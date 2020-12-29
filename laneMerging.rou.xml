@@ -1,0 +1,66 @@
+<routes>
+        <vType id="typeA" type="passenger" length="5" accel="10" decel="10" sigma="0.0" maxSpeed="50" color="yellow"/>
+        <vType id="typeB" type="passenger" length="5" accel="10" decel="10" sigma="0.0" maxSpeed="50" color="blue"/>
+
+        <route id="right" edges="E1 E2" />
+    <vehicle id="B_1" type="typeB" route="right" depart="0" departLane="0" departSpeed="random"/>
+    <vehicle id="B_2" type="typeB" route="right" depart="4" departLane="0" departSpeed="random"/>
+    <vehicle id="A_1" type="typeA" route="right" depart="6" departLane="1" departSpeed="random"/>
+    <vehicle id="B_3" type="typeB" route="right" depart="9" departLane="0" departSpeed="random"/>
+    <vehicle id="B_4" type="typeB" route="right" depart="20" departLane="0" departSpeed="random"/>
+    <vehicle id="B_5" type="typeB" route="right" depart="33" departLane="0" departSpeed="random"/>
+    <vehicle id="B_6" type="typeB" route="right" depart="44" departLane="0" departSpeed="random"/>
+    <vehicle id="A_2" type="typeA" route="right" depart="47" departLane="1" departSpeed="random"/>
+    <vehicle id="A_3" type="typeA" route="right" depart="50" departLane="1" departSpeed="random"/>
+    <vehicle id="A_4" type="typeA" route="right" depart="62" departLane="1" departSpeed="random"/>
+    <vehicle id="A_5" type="typeA" route="right" depart="63" departLane="1" departSpeed="random"/>
+    <vehicle id="A_6" type="typeA" route="right" depart="112" departLane="1" departSpeed="random"/>
+    <vehicle id="B_7" type="typeB" route="right" depart="134" departLane="0" departSpeed="random"/>
+    <vehicle id="A_7" type="typeA" route="right" depart="145" departLane="1" departSpeed="random"/>
+    <vehicle id="B_8" type="typeB" route="right" depart="148" departLane="0" departSpeed="random"/>
+    <vehicle id="A_8" type="typeA" route="right" depart="162" departLane="1" departSpeed="random"/>
+    <vehicle id="A_9" type="typeA" route="right" depart="171" departLane="1" departSpeed="random"/>
+    <vehicle id="A_10" type="typeA" route="right" depart="184" departLane="1" departSpeed="random"/>
+    <vehicle id="A_11" type="typeA" route="right" depart="197" departLane="1" departSpeed="random"/>
+    <vehicle id="B_9" type="typeB" route="right" depart="207" departLane="0" departSpeed="random"/>
+    <vehicle id="B_10" type="typeB" route="right" depart="213" departLane="0" departSpeed="random"/>
+    <vehicle id="B_11" type="typeB" route="right" depart="240" departLane="0" departSpeed="random"/>
+    <vehicle id="B_12" type="typeB" route="right" depart="246" departLane="0" departSpeed="random"/>
+    <vehicle id="B_13" type="typeB" route="right" depart="250" departLane="0" departSpeed="random"/>
+    <vehicle id="A_12" type="typeA" route="right" depart="252" departLane="1" departSpeed="random"/>
+    <vehicle id="A_13" type="typeA" route="right" depart="254" departLane="1" departSpeed="random"/>
+    <vehicle id="A_14" type="typeA" route="right" depart="259" departLane="1" departSpeed="random"/>
+    <vehicle id="A_15" type="typeA" route="right" depart="264" departLane="1" departSpeed="random"/>
+    <vehicle id="B_14" type="typeB" route="right" depart="271" departLane="0" departSpeed="random"/>
+    <vehicle id="B_15" type="typeB" route="right" depart="294" departLane="0" departSpeed="random"/>
+    <vehicle id="A_16" type="typeA" route="right" depart="299" departLane="1" departSpeed="random"/>
+    <vehicle id="B_16" type="typeB" route="right" depart="318" departLane="0" departSpeed="random"/>
+    <vehicle id="A_17" type="typeA" route="right" depart="329" departLane="1" departSpeed="random"/>
+    <vehicle id="A_18" type="typeA" route="right" depart="342" departLane="1" departSpeed="random"/>
+    <vehicle id="A_19" type="typeA" route="right" depart="358" departLane="1" departSpeed="random"/>
+    <vehicle id="A_20" type="typeA" route="right" depart="364" departLane="1" departSpeed="random"/>
+    <vehicle id="B_17" type="typeB" route="right" depart="408" departLane="0" departSpeed="random"/>
+    <vehicle id="A_21" type="typeA" route="right" depart="413" departLane="1" departSpeed="random"/>
+    <vehicle id="B_18" type="typeB" route="right" depart="425" departLane="0" departSpeed="random"/>
+    <vehicle id="A_22" type="typeA" route="right" depart="432" departLane="1" departSpeed="random"/>
+    <vehicle id="A_23" type="typeA" route="right" depart="441" departLane="1" departSpeed="random"/>
+    <vehicle id="A_24" type="typeA" route="right" depart="454" departLane="1" departSpeed="random"/>
+    <vehicle id="A_25" type="typeA" route="right" depart="478" departLane="1" departSpeed="random"/>
+    <vehicle id="A_26" type="typeA" route="right" depart="483" departLane="1" departSpeed="random"/>
+    <vehicle id="B_19" type="typeB" route="right" depart="497" departLane="0" departSpeed="random"/>
+    <vehicle id="B_20" type="typeB" route="right" depart="506" departLane="0" departSpeed="random"/>
+    <vehicle id="A_27" type="typeA" route="right" depart="513" departLane="1" departSpeed="random"/>
+    <vehicle id="B_21" type="typeB" route="right" depart="516" departLane="0" departSpeed="random"/>
+    <vehicle id="A_28" type="typeA" route="right" depart="517" departLane="1" departSpeed="random"/>
+    <vehicle id="B_22" type="typeB" route="right" depart="524" departLane="0" departSpeed="random"/>
+    <vehicle id="A_29" type="typeA" route="right" depart="532" departLane="1" departSpeed="random"/>
+    <vehicle id="B_23" type="typeB" route="right" depart="562" departLane="0" departSpeed="random"/>
+    <vehicle id="B_24" type="typeB" route="right" depart="566" departLane="0" departSpeed="random"/>
+    <vehicle id="B_25" type="typeB" route="right" depart="569" departLane="0" departSpeed="random"/>
+    <vehicle id="B_26" type="typeB" route="right" depart="582" departLane="0" departSpeed="random"/>
+    <vehicle id="A_30" type="typeA" route="right" depart="584" departLane="1" departSpeed="random"/>
+    <vehicle id="A_31" type="typeA" route="right" depart="587" departLane="1" departSpeed="random"/>
+    <vehicle id="A_32" type="typeA" route="right" depart="592" departLane="1" departSpeed="random"/>
+    <vehicle id="B_27" type="typeB" route="right" depart="592" departLane="0" departSpeed="random"/>
+    <vehicle id="B_28" type="typeB" route="right" depart="596" departLane="0" departSpeed="random"/>
+</routes>
