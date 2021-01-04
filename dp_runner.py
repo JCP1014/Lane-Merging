@@ -19,12 +19,11 @@ else:
 from sumolib import checkBinary  # noqa
 import traci  # noqa
 
-def generate_routefile():
-    random.seed(42)  # make tests reproducible
-    N = 600  # number of time steps
+def generate_routefile(N):
+    # random.seed(42)  # make tests reproducible
     # demand per second from different directions
-    pA = 1. / 15 # a vehicle is generated every 30 seconds in average.
-    pB = 1. / 20 # a vehicle is generated every 30 seconds in average.
+    pA = 1. / 8 # a vehicle is generated every 9 seconds in average.
+    pB = 1. / 12 # a vehicle is generated every 10 seconds in average.
     with open("laneMerging.rou.xml", "w") as routes:
         print("""<routes>
         <vType id="typeA" type="passenger" length="5" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="yellow"/>
@@ -82,9 +81,7 @@ def compute_earliest_arrival(junction_x, schedule_A, schedule_B):
     return a, b, id_a, id_b
 
 
-def compute_entering_time(a, b):
-    W_same = 1  # the waiting time if two consecutive vehicles are from the same lane
-    W_diff = 3  # the waiting time if two consecutive vehicles are from different lanes
+def compute_entering_time(a, b, W_same, W_diff):
     alpha = len(a) - 1
     beta = len(b) - 1
     L = np.zeros((alpha+1, beta+1, 2))  # dp table
@@ -139,57 +136,126 @@ def print_table(L):
 
 
 def run():
+    W_same = 1  # the waiting time if two consecutive vehicles are from the same lane
+    W_diff = 3  # the waiting time if two consecutive vehicles are from different lanes
     step = 0
-    period = 6
+    period = 5
     junction_x = traci.junction.getPosition("gneJ1")[0]
-    offset = 5
     schedule_A = []
     schedule_B = []
+    leaveA = False
+    leaveB = False
+    countdown = 0
+    endTime = 0
+
     """execute the TraCI control loop"""
     # we start with phase 2 where EW has green
     # traci.trafficlight.setPhase("0", 2)
     while traci.simulation.getMinExpectedNumber() > 0:  # The number of vehicles which are in the net plus the ones still waiting to start. 
         for vehID in traci.simulation.getLoadedIDList():
             traci.vehicle.setLaneChangeMode(vehID, 0b000000000000)
-        for vehID in traci.simulation.getArrivedIDList():
-            print(vehID, 'leaves')
         traci.simulationStep()
         step += 1
         currentTime = traci.simulation.getTime()
-        print(currentTime)
-        if len(schedule_A) > 0 and schedule_A[0][2] == False:
-            t = schedule_A[0][1]
-            d = t-traci.simulation.getTime()
-            print('stop', schedule_A[0][0], t)
-            try:
-                traci.vehicle.setStop(schedule_A[0][0], "E1", pos=junction_x, laneIndex=1, duration=0, until=t)
-                schedule_A[0][2] = True
-            except traci.exceptions.TraCIException:
-                pass
-        if len(schedule_B) > 0 and schedule_B[0][2] == False:
-            t = schedule_B[0][1]
-            d = t-traci.simulation.getTime()
-            print('stop', schedule_B[0][0], t)
-            try:
-                traci.vehicle.setStop(schedule_B[0][0], "E1", pos=junction_x, laneIndex=0, duration=0, until=t)
-                schedule_B[0][2] = True
-            except traci.exceptions.TraCIException:
-                pass
+        endTime = currentTime
+        # print(currentTime)
+        # print("Pass", traci.lane.getLastStepVehicleIDs("E2_0"))
+        if len(schedule_A) > 0 and traci.vehicle.getPosition(schedule_A[0][0])[0] >= junction_x:
+            schedule_A.remove(schedule_A[0])
+            leaveA = True
+        elif len(schedule_B) > 0 and traci.vehicle.getPosition(schedule_B[0][0])[0] >= junction_x:
+            schedule_B.remove(schedule_B[0])
+            leaveB = True
+            
+        if len(schedule_A) > 0 and len(schedule_B) > 0:
+            if schedule_A[0][1] < schedule_B[0][1]:
+                if leaveA:
+                    countdown = W_same - 1
+                elif leaveB:
+                    countdown = W_diff - 1
+                else:
+                    if countdown:
+                        traci.trafficlight.setPhase("TL1", 1)
+                        countdown -= 1
+                    else:
+                        traci.trafficlight.setPhase("TL1", 2)
+                # traci.trafficlight.setPhaseDuration("TL1", schedule_A[0][1]-currentTime)
+            else:
+                if leaveB:
+                    countdown = W_same - 1
+                elif leaveA:
+                    countdown = W_diff - 1
+                else:
+                    if countdown:
+                        traci.trafficlight.setPhase("TL1", 1)
+                        countdown -= 1
+                    else:
+                        traci.trafficlight.setPhase("TL1", 4)
+                # traci.trafficlight.setPhaseDuration("TL1", schedule_B[0][1]-currentTime)
+        elif len(schedule_A) > 0:
+            if leaveA:
+                    countdown = W_same - 1
+            elif leaveB:
+                countdown = W_diff - 1
+            else:
+                if countdown:
+                    traci.trafficlight.setPhase("TL1", 1)
+                    countdown -= 1
+                else:
+                    traci.trafficlight.setPhase("TL1", 2)
+        elif len(schedule_B) > 0:
+            if leaveB:
+                    countdown = W_same - 1
+            elif leaveA:
+                countdown = W_diff - 1
+            else:
+                if countdown:
+                    traci.trafficlight.setPhase("TL1", 1)
+                    countdown -= 1
+                else:
+                    traci.trafficlight.setPhase("TL1", 4)
+        else:
+            if countdown:
+                traci.trafficlight.setPhase("TL1", 1)
+                countdown -= 1
+            else:
+                traci.trafficlight.setPhase("TL1", 0)
 
-        # if len(schedule_A) > 0:
-        for i in schedule_A:
-            if i[1] < traci.simulation.getTime():
-                schedule_A.remove(i)
+        leaveA = False
+        leaveB = False
+        # if len(schedule_A) > 0 and schedule_A[0][2] == False:
+        #     t = schedule_A[0][1]
+        #     d = t-traci.simulation.getTime()
+        #     print('stop', schedule_A[0][0], t)
+        #     try:
+        #         traci.vehicle.setStop(schedule_A[0][0], "E1", pos=junction_x, laneIndex=1, duration=0, until=t)
+        #         schedule_A[0][2] = True
+        #     except traci.exceptions.TraCIException:
+        #         pass
+        # if len(schedule_B) > 0 and schedule_B[0][2] == False:
+        #     t = schedule_B[0][1]
+        #     d = t-traci.simulation.getTime()
+        #     print('stop', schedule_B[0][0], t)
+        #     try:
+        #         traci.vehicle.setStop(schedule_B[0][0], "E1", pos=junction_x, laneIndex=0, duration=0, until=t)
+        #         schedule_B[0][2] = True
+        #     except traci.exceptions.TraCIException:
+        #         pass
+
+        # # if len(schedule_A) > 0:
+        # for i in schedule_A:
+        #     if i[1] < traci.simulation.getTime():
+        #         schedule_A.remove(i)
         
-        # if len(schedule_B) > 0:
-        for i in schedule_B:
-            if i[1] < traci.simulation.getTime():
-                schedule_B.remove(i)
+        # # if len(schedule_B) > 0:
+        # for i in schedule_B:
+        #     if i[1] < traci.simulation.getTime():
+        #         schedule_B.remove(i)
 
         if step == period:
             if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0:
                 a, b, id_a, id_b = compute_earliest_arrival(junction_x, schedule_A, schedule_B)
-                order_stack_A, order_stack_B = compute_entering_time(a, b)
+                order_stack_A, order_stack_B = compute_entering_time(a, b, W_same, W_diff)
                 index_A = 1
                 index_B = 1
                 schedule_A = []
@@ -197,7 +263,7 @@ def run():
                 while len(order_stack_A) > 0:
                     top = order_stack_A.pop()
                     schedule_A.append([id_a[index_A], top[2], False])
-                    print(id_a[index_A], 'enter =', top[2])
+                    # print(id_a[index_A], 'enter =', top[2])
                     # if index_A == 1:
                     #     d = top[2]-currentTime
                     #     print('stop', id_a[index_A])
@@ -209,7 +275,7 @@ def run():
                 while len(order_stack_B) > 0:
                     top = order_stack_B.pop()
                     schedule_B.append([id_b[index_B], top[2], False])
-                    print(id_b[index_B], 'enter =', top[2])
+                    # print(id_b[index_B], 'enter =', top[2])
                     # if index_B == 1:
                     #     d = top[2]-currentTime
                     #     print('stop', id_b[index_B])
@@ -219,6 +285,8 @@ def run():
                     #         pass
                     index_B += 1
             step = 0
+
+    print(endTime)
     traci.close()
     sys.stdout.flush()
 
@@ -231,8 +299,7 @@ def get_options():
     return options
 
 
-# this is the main entry point of this script
-if __name__ == "__main__":
+def main():
     options = get_options()
 
     # this script has been called from the command line. It will start sumo as a
@@ -242,11 +309,22 @@ if __name__ == "__main__":
     else:
         sumoBinary = checkBinary('sumo-gui')
 
-    # first, generate the route file for this simulation
-    generate_routefile()
+    if len(sys.argv) < 2:
+        print("Please input a number for N")
+        return
+    else:
+        # first, generate the route file for this simulation
+        N = int(sys.argv[1])  # number of time steps
+        generate_routefile(N)
 
-    # this is the normal way of using traci. sumo is started as a
-    # subprocess and then the python script connects and runs
-    traci.start([sumoBinary, "-c", "laneMerging.sumocfg",
-                             "--tripinfo-output", "tripinfo.xml"])
-    run()
+        # this is the normal way of using traci. sumo is started as a
+        # subprocess and then the python script connects and runs
+        traci.start([sumoBinary, "-c", "laneMerging.sumocfg",
+                                "--tripinfo-output", "tripinfo_dp.xml",
+                                "-S",
+                                "--no-step-log", "true", "-W", "--duration-log.disable", "true"])
+        run()
+
+
+if __name__ == "__main__":
+    main()

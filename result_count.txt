@@ -1,0 +1,50 @@
+time steps: 60
+vehNum range: [2, 24]
+dp_total_win: 101 (10.100000000000001%)
+fafg_total_win: 37 (3.6999999999999997%)
+total_tie: 862 (86.2%)
+dp_wait_win: 176 (17.599999999999998%)
+fafg_wait_win: 44 (4.3999999999999995%)
+wait_tie: 780 (78.0%)
+
+
+time steps: 300
+vehNum range: [40, 88]
+dp_total_win: 191 (19.1%)
+fafg_total_win: 154 (15.4%)
+total_tie: 655 (65.5%)
+dp_wait_win: 523 (52.300000000000004%)
+fafg_wait_win: 286 (28.599999999999998%)
+wait_tie: 191 (19.1%)
+
+
+time steps: 600
+vehNum range: [93, 157]
+dp_total_win: 245 (24.5%)
+fafg_total_win: 218 (21.8%)
+total_tie: 537 (53.7%)
+dp_wait_win: 548 (54.800000000000004%)
+fafg_wait_win: 419 (41.9%)
+wait_tie: 33 (3.3000000000000003%)
+
+
+time steps: 1800
+vehNum range: [314, 431]
+dp_total_win: 258 (25.8%)
+fafg_total_win: 248 (24.8%)
+total_tie: 494 (49.4%)
+dp_wait_win: 503 (50.3%)
+fafg_wait_win: 494 (49.4%)
+wait_tie: 3 (0.3%)
+
+
+time steps: 3600
+vehNum range: [668, 821]
+dp_total_win: 233 (23.3%)
+fafg_total_win: 260 (26.0%)
+total_tie: 507 (50.7%)
+dp_wait_win: 440 (44.0%)
+fafg_wait_win: 560 (56.00000000000001%)
+wait_tie: 0 (0.0%)
+
+

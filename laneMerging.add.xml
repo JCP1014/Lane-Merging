@@ -1,4 +1,4 @@
 <additional>
-   <laneAreaDetector id="dA" lane="E1_1" endPos="300" length="200" freq="10" file="output_dA.xml" />  
-   <laneAreaDetector id="dB" lane="E1_0" endPos="300" length="200" freq="10" file="output_dB.xml" />
+   <laneAreaDetector id="dA" lane="E1_1" endPos="500" length="300" freq="5" file="output_dA.xml" />  
+   <laneAreaDetector id="dB" lane="E1_0" endPos="500" length="300" freq="5" file="output_dB.xml" />
 </additional>
