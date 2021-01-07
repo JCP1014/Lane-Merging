@@ -16,8 +16,8 @@ if 'SUMO_HOME' in os.environ:
 else:
     sys.exit("please declare environment variable 'SUMO_HOME'")
 
-from sumolib import checkBinary  # noqa
-import traci  # noqa
+from sumolib import checkBinary
+import traci
 
 def compute_earliest_arrival(junction_x, schedule_A, schedule_B):
     a = np.array([0])
@@ -36,6 +36,11 @@ def compute_earliest_arrival(junction_x, schedule_A, schedule_B):
                     arrivalTime = i[1]
         elif speed != 0:
             arrivalTime = currentTime + (dist/speed)
+            for i in schedule_A:
+                if i[0] == vehID:
+                    if i[1] < arrivalTime:
+                        arrivalTime = i[1]
+                    break
         a = np.append(a, arrivalTime)
         id_a = np.append(id_a, vehID)
 
@@ -50,6 +55,11 @@ def compute_earliest_arrival(junction_x, schedule_A, schedule_B):
                     arrivalTime = i[1]
         elif speed != 0:
             arrivalTime = currentTime + (dist/speed)
+            for i in schedule_B:
+                if i[0] == vehID:
+                    if i[1] < arrivalTime:
+                        arrivalTime = i[1]
+                    break
         b = np.append(b, arrivalTime)
         id_b = np.append(id_b, vehID)
 
@@ -58,7 +68,7 @@ def compute_earliest_arrival(junction_x, schedule_A, schedule_B):
 
 def run_scheduled():
     W_same = 1  # the waiting time if two consecutive vehicles are from the same lane
-    W_diff = 3  # the waiting time if two consecutive vehicles are from different lanes
+    W_diff = 5  # the waiting time if two consecutive vehicles are from different lanes
     step = 0
     period = 5
     junction_x = traci.junction.getPosition("gneJ1")[0]
@@ -154,7 +164,7 @@ def run_scheduled():
                     schedule_B.append([id_b[i], b[i]])
             step = 0
 
-    print(endTime)
+    # print(endTime)
     traci.close()
     sys.stdout.flush()
 
@@ -247,7 +257,7 @@ def run_noSchedule():
         leaveA = False
         leaveB = False
 
-    print(endTime)
+    # print(endTime)
     traci.close()
     sys.stdout.flush()
 
@@ -274,7 +284,7 @@ if __name__ == "__main__":
     # this is the normal way of using traci. sumo is started as a
     # subprocess and then the python script connects and runs
     traci.start([sumoBinary, "-c", "laneMerging.sumocfg",
-                             "--tripinfo-output", "tripinfo_fafg.xml",
+                             "--tripinfo-output", "tripinfo_fcfg.xml",
                              "-S",
                              "--no-step-log", "true", "-W", "--duration-log.disable", "true"])
     run_scheduled()
