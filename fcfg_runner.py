@@ -68,9 +68,9 @@ def compute_earliest_arrival(junction_x, schedule_A, schedule_B):
 
 def run_scheduled():
     W_same = 1  # the waiting time if two consecutive vehicles are from the same lane
-    W_diff = 5  # the waiting time if two consecutive vehicles are from different lanes
+    W_diff = 2  # the waiting time if two consecutive vehicles are from different lanes
     step = 0
-    period = 5
+    period = 4
     junction_x = traci.junction.getPosition("gneJ1")[0]
     schedule_A = []
     schedule_B = []
@@ -83,6 +83,19 @@ def run_scheduled():
     # we start with phase 2 where EW has green
     # traci.trafficlight.setPhase("0", 2)
     while traci.simulation.getMinExpectedNumber() > 0:  # The number of vehicles which are in the net plus the ones still waiting to start. 
+        if step == period:
+            if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0:
+                a, b, id_a, id_b = compute_earliest_arrival(junction_x, schedule_A, schedule_B)
+                schedule_A = []
+                schedule_B = []
+                for i in range(1, len(a)):
+                    schedule_A.append([id_a[i], a[i]])
+                schedule_A.sort(key=lambda x: x[1])
+                for i in range(1, len(b)):
+                    schedule_B.append([id_b[i], b[i]])
+                schedule_B.sort(key=lambda x: x[1])
+            step = 0
+
         for vehID in traci.simulation.getLoadedIDList():
             traci.vehicle.setLaneChangeMode(vehID, 0b000000000000)
         traci.simulationStep()
@@ -151,18 +164,6 @@ def run_scheduled():
         leaveA = False
         leaveB = False
 
-        if step == period:
-            if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0:
-                a, b, id_a, id_b = compute_earliest_arrival(junction_x, schedule_A, schedule_B)
-                schedule_A = []
-                schedule_B = []
-                for i in range(1, len(a)):
-                    # print(id_a[i],'enter',a[i])
-                    schedule_A.append([id_a[i], a[i]])
-                for i in range(1, len(b)):
-                    # print(id_b[i],'enter',b[i])
-                    schedule_B.append([id_b[i], b[i]])
-            step = 0
 
     # print(endTime)
     traci.close()

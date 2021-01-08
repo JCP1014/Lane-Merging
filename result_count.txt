@@ -1,40 +1,70 @@
-time steps: 60
-vehNum range: [4, 23]
-dp_total_win: 771 (77.10000000000001%)
-fcfg_total_win: 2 (0.2%)
-total_tie: 227 (22.7%)
-dp_wait_win: 867 (86.7%)
-fcfg_wait_win: 0 (0.0%)
-wait_tie: 133 (13.3%)
-
-
-time steps: 600
-vehNum range: [85, 171]
-dp_total_win: 928 (92.80000000000001%)
-fcfg_total_win: 0 (0.0%)
-total_tie: 72 (7.199999999999999%)
+case: 600_6_w4
+vehNum range: [158, 243]
+dp_total_win: 997 (99.7%)
+fcfg_total_win: 3 (0.3%)
+total_tie: 0 (0.0%)
 dp_wait_win: 1000 (100.0%)
 fcfg_wait_win: 0 (0.0%)
 wait_tie: 0 (0.0%)
+dp_total_avg: 711.011
+fcfg_total_avg: 825.841
+dp_wait_avg: 25.301612363248076
+fcfg_wait_avg: 59.64852385340114
 
 
-time steps: 1800
-vehNum range: [317, 431]
-dp_total_win: 910 (91.0%)
-fcfg_total_win: 0 (0.0%)
-total_tie: 90 (9.0%)
-dp_wait_win: 1000 (100.0%)
-fcfg_wait_win: 0 (0.0%)
+case: 600_6_w3
+vehNum range: [161, 245]
+dp_total_win: 933 (93.30000000000001%)
+fcfg_total_win: 60 (6.0%)
+total_tie: 7 (0.7000000000000001%)
+dp_wait_win: 655 (65.5%)
+fcfg_wait_win: 345 (34.5%)
 wait_tie: 0 (0.0%)
+dp_total_avg: 712.222
+fcfg_total_avg: 754.279
+dp_wait_avg: 25.648225759941198
+fcfg_wait_avg: 28.91468257668567
 
 
-time steps: 3600
-vehNum range: [680, 847]
-dp_total_win: 667 (92.63888888888889%)
-fcfg_total_win: 0 (0.0%)
-total_tie: 53 (7.361111111111112%)
-dp_wait_win: 720 (100.0%)
-fcfg_wait_win: 0 (0.0%)
+case: 600_6_w2
+vehNum range: [160, 247]
+dp_total_win: 647 (64.7%)
+fcfg_total_win: 236 (23.599999999999998%)
+total_tie: 117 (11.700000000000001%)
+dp_wait_win: 135 (13.5%)
+fcfg_wait_win: 865 (86.5%)
 wait_tie: 0 (0.0%)
+dp_total_avg: 681.904
+fcfg_total_avg: 686.208
+dp_wait_avg: 10.516679654973487
+fcfg_wait_avg: 7.541990983064467
+
+
+case: 600_7_w4
+vehNum range: [128, 204]
+dp_total_win: 986 (98.6%)
+fcfg_total_win: 9 (0.8999999999999999%)
+total_tie: 5 (0.5%)
+dp_wait_win: 995 (99.5%)
+fcfg_wait_win: 5 (0.5%)
+wait_tie: 0 (0.0%)
+dp_total_avg: 686.415
+fcfg_total_avg: 749.097
+dp_wait_avg: 12.767179846211945
+fcfg_wait_avg: 30.781698647340946
+
+
+case: 600_8_w4
+vehNum range: [118, 183]
+dp_total_win: 793 (79.3%)
+fcfg_total_win: 112 (11.200000000000001%)
+total_tie: 95 (9.5%)
+dp_wait_win: 928 (92.80000000000001%)
+fcfg_wait_win: 71 (7.1%)
+wait_tie: 1 (0.1%)
+dp_total_avg: 674.711
+fcfg_total_avg: 693.273
+dp_wait_avg: 7.261387169826828
+fcfg_wait_avg: 13.704662495022315
 
 

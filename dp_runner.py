@@ -19,11 +19,11 @@ else:
 from sumolib import checkBinary  # noqa
 import traci  # noqa
 
-def generate_routefile(N):
+def generate_routefile(N, p):
     # random.seed(42)  # make tests reproducible
     # demand per second from different directions
-    pA = 1. / 8 # a vehicle is generated every 8 seconds in average.
-    pB = 1. / 12 # a vehicle is generated every 12 seconds in average.
+    pA = 1. / p # a vehicle is generated every 8 seconds in average.
+    pB = 1. / p # a vehicle is generated every 12 seconds in average.
     with open("laneMerging.rou.xml", "w") as routes:
         print("""<routes>
         <vType id="typeA" type="passenger" length="5" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="yellow"/>
@@ -148,9 +148,9 @@ def print_table(L):
 
 def run():
     W_same = 1  # the waiting time if two consecutive vehicles are from the same lane
-    W_diff = 3  # the waiting time if two consecutive vehicles are from different lanes
+    W_diff = 2  # the waiting time if two consecutive vehicles are from different lanes
     step = 0
-    period = 5
+    period = 3
     junction_x = traci.junction.getPosition("gneJ1")[0]
     schedule_A = []
     schedule_B = []
@@ -163,6 +163,26 @@ def run():
     # we start with phase 2 where EW has green
     # traci.trafficlight.setPhase("0", 2)
     while traci.simulation.getMinExpectedNumber() > 0:  # The number of vehicles which are in the net plus the ones still waiting to start. 
+        if step == period:
+            if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0:
+                a, b, id_a, id_b = compute_earliest_arrival(junction_x, schedule_A, schedule_B)
+                order_stack_A, order_stack_B = compute_entering_time(a, b, W_same, W_diff)
+                index_A = 1
+                index_B = 1
+                schedule_A = []
+                schedule_B = []
+                while len(order_stack_A) > 0:
+                    top = order_stack_A.pop()
+                    schedule_A.append([id_a[index_A], top[2], False])
+                    index_A += 1
+                schedule_A.sort(key=lambda x: x[1])
+                while len(order_stack_B) > 0:
+                    top = order_stack_B.pop()
+                    schedule_B.append([id_b[index_B], top[2], False])
+                    index_B += 1
+                schedule_B.sort(key=lambda x: x[1])
+            step = 0
+
         for vehID in traci.simulation.getLoadedIDList():
             traci.vehicle.setLaneChangeMode(vehID, 0b000000000000)
         traci.simulationStep()
@@ -236,26 +256,6 @@ def run():
         leaveB = False
 
 
-        if step == period:
-            if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0:
-                a, b, id_a, id_b = compute_earliest_arrival(junction_x, schedule_A, schedule_B)
-                order_stack_A, order_stack_B = compute_entering_time(a, b, W_same, W_diff)
-                index_A = 1
-                index_B = 1
-                schedule_A = []
-                schedule_B = []
-                while len(order_stack_A) > 0:
-                    top = order_stack_A.pop()
-                    schedule_A.append([id_a[index_A], top[2], False])
-                    # print(id_a[index_A], 'enter:', top[2])
-                    index_A += 1
-                while len(order_stack_B) > 0:
-                    top = order_stack_B.pop()
-                    schedule_B.append([id_b[index_B], top[2], False])
-                    # print(id_b[index_B], 'enter:', top[2])
-                    index_B += 1
-            step = 0
-
     # print(endTime)
     traci.close()
     sys.stdout.flush()
@@ -285,7 +285,8 @@ def main():
     else:
         # first, generate the route file for this simulation
         N = int(sys.argv[1])  # number of time steps
-        generate_routefile(N)
+        p = int(sys.argv[2])
+        generate_routefile(N, p)
 
         # this is the normal way of using traci. sumo is started as a
         # subprocess and then the python script connects and runs
