@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Wed Jan  6 18:58:39 2021 by Eclipse SUMO netedit Version 1.7.0
+<!-- generated on 二  1/19 14:14:25 2021 by Eclipse SUMO netedit Version 1.7.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
-        <sumo-net-file value="laneMerging.net.xml"/>
+        <sumo-net-file value="/Users/jcp/Desktop/OneDrive%20-%20國立成功大學/Intelligent%20Vehicles/Project/Lane-Merging/laneMerging.net.xml"/>
     </input>
 
     <output>
-        <output-file value="laneMerging.net.xml"/>
+        <output-file value="/Users/jcp/Desktop/OneDrive%20-%20國立成功大學/Intelligent%20Vehicles/Project/Lane-Merging/laneMerging.net.xml"/>
     </output>
 
     <processing>
@@ -66,7 +66,7 @@
     </junction>
     <junction id="gneJ2" type="dead_end" x="800.00" y="0.00" incLanes="E2_0" intLanes="" shape="800.00,-3.20 800.00,0.00" fringe="outer"/>
 
-    <connection from="E1" to="E2" fromLane="0" toLane="0" tl="TL1" linkIndex="0" dir="s" state="o"/>
-    <connection from="E1" to="E2" fromLane="1" toLane="0" keepClear="0" tl="TL1" linkIndex="1" dir="s" state="O"/>
+    <connection from="E1" to="E2" fromLane="0" toLane="0" dir="s" state="m"/>
+    <connection from="E1" to="E2" fromLane="1" toLane="0" keepClear="0" dir="s" state="M"/>
 
 </net>

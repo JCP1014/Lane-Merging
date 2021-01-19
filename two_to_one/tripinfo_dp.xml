@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Sun Jan 10 19:47:39 2021 by Eclipse SUMO GUI Version 1.7.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="laneMerging.net.xml"/>
+        <route-files value="laneMerging.rou.xml"/>
+        <additional-files value="laneMerging.add.xml"/>
+    </input>
+
+    <output>
+        <tripinfo-output value="tripinfo_dp.xml"/>
+    </output>
+
+    <report>
+        <no-warnings value="true"/>
+        <duration-log.disable value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+    <traci_server>
+        <remote-port value="50156"/>
+    </traci_server>
+
+    <gui_only>
+        <gui-settings-file value="laneMerging.view.xml"/>
+        <start value="true"/>
+    </gui_only>
+
+</configuration>
+-->
+
+<tripinfos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tripinfo_file.xsd">
+    <tripinfo id="B_1" depart="0.00" departLane="E1_0" departPos="5.10" departSpeed="13.12" departDelay="0.00" arrival="54.00" arrivalLane="E2_0" arrivalPos="300.00" arrivalSpeed="14.72" duration="54.00" routeLength="794.90" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="0.01" rerouteNo="0" devices="tripinfo_B_1" vType="typeB" speedFactor="1.06" vaporized=""/>
+    <tripinfo id="B_2" depart="2.00" departLane="E1_0" departPos="5.10" departSpeed="9.29" departDelay="0.00" arrival="64.00" arrivalLane="E2_0" arrivalPos="300.00" arrivalSpeed="13.03" duration="62.00" routeLength="794.90" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="0.23" rerouteNo="0" devices="tripinfo_B_2" vType="typeB" speedFactor="0.94" vaporized=""/>
+    <tripinfo id="B_3" depart="10.00" departLane="E1_0" departPos="5.10" departSpeed="7.39" departDelay="0.00" arrival="65.00" arrivalLane="E2_0" arrivalPos="300.00" arrivalSpeed="14.99" duration="55.00" routeLength="794.90" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="2.02" rerouteNo="0" devices="tripinfo_B_3" vType="typeB" speedFactor="1.08" vaporized=""/>
+    <tripinfo id="A_1" depart="5.00" departLane="E1_1" departPos="5.10" departSpeed="0.64" departDelay="0.00" arrival="72.00" arrivalLane="E2_0" arrivalPos="300.00" arrivalSpeed="14.03" duration="67.00" routeLength="794.90" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="9.83" rerouteNo="0" devices="tripinfo_A_1" vType="typeA" speedFactor="1.01" vaporized=""/>
+    <tripinfo id="A_2" depart="13.00" departLane="E1_1" departPos="5.10" departSpeed="8.44" departDelay="0.00" arrival="73.00" arrivalLane="E2_0" arrivalPos="300.00" arrivalSpeed="14.31" duration="60.00" routeLength="794.90" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="4.45" rerouteNo="0" devices="tripinfo_A_2" vType="typeA" speedFactor="1.03" vaporized=""/>
+</tripinfos>

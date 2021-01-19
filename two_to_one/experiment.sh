@@ -1,6 +1,6 @@
 #!/bin/sh
 
-INDEX=11
+INDEX=1
 STEPS=600
 P=6
 while [ $INDEX -le 1000 ]
@@ -28,7 +28,7 @@ done
 echo "$STEPS Finish $INDEX times!"
 
 
-# INDEX=11
+# INDEX=1
 # STEPS=600
 # P=7
 # while [ $INDEX -le 1000 ]
@@ -56,7 +56,7 @@ echo "$STEPS Finish $INDEX times!"
 # echo "$STEPS Finish $INDEX times!"
 
 
-# INDEX=11
+# INDEX=1
 # STEPS=600
 # P=8
 # while [ $INDEX -le 1000 ]

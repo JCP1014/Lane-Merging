@@ -67,24 +67,11 @@ def read_result(case):
     
 
 def main():
-    # read_result('1000_9_w3')
-    # read_result('1000_8_w4')
-    # read_result('1000_8_w3')
-    # read_result('1000_7_w4')
-    # read_result('1000_7_w3')
-    # read_result('1000_7_w2')
-    # read_result('1000_6_w4')
-    # read_result('1000_6_w3')
-    # read_result('1000_5_w4')
-    # read_result('1000_5_w3')
-    # read_result('1000_5_w2')
-    # read_result('600_5_w4')
     read_result('600_6_w4')
     read_result('600_6_w3')
     read_result('600_6_w2')
     read_result('600_7_w4')
     read_result('600_8_w4')
-    # read_result('600_9_w4')
 
 
 
