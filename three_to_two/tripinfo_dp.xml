@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Tue Jan 19 14:23:46 2021 by Eclipse SUMO GUI Version 1.7.0
+<!-- generated on Wed Jan 20 14:44:54 2021 by Eclipse SUMO GUI Version 1.7.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="laneMerging.net.xml"/>
+        <net-file value="three_to_two.net.xml"/>
         <route-files value="laneMerging.rou.xml"/>
         <additional-files value="laneMerging.add.xml"/>
     </input>
@@ -20,7 +20,7 @@
     </report>
 
     <traci_server>
-        <remote-port value="50536"/>
+        <remote-port value="50909"/>
     </traci_server>
 
     <gui_only>

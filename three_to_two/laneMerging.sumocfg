@@ -1,6 +1,6 @@
 <configuration>
     <input>
-       <net-file value="laneMerging.net.xml"/>
+       <net-file value="three_to_two.net.xml"/>
        <route-files value="laneMerging.rou.xml"/>
        <additional-files value="laneMerging.add.xml"/>
        <gui-settings-file value="laneMerging.view.xml"/>
