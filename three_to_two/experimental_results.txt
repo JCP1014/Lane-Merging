@@ -1,0 +1,189 @@
+case: 01
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 1009.7409000001361
+fcfg_total_avg: 1085.6212000000983
+dp_computeTime_avg: 0.10398971939086914
+
+
+case: 02
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 507.591800000046
+fcfg_total_avg: 544.6248000000554
+dp_computeTime_avg: 0.10372496247291565
+
+
+case: 03
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 340.44910000000834
+fcfg_total_avg: 363.32760000001366
+dp_computeTime_avg: 0.3744294211864471
+
+
+case: 04
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 256.44049999999237
+fcfg_total_avg: 291.456199999998
+dp_computeTime_avg: 0.1034808759689331
+
+
+case: 05
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 214.3259999999962
+fcfg_total_avg: 285.1836999999962
+dp_computeTime_avg: 0.1046673412322998
+
+
+case: 20
+dp_total_win: 999 (99.9%)
+fcfg_total_win: 1 (0.1%)
+total_tie: 0 (0.0%)
+dp_total_avg: 54.5549000000002
+fcfg_total_avg: 63.57410000000031
+dp_computeTime_avg: 0.004346327543258667
+
+
+case: 40
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 106.11589999999879
+fcfg_total_avg: 121.22469999999707
+dp_computeTime_avg: 0.01681863570213318
+
+
+case: 60
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 157.199899999996
+fcfg_total_avg: 178.96049999999428
+dp_computeTime_avg: 0.037499753952026364
+
+
+case: 80
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 206.96629999999368
+fcfg_total_avg: 236.7275999999906
+dp_computeTime_avg: 0.06617314553260803
+
+
+case: 100
+dp_total_win: 999 (99.9%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 1 (0.1%)
+dp_total_avg: 256.586499999992
+fcfg_total_avg: 291.2617999999979
+dp_computeTime_avg: 0.10305041837692261
+
+
+case: w10
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 257.9231999999924
+fcfg_total_avg: 291.6339999999981
+dp_computeTime_avg: 0.10280480337142944
+
+
+case: w12
+dp_total_win: 999 (99.9%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 1 (0.1%)
+dp_total_avg: 264.44159999999533
+fcfg_total_avg: 308.4714000000013
+dp_computeTime_avg: 0.1028320505619049
+
+
+case: w14
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 272.61849999999674
+fcfg_total_avg: 328.92650000000606
+dp_computeTime_avg: 0.10297204685211182
+
+
+case: w16
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 280.3637999999975
+fcfg_total_avg: 348.06250000001074
+dp_computeTime_avg: 0.10294606804847717
+
+
+case: w18
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 295.70829999999944
+fcfg_total_avg: 370.3724000000152
+dp_computeTime_avg: 0.10293088626861573
+
+
+case: w20
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 315.3005999999998
+fcfg_total_avg: 390.1486000000207
+dp_computeTime_avg: 0.10360296773910523
+
+
+case: w22
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 339.15679999999946
+fcfg_total_avg: 414.326300000025
+dp_computeTime_avg: 0.11129438710212708
+
+
+case: w24
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 365.31760000000054
+fcfg_total_avg: 439.26130000003195
+dp_computeTime_avg: 0.10776300764083863
+
+
+case: w26
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 392.9421000000002
+fcfg_total_avg: 463.967600000037
+dp_computeTime_avg: 0.10627886199951173
+
+
+case: w28
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 421.1834000000003
+fcfg_total_avg: 488.4796000000426
+dp_computeTime_avg: 0.10769132447242737
+
+
+case: w30
+dp_total_win: 1000 (100.0%)
+fcfg_total_win: 0 (0.0%)
+total_tie: 0 (0.0%)
+dp_total_avg: 450.0484000000006
+fcfg_total_avg: 466.39580000003616
+dp_computeTime_avg: 0.10739029049873353
+
+

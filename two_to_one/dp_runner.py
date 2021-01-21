@@ -206,11 +206,11 @@ def run():
                     countdown = W_diff - 1
                 else:
                     if countdown:
-                        traci.trafficlight.setPhase("TL1", 1)
+                        traci.trafficlight.setPhase("gneJ1", 1)
                         countdown -= 1
                     else:
-                        traci.trafficlight.setPhase("TL1", 2)
-                # traci.trafficlight.setPhaseDuration("TL1", schedule_A[0][1]-currentTime)
+                        traci.trafficlight.setPhase("gneJ1", 2)
+                # traci.trafficlight.setPhaseDuration("gneJ1", schedule_A[0][1]-currentTime)
             else:
                 if leaveB:
                     countdown = W_same - 1
@@ -218,11 +218,11 @@ def run():
                     countdown = W_diff - 1
                 else:
                     if countdown:
-                        traci.trafficlight.setPhase("TL1", 1)
+                        traci.trafficlight.setPhase("gneJ1", 1)
                         countdown -= 1
                     else:
-                        traci.trafficlight.setPhase("TL1", 4)
-                # traci.trafficlight.setPhaseDuration("TL1", schedule_B[0][1]-currentTime)
+                        traci.trafficlight.setPhase("gneJ1", 4)
+                # traci.trafficlight.setPhaseDuration("gneJ1", schedule_B[0][1]-currentTime)
         elif len(schedule_A) > 0:
             if leaveA:
                     countdown = W_same - 1
@@ -230,10 +230,10 @@ def run():
                 countdown = W_diff - 1
             else:
                 if countdown:
-                    traci.trafficlight.setPhase("TL1", 1)
+                    traci.trafficlight.setPhase("gneJ1", 1)
                     countdown -= 1
                 else:
-                    traci.trafficlight.setPhase("TL1", 2)
+                    traci.trafficlight.setPhase("gneJ1", 2)
         elif len(schedule_B) > 0:
             if leaveB:
                     countdown = W_same - 1
@@ -241,16 +241,16 @@ def run():
                 countdown = W_diff - 1
             else:
                 if countdown:
-                    traci.trafficlight.setPhase("TL1", 1)
+                    traci.trafficlight.setPhase("gneJ1", 1)
                     countdown -= 1
                 else:
-                    traci.trafficlight.setPhase("TL1", 4)
+                    traci.trafficlight.setPhase("gneJ1", 4)
         else:
             if countdown:
-                traci.trafficlight.setPhase("TL1", 1)
+                traci.trafficlight.setPhase("gneJ1", 1)
                 countdown -= 1
             else:
-                traci.trafficlight.setPhase("TL1", 0)
+                traci.trafficlight.setPhase("gneJ1", 0)
 
         leaveA = False
         leaveB = False

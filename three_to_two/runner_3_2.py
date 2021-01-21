@@ -244,7 +244,7 @@ def run():
     W_same = 1  # the waiting time if two consecutive vehicles are from the same lane
     W_diff = 2  # the waiting time if two consecutive vehicles are from different lanes
     step = 0
-    period = 3
+    period = 4
     junction_x = traci.junction.getPosition("gneJ1")[0]
     schedule_A = []
     schedule_B1 = []
@@ -455,7 +455,7 @@ def run():
                 traci.trafficlight.setPhase("TL1", 1)
                 countdown -= 1
             else:
-                traci.trafficlight.setPhase("TL1", 6)
+                traci.trafficlight.setPhase("TL1", 0)
         leaveA = False
         leaveB1 = False
         leaveB2 = False

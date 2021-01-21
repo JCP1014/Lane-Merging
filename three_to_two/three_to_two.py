@@ -1,15 +1,16 @@
 import numpy as np
 import time
+import sys
 
-def generate_traffic(alpha, beta, gamma, ):
+def generate_traffic(alpha, beta, gamma, pA, pB, pC):
     a = np.array([0])
     b = np.array([0])
     c = np.array([0])
     
     # Randomly generate earliest arrival time
-    pA = 1. / 10 # a vehicle is generated every 10 seconds in average.
-    pB = 1. / 10
-    pC = 1. / 10
+    # pA = 1. / 10 # a vehicle is generated every 10 seconds in average.
+    # pB = 1. / 10
+    # pC = 1. / 10
     alpha_tmp = alpha
     beta_tmp = beta
     gamma_tmp = gamma
@@ -18,37 +19,30 @@ def generate_traffic(alpha, beta, gamma, ):
         if np.random.uniform(0, 1) < pA:
             a = np.append(a, t)
             alpha_tmp -= 1
-        t += 1
+        t += 0.1
     t = 1
     while beta_tmp > 0:
         if np.random.uniform(0, 1) < pB:
             b = np.append(b, t)
             beta_tmp -= 1
-        t += 1
+        t += 0.1
     t = 1
     while gamma_tmp > 0:
         if np.random.uniform(0, 1) < pC:
             c = np.append(c, t)
             gamma_tmp -= 1
-        t += 1
+        t += 0.1
 
     return a, b, c
 
-def print_table(L):
-    for k in range(L.shape[2]):
-        for i in range(L.shape[0]):
-            for j in range(L.shape[1]):
-                print(L[i][j][k], end=' ')
-            print('')
-        print('')
-
-def schedule(a, b, c, W_same, W_diff):
+def dp_schedule(a, b, c, W_same, W_diff):
     alpha = len(a) - 1
     beta = len(b) - 1
     gamma = len(c) - 1
     L1 = np.zeros((alpha+1, beta+1, 2))  # dp table
     L2 = np.zeros((gamma+1, beta+1, 2))  # dp table
 
+    t0 = time.time()
     # Initialize
     L1[0][0][0] = 0
     L1[0][0][1] = 0
@@ -97,6 +91,8 @@ def schedule(a, b, c, W_same, W_diff):
         else:
             beta_2 += 1
         beta_sum += 1
+    computeTime = time.time() - t0
+
     beta_1 -= 1
     beta_2 -= 1
     # print(cnt)
@@ -118,7 +114,7 @@ def schedule(a, b, c, W_same, W_diff):
     # print('Lane 1:', order_stack[0])
     # while len(order_stack) > 0:
     #     print(order_stack.pop())
-    last = order_stack[0][2]
+    T_last = order_stack[0][2]
 
     order_stack = []
     i = gamma
@@ -134,13 +130,20 @@ def schedule(a, b, c, W_same, W_diff):
     # print('Lane 2:', order_stack[0])
     # while len(order_stack) > 0:
     #     print(order_stack.pop())
-    if order_stack[0][2] < last:
-        last = order_stack[0][2]
+    if order_stack[0][2] < T_last:
+        T_last = order_stack[0][2]
 
-    return last
+    return T_last, computeTime
 
+def print_table(L):
+    for k in range(L.shape[2]):
+        for i in range(L.shape[0]):
+            for j in range(L.shape[1]):
+                print(L[i][j][k], end=' ')
+            print('')
+        print('')
 
-def fafg(a, b, c, W_same, W_diff):
+def fafg_schedule(a, b, c, W_same, W_diff):
     a = a[1:]
     b = b[1:]
     c = c[1:]
@@ -153,7 +156,7 @@ def fafg(a, b, c, W_same, W_diff):
     nextB2 = 1
     nextC = 1
     while len(a) > 0 or len(b) > 0 or len(c) > 0:
-        t += 1
+        t += 0.1
         if len(a) > 0 and len(b) > 0 and len(c) > 0:
             # print('a', a[0], 'b', b[0], 'c', c[0])
             if (a[0] <= t and nextA <= t) and ((b[0] <= t and nextB1 <= t) or (b[0] <= t and nextB2 <= t)) and (c[0] <= t and nextC <= t):
@@ -340,27 +343,31 @@ def fafg(a, b, c, W_same, W_diff):
     # print(t)
     return t
     
-
+# arguments: lambda, N, W=, W+
 def main():
-    W_same = 1  # the waiting time if two consecutive vehicles are from the same lane
-    W_diff = 3  # the waiting time if two consecutive vehicles are from different lanes
-    alpha = np.random.randint(1,11)
-    beta = np.random.randint(1,11)
-    gamma = np.random.randint(1,11)
-    alpha = 100
-    beta = 100
-    gamma = 100
+    W_same = float(sys.argv[3]) # the waiting time if two consecutive vehicles are from the same lane
+    W_diff = float(sys.argv[4])  # the waiting time if two consecutive vehicles are from different lanes
+    # alpha = np.random.randint(1,11)
+    # beta = np.random.randint(1,11)
+    # gamma = np.random.randint(1,11)
+    alpha = int(sys.argv[2])
+    beta = int(sys.argv[2])
+    gamma = int(sys.argv[2])
     # print(alpha)
     # print(beta)
     # print(gamma)
-    a, b, c = generate_traffic(alpha, beta, gamma)
+    pA = float(sys.argv[1])
+    pB = float(sys.argv[1])
+    pC = float(sys.argv[1])
+    a, b, c = generate_traffic(alpha, beta, gamma, pA, pB, pC)
     
     # print(a)
     # print(b)
     # print(c)
 
-    print('dp:', schedule(a, b, c, W_same, W_diff))
-    print('fcfg:', fafg(a, b, c, W_same, W_diff))
+    ret = dp_schedule(a, b, c, W_same, W_diff)
+    print('dp:', ret[0], ret[1])
+    print('fcfg:', fafg_schedule(a, b, c, W_same, W_diff))
 
 
 if __name__ == '__main__':
