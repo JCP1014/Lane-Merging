@@ -144,11 +144,11 @@ def compute_entering_time(a, b, c, W_same, W_diff):
     L1[0][0][0] = 0
     L1[0][0][1] = 0
     L1[1][0][0] = a[1].time
-    L1[0][1][1] = b[1].time
+    # L1[0][1][1] = b[1].time
     L2[0][0][0] = 0
     L2[0][0][1] = 0
     L2[1][0][0] = c[1].time
-    L2[0][1][1] = b[1].time
+    # L2[0][1][1] = b[1].time
     cnt = 8
     for i in range(2, alpha+1):
         L1[i][0][0] = max(a[i].time, L1[i-1][0][0]+W_same)
@@ -269,14 +269,6 @@ def run():
             if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0 and traci.lanearea.getLastStepVehicleNumber("dC") > 0:
                 a, b, c = compute_earliest_arrival(junction_x, schedule_A, schedule_B1, schedule_B2, schedule_C)
                 schedule_A, schedule_B1, schedule_B2, schedule_C = compute_entering_time(a, b, c, W_same, W_diff)
-                # index_A = 1
-                # index_B = 1
-                # schedule_A = []
-                # schedule_B = []
-                # while len(order_stack_A) > 0:
-                #     top = order_stack_A.pop()
-                #     schedule_A.append([id_a[index_A], top[2], False])
-                #     index_A += 1
                 schedule_A.sort(key=lambda x: x[1])
                 schedule_B1.sort(key=lambda x: x[1])
                 schedule_B2.sort(key=lambda x: x[1])
@@ -429,12 +421,16 @@ def run():
         
             if gA and gB1 and gB2 and gC:
                 traci.trafficlight.setPhase("TL1", 0)
+                print(0)
             elif gA and gB2:
                 traci.trafficlight.setPhase("TL1", 2)
+                print(2)
             elif gA and gC:
                 traci.trafficlight.setPhase("TL1", 4)
+                print(4)
             elif gB1 and gC:
                 traci.trafficlight.setPhase("TL1", 6)
+                print('first',6)
             else:
                 traci.trafficlight.setPhase("TL1", 1)
 
@@ -444,12 +440,16 @@ def run():
                 countdown -= 1
             else:
                 traci.trafficlight.setPhase("TL1", 2)
+                print(2)
         elif traci.lanearea.getLastStepVehicleNumber("dC") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0:
             if countdown:
                 traci.trafficlight.setPhase("TL1", 1)
                 countdown -= 1
             else:
                 traci.trafficlight.setPhase("TL1", 6)
+                for veh in schedule_B1:
+                    traci.vehicle.updateBestLanes(veh.id)
+                print('second',6)
         else:
             if countdown:
                 traci.trafficlight.setPhase("TL1", 1)

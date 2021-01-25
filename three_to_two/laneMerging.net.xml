@@ -58,25 +58,25 @@
         <!-- 1 -->
         <phase duration="1000" state="rrrr"/>
         <!-- 2 -->
-        <phase duration="1"  state="GrGr"/>
+        <phase duration="1"  state="rGrG"/>
         <phase duration="1000" state="rrrr"/>
         <!-- 4 -->
         <phase duration="1"  state="GrrG"/>
         <phase duration="1000" state="rrrr"/>
         <!-- 6 -->
-        <phase duration="1"  state="rGrG"/>
+        <phase duration="1"  state="GrGr"/>
         <phase duration="1000" state="rrrr"/>
         <!-- 8 -->
-        <phase duration="1"  state="Grrr"/>
+        <phase duration="1"  state="rrrG"/>
         <phase duration="1000" state="rrrr"/>
         <!-- 10 -->
-        <phase duration="1"  state="rGrr"/>
-        <phase duration="1000" state="rrrr"/>
-        <!-- 12 -->
         <phase duration="1"  state="rrGr"/>
         <phase duration="1000" state="rrrr"/>
+        <!-- 12 -->
+        <phase duration="1"  state="rGrr"/>
+        <phase duration="1000" state="rrrr"/>
         <!-- 14 -->
-        <phase duration="1"  state="rrrG"/>
+        <phase duration="1"  state="Grrr"/>
         <phase duration="1000" state="rrrr"/>
     </tlLogic>
 
@@ -91,7 +91,7 @@
 
     <connection from="E1" to="E2" fromLane="0" toLane="0" tl="TL1" linkIndex="0" dir="s" state="o"/>
     <connection from="E1" to="E2" fromLane="1" toLane="0" tl="TL1" linkIndex="1" dir="s" state="O"/>
-    <connection from="E1" to="E2" fromLane="1" toLane="1" tl="TL1" linkIndex="2" dir="l" state="o"/>
+    <connection from="E1" to="E2" fromLane="1" toLane="1" tl="TL1" linkIndex="2" dir="s" state="o"/>
     <connection from="E1" to="E2" fromLane="2" toLane="1" keepClear="0" tl="TL1" linkIndex="3" dir="s" state="O"/>
 
 </net>
