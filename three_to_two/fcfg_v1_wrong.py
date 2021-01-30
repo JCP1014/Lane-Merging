@@ -2,9 +2,6 @@ def fcfg_v1(a, b, c, W_same, W_diff):
     a = a[1:]
     b = b[1:]
     c = c[1:]
-    alpha = len(a)
-    beta = len(b)
-    gamma = len(c)
     t = 0   # time
     nextA = 1
     nextB1 = 1

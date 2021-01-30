@@ -91,10 +91,10 @@ def main():
     # a = np.sort(a)
     # b = np.sort(b)
 
-    alpha = 2
-    beta = 2
-    a = np.array([0, 3, 5])
-    b = np.array([0, 1, 3])
+    alpha = 3
+    beta = 3
+    a = np.array([0, 7.8, 9.5, 11.0])
+    b = np.array([0, 4.2, 7.1, 11.8])
     print(a)
     print(b)
 
