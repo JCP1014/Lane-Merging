@@ -190,16 +190,12 @@ def multiDim_dp(a, b, c, W_same, W_diff):
             
     for i in range(2, alpha+1):
         L_AB[i][1][0] = Sol((max(a[i], L_AB[i-1][1][0].time[0]+W_same), b[1]), 'AB', 'XY')
-    # for j in range(2, beta+1):
-    #     L_AB[1][j][0] = ( a[1], max(b[j], L_AB[1][j-1][0][1]+W_same) )
     for i in range(2, alpha+1):
         L_AC[i][0][1] = Sol((max(a[i], L_AC[i-1][0][1].time[0]+W_same), c[1]), 'AC', 'XY')
     for k in range(2, gamma+1):
         L_AC[1][0][k] = Sol((a[1], max(c[k], L_AC[1][0][k-1].time[1]+W_same)), 'AC', 'XY')
-    # for j in range(2, beta+1):
-    #     L_BC[0][j][1] = ( max(b[j], L_BC[0][j-1][1][0]+W_same), c[1] )
     for k in range(2, gamma+1):
-        L_BC[0][1][k] = Sol((b[1], max(c[k], L_BC[0][1][k-1].time[1]+W_same)), 'BB', 'XY')
+        L_BC[0][1][k] = Sol((b[1], max(c[k], L_BC[0][1][k-1].time[1]+W_same)), 'BC', 'XY')
     if beta >= 4:
         for j in range(4, beta+1):
             L_BB[0][j][0] = min(
@@ -871,9 +867,6 @@ def main():
     # a = [0, 1.0, 2.0, 4.0]
     # b = [0, 3.0, 4.0, 8.0]
     # c = [0, 4.0, 7.0, 8.0]
-    a = [0, 2.0, 3.0]
-    b = [0, 1.0, 2.0]
-    c = [0, 1.0, 4.0]
     print(a)
     print(b)
     print(c)
