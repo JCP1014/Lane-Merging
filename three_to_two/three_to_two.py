@@ -2,8 +2,11 @@ import numpy as np
 import time
 import sys
 import copy
+from collections import namedtuple
+Sol = namedtuple("Sol", "time table lane")
 
-def generate_traffic(alpha, beta, gamma, pA, pB, pC):
+
+def generate_traffic(timeStep, alpha, beta, gamma, pA, pB, pC):
     a = [0]
     b = [0]
     c = [0]
@@ -20,28 +23,30 @@ def generate_traffic(alpha, beta, gamma, pA, pB, pC):
         if np.random.uniform(0, 1) < pA:
             a.append(round(t, 1))
             alpha_tmp -= 1
-        t += 0.1
+        t += timeStep
     t = 1.0
     while beta_tmp > 0:
         if np.random.uniform(0, 1) < pB:
             b.append(round(t, 1))
             beta_tmp -= 1
-        t += 0.1
+        t += timeStep
     t = 1.0
     while gamma_tmp > 0:
         if np.random.uniform(0, 1) < pC:
             c.append(round(t, 1))
             gamma_tmp -= 1
-        t += 0.1
+        t += timeStep
 
     return a, b, c
 
 
-def print_table(L):
-    for k in range(L.shape[2]):
-        for i in range(L.shape[0]):
-            for j in range(L.shape[1]):
-                print(L[i][j][k], end=' ')
+def print_table(L, name):
+    print(name)
+    for k in range(len(L[0][0])):
+        print('k =',k)
+        for i in range(len(L)):
+            for j in range(len(L[0])):
+                print(str(L[i][j][k].time)+'('+L[i][j][k].table+')'+'('+L[i][j][k].lane+')', end=' ')
             print('')
         print('')
 
@@ -144,204 +149,307 @@ def twoDim_dp(a, b, c, W_same, W_diff):
     return T_last, computeTime
         
 
+def get_obj(sol):
+    return max(sol.time)
+
 def multiDim_dp(a, b, c, W_same, W_diff):
     alpha = len(a) - 1
     beta = len(b) - 1
     gamma = len(c) - 1
-    L_AB = np.zeros((alpha+1, beta+1, gamma+1))
-    L_AC = np.zeros((alpha+1, beta+1, gamma+1))
-    L_BB = np.zeros((alpha+1, beta+1, gamma+1))
-    L_BC = np.zeros((alpha+1, beta+1, gamma+1))
+    L_AB = [[[ Sol((float('inf'), float('inf')), '', '') for k in range(gamma+1) ] for j in range(beta+1)] for i in range(alpha+1)]
+    L_AC = [[[ Sol((float('inf'), float('inf')), '', '') for k in range(gamma+1) ] for j in range(beta+1)] for i in range(alpha+1)]
+    L_BB = [[[ Sol((float('inf'), float('inf')), '', '') for k in range(gamma+1) ] for j in range(beta+1)] for i in range(alpha+1)]
+    L_BC = [[[ Sol((float('inf'), float('inf')), '', '') for k in range(gamma+1) ] for j in range(beta+1)] for i in range(alpha+1)]
 
     t0 = time.time()
     # Initialize
-    L_AB[0][0][0] = (0, 0)
-    L_AC[0][0][0] = (0, 0)
-    L_BB[0][0][0] = (0, 0)
-    L_BC[0][0][0] = (0, 0)
+    L_AB[0][0][0] = Sol((0.0, 0.0), '', '')
+    L_AC[0][0][0] = Sol((0.0, 0.0), '', '')
+    L_BB[0][0][0] = Sol((0.0, 0.0), '', '')
+    L_BC[0][0][0] = Sol((0.0, 0.0), '', '')
 
-    L_AB[1][1][0] = (a[1], b[1])
-    L_AC[1][0][1] = (a[1], c[1])
-    L_BC[0][1][1] = (b[1], c[1])
-    if a[1] <= c[1]:
-        L_BB[0][2][0] = (b[1], b[2])
-    else:
-        L_BB[0][2][0] = (b[2], b[1])
-
+    L_AB[1][1][0] = Sol((a[1], b[1]), 'AB', 'XY')
+    L_AC[1][0][1] = Sol((a[1], c[1]), 'AC', 'XY')
+    L_BC[0][1][1] = Sol((b[1], c[1]), 'BC', 'XY')
+    L_BB[0][1][0] = Sol((b[1], b[1]), 'BB', 'XY')
+    if beta >= 2:
+        L_BB[0][2][0] = Sol((b[1], b[2]), 'BB', 'XY') if a[1] <= c[1] else Sol((b[2], b[1]), 'BB', 'YX')
+    if beta >= 3:
+        L_BB[0][3][0] = min(
+                            Sol((b[1], max(b[3], b[2]+W_same)), 'BB', 'YY'),
+                            Sol((max(b[3], b[1]+W_same), b[2]), 'BB', 'YX'),
+                            Sol((max(b[2], b[1]+W_same), b[3]), 'BB', 'XY'),
+                            key=get_obj
+        )
+        # if L_BB[0][3][0][0] > L_BB[0][3][0][1]:
+        #     if a[1] < c[1]:
+        #         L_BB[0][3][0] = L_BB[0][3][0][::-1]
+        # elif L_BB[0][3][0][0] < L_BB[0][3][0][1]:
+        #     if c[1] < a[1]:
+        #         L_BB[0][3][0] = L_BB[0][3][0][::-1]
+            
     for i in range(2, alpha+1):
-        L_AB[i][1][0] = ( max(a[i], L_AB[i-1][1][0]+W_same), b[1] )
-    for j in range(2, beta+1):
-        L_AB[1][j][0] = ( a[1], max(b[j], L_AB[1][j-1][0]+W_same) )
+        L_AB[i][1][0] = Sol((max(a[i], L_AB[i-1][1][0].time[0]+W_same), b[1]), 'AB', 'XY')
+    # for j in range(2, beta+1):
+    #     L_AB[1][j][0] = ( a[1], max(b[j], L_AB[1][j-1][0][1]+W_same) )
     for i in range(2, alpha+1):
-        L_AC[i][0][1] = ( max(a[i], L_AC[i-1][0][1]+W_same), c[1] )
+        L_AC[i][0][1] = Sol((max(a[i], L_AC[i-1][0][1].time[0]+W_same), c[1]), 'AC', 'XY')
     for k in range(2, gamma+1):
-        L_AC[1][0][k] = ( a[1], max(c[k], L_AC[1][0][k-1]+W_same) )
-    for j in range(2, beta+1):
-        L_BC[0][j][1] = ( max(b[j], L_BC[0][j-1][1]+W_same), c[1] )
+        L_AC[1][0][k] = Sol((a[1], max(c[k], L_AC[1][0][k-1].time[1]+W_same)), 'AC', 'XY')
+    # for j in range(2, beta+1):
+    #     L_BC[0][j][1] = ( max(b[j], L_BC[0][j-1][1][0]+W_same), c[1] )
     for k in range(2, gamma+1):
-        L_BC[0][1][k] = ( b[1], max(c[k], L_BC[0][1][k-1]+W_same) )
+        L_BC[0][1][k] = Sol((b[1], max(c[k], L_BC[0][1][k-1].time[1]+W_same)), 'BB', 'XY')
+    if beta >= 4:
+        for j in range(4, beta+1):
+            L_BB[0][j][0] = min(
+                                Sol((max(b[j-1], L_BB[i][j-2][0].time[0]+W_same), max(b[j], L_BB[i][j-2][0].time[1]+W_same)), 'BB', 'XY'),
+                                Sol((max(b[j], L_BB[i][j-2][0].time[0]+W_same), max(b[j-1], L_BB[i][j-2][0].time[1]+W_same)), 'BB', 'YX'),
+                                Sol((max(b[j], max(b[j-1], L_BB[i][j-2][0].time[0]+W_same)+W_same), L_BB[i][j-2][0].time[1]), 'BB', 'XX'),
+                                Sol((L_BB[i][j-2][0].time[0], max(b[j], max(b[j-1], L_BB[i][j-2][0].time[1]+W_same)+W_same)), 'BB', 'YY'),
+                                key=get_obj
+            )
+            # if L_BB[0][j][0][0] > L_BB[0][j][0][1]:
+            #     if a[1] < c[1]:
+            #         L_BB[0][j][0] = L_BB[0][j][0][::-1]
+            # elif L_BB[0][j][0][0] < L_BB[0][j][0][1]:
+            #     if c[1] < a[1]:
+            #         L_BB[0][j][0] = L_BB[0][j][0][::-1]
 
+
+    L_AB[1][0][0] = Sol((a[1], -W_diff), 'AB', 'X0')
+    for i in range(2, alpha+1):
+        L_AB[i][0][0] = Sol((max(a[i], L_AB[i-1][0][0].time[0]+W_same), -W_diff), 'AB', 'X0')
+    L_AC[1][0][0] = Sol((a[1], -W_diff), 'AC', 'X0')
+    for i in range(2, alpha+1):
+        L_AC[i][0][0] = Sol((max(a[i], L_AC[i-1][0][0].time[0]+W_same), -W_diff), 'AC', 'X0')
+    L_AC[0][0][1] = Sol((-W_diff, c[1]), 'AC', '0Y')
+    for k in range(2, gamma+1):
+        L_AC[0][0][k] = Sol((-W_diff, max(c[k], L_AC[0][0][k-1].time[1]+W_same)), 'AC', '0Y')
+    L_BC[0][0][1] = Sol((-W_diff, c[1]), 'BC', '0Y')
+    for k in range(2, gamma+1):
+        L_BC[0][0][k] = Sol((-W_diff, max(c[k], L_BC[0][0][k-1].time[1]+W_same)), 'BC', '0Y')
+    if beta >= 2:
+        for i in range(1, alpha+1):
+            L_BB[i][2][0] = min(
+                                Sol((max(b[1], L_AC[i][0][0].time[0]+W_diff), b[2]), 'AC', 'XY'),
+                                Sol((max(b[2], L_AC[i][0][0].time[0]+W_diff), b[1]), 'AC', 'YX'),
+                                key=get_obj
+            )
+        for k in range(1, gamma+1):
+            L_BB[0][2][k] = min(
+                                Sol((b[1], max(b[2], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY'),
+                                Sol((b[2], max(b[1], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX'),
+                                key=get_obj
+            )
+
+    
+    for i in range(1, alpha+1):
+        for j in range(2, beta+1):
+            L_AB[i][j][0] = min(
+                                Sol((max(a[i], L_AB[i-1][j-1][0].time[0]+W_same), max(b[j], L_AB[i-1][j-1][0].time[1]+W_same)), 'AB', 'XY'),
+                                Sol((max(a[i], max(b[j], L_AB[i-1][j-1][0].time[0]+W_diff)+W_diff), L_AB[i-1][j-1][0].time[1]), 'AB', 'XX'),
+                                Sol((max(a[i], L_BB[i-1][j-1][0].time[0]+W_diff), max(b[j], L_BB[i-1][j-1][0].time[1]+W_same)), 'BB', 'XY'),
+                                Sol((max(a[i], max(b[j], L_BB[i-1][j-1][0].time[0]+W_same)+W_diff), L_BB[i-1][j-1][0].time[1]), 'BB', 'XX'),
+                                key=get_obj
+            )
+    for i in range(2, alpha+1):
+        for k in range(2, gamma+1):
+            L_AC[i][0][k] = Sol((max(a[i], L_AC[i-1][0][k-1].time[0]+W_same), max(c[k], L_AC[i-1][0][k-1].time[1]+W_same)), 'AC', 'XY')
+    for j in range(2, beta+1):
+        for k in range(1, gamma+1):
+            L_BC[0][j][k] = min(
+                                Sol((max(b[j], L_BB[0][j-1][k-1].time[0]+W_same), max(c[k], L_BB[0][j-1][k-1].time[1]+W_diff)), 'BB', 'XY'),
+                                Sol((L_BB[0][j-1][k-1].time[0], max(c[k], max(b[j], L_BB[0][j-1][k-1].time[1]+W_same)+W_diff)), 'BB', 'YY'),
+                                Sol((max(b[j], L_BC[0][j-1][k-1].time[0]+W_same), max(c[k], L_BC[0][j-1][k-1].time[1]+W_same)), 'BC', 'XY'),
+                                Sol((L_BC[0][j-1][k-1].time[0], max(c[k], max(b[j], L_BC[0][j-1][k-1].time[1]+W_diff)+W_diff)), 'BC', 'YY'),
+                                key=get_obj
+            )
+    for i in range(1, alpha+1):
+        for j in range(3, beta+1):
+            L_BB[i][j][0] = min(
+                                Sol((max(b[j-1], L_AB[i][j-2][0].time[0]+W_diff), max(b[j], L_AB[i][j-2][0].time[1]+W_same)), 'AB', 'XY'),
+                                Sol((max(b[j], L_AB[i][j-2][0].time[0]+W_diff), max(b[j-1], L_AB[i][j-2][0].time[1]+W_same)), 'AB', 'YX'),
+                                Sol((max(b[j-1], L_BB[i][j-2][0].time[0]+W_same), max(b[j], L_BB[i][j-2][0].time[1]+W_same)), 'BB', 'XY'),
+                                Sol((max(b[j], L_BB[i][j-2][0].time[0]+W_same), max(b[j-1], L_BB[i][j-2][0].time[1]+W_same)), 'BB', 'YX'),
+                                Sol((max(b[j], max(b[j-1], L_BB[i][j-2][0].time[0]+W_same)+W_same), L_BB[i][j-2][0].time[1]), 'BB', 'XX'), 
+                                Sol((L_BB[i][j-2][0].time[0], max(b[j], max(b[j-1], L_BB[i][j-2][0].time[1]+W_same)+W_same)), 'BB', 'YY'),
+                                key=get_obj
+            )
+
+    L_AB[0][1][0] = Sol((-W_diff, b[1]), 'AB', '0Y')
+    L_BC[0][1][0] = Sol((b[1], -W_diff), 'BC', 'X0')
+
+    # print_table(L_AB, 'L_AB')
+    # print_table(L_AC, 'L_AC')
+    # print_table(L_BB, 'L_BB')
+    # print_table(L_BC, 'L_BC')
+    # print('------------------------')
     
     for i in range(1, alpha+1):
         for j in range(1, beta+1):
             for k in range(1, gamma+1):
                 L_AB[i][j][k] = min(
-                                    (max(a[i], L_AB[i-1][j-1][k][0]+W_same), max(b[j], L_AB[i-1][j-1][k][1]+W_same)),
-                                    (max(a[i], max(b[j], L_AB[i-1][j-1][k][0]+W_diff)+W_diff), L_AB[i-1][j-1][k][1]),
-                                    (max(a[i], L_AC[i-1][j-1][k][0]+W_same), max(b[j], L_AC[i-1][j-1][k][1]+W_diff)),
-                                    (max(a[i], L_BB[i-1][j-1][k][0]+W_diff), max(b[j], L_BB[i-1][j-1][k][1]+W_same)),
-                                    (max(a[i], max(b[j], L_BB[i-1][j-1][k][0]+W_same)+W_diff), L_BB[i-1][j-1][k][1]),
-                                    (max(a[i], L_BC[i-1][j-1][k][0]+W_diff), max(b[j], L_BC[i-1][j-1][k][1]+W_diff)),
-                                    key=max
+                                    Sol((max(a[i], L_AB[i-1][j-1][k].time[0]+W_same), max(b[j], L_AB[i-1][j-1][k].time[1]+W_same)), 'AB', 'XY'),
+                                    Sol((max(a[i], max(b[j], L_AB[i-1][j-1][k].time[0]+W_diff)+W_diff), L_AB[i-1][j-1][k].time[1]), 'AB', 'XX'),
+                                    Sol((max(a[i], L_AC[i-1][j-1][k].time[0]+W_same), max(b[j], L_AC[i-1][j-1][k].time[1]+W_diff)), 'AC', 'XY'),
+                                    Sol((max(a[i], L_BB[i-1][j-1][k].time[0]+W_diff), max(b[j], L_BB[i-1][j-1][k].time[1]+W_same)), 'BB', 'XY'),
+                                    Sol((max(a[i], max(b[j], L_BB[i-1][j-1][k].time[0]+W_same)+W_diff), L_BB[i-1][j-1][k].time[1]), 'BB', 'XX'),
+                                    Sol((max(a[i], L_BC[i-1][j-1][k].time[0]+W_diff), max(b[j], L_BC[i-1][j-1][k].time[1]+W_diff)), 'BC', 'XY'),
+                                    key=get_obj
                 )
                 L_AC[i][j][k] = min(
-                                    (max(a[i], L_AB[i-1][j][k-1][0]+W_same), max(c[k], L_AB[i-1][j][k-1][1]+W_diff)),
-                                    (max(a[i], L_AC[i-1][j][k-1][0]+W_same), max(c[k], L_AC[i-1][j][k-1][1]+W_same)),
-                                    (max(a[i], L_BB[i-1][j][k-1][0]+W_diff), max(c[k], L_BB[i-1][j][k-1][1]+W_diff)),
-                                    (max(a[i], L_BC[i-1][j][k-1][0]+W_diff), max(c[k], L_BC[i-1][j][k-1][1]+W_same)),
-                                    key=max
+                                    Sol((max(a[i], L_AB[i-1][j][k-1].time[0]+W_same), max(c[k], L_AB[i-1][j][k-1].time[1]+W_diff)), 'AB', 'XY'),
+                                    Sol((max(a[i], L_AC[i-1][j][k-1].time[0]+W_same), max(c[k], L_AC[i-1][j][k-1].time[1]+W_same)), 'AC', 'XY'),
+                                    Sol((max(a[i], L_BB[i-1][j][k-1].time[0]+W_diff), max(c[k], L_BB[i-1][j][k-1].time[1]+W_diff)), 'BB', 'XY'),
+                                    Sol((max(a[i], L_BC[i-1][j][k-1].time[0]+W_diff), max(c[k], L_BC[i-1][j][k-1].time[1]+W_same)), 'BC', 'XY'),
+                                    key=get_obj
                 )
                 L_BC[i][j][k] = min(
-                                    (max(b[j], L_AB[i][j-1][k-1][0]+W_diff), max(c[k], L_AB[i][j-1][k-1][1]+W_diff)),
-                                    (max(b[j], L_AC[i][j-1][k-1][0]+W_diff), max(c[k], L_AC[i][j-1][k-1][1]+W_same)),
-                                    (max(b[j], L_BB[i][j-1][k-1][0]+W_same), max(c[k], L_BB[i][j-1][k-1][1]+W_diff)),
-                                    (L_BB[i][j-1][k-1][0], max(c[k], max(b[j], L_BB[i][j-1][k-1][1]+W_same)+W_diff)),
-                                    (max(b[j], L_BC[i][j-1][k-1][0]+W_same), max(c[k], L_BC[i][j-1][k-1][1]+W_same)),
-                                    (L_BC[i][j-1][k-1][0], max(c[k], max(b[j], L_BC[i][j-1][k-1][1]+W_diff)+W_diff)),
-                                    key=max
+                                    Sol((max(b[j], L_AB[i][j-1][k-1].time[0]+W_diff), max(c[k], L_AB[i][j-1][k-1].time[1]+W_diff)), 'AB', 'XY'),
+                                    Sol((max(b[j], L_AC[i][j-1][k-1].time[0]+W_diff), max(c[k], L_AC[i][j-1][k-1].time[1]+W_same)), 'AC', 'XY'),
+                                    Sol((max(b[j], L_BB[i][j-1][k-1].time[0]+W_same), max(c[k], L_BB[i][j-1][k-1].time[1]+W_diff)), 'BB', 'XY'),
+                                    Sol((L_BB[i][j-1][k-1].time[0], max(c[k], max(b[j], L_BB[i][j-1][k-1].time[1]+W_same)+W_diff)), 'BB', 'YY'),
+                                    Sol((max(b[j], L_BC[i][j-1][k-1].time[0]+W_same), max(c[k], L_BC[i][j-1][k-1].time[1]+W_same)), 'BC', 'XY'),
+                                    Sol((L_BC[i][j-1][k-1].time[0], max(c[k], max(b[j], L_BC[i][j-1][k-1].time[1]+W_diff)+W_diff)), 'BC', 'YY'),
+                                    key=get_obj
                 )
                 L_BB[i][j][k] = min(
-                                    (max(b[j-1], L_AB[i][j-2][k][0]+W_diff), max(b[j], L_AB[i][j-2][k][1]+W_same)),
-                                    (max(b[j], L_AB[i][j-2][k][0]+W_diff), max(b[j-1], L_AB[i][j-2][k][1]+W_same)),
-                                    (max(b[j-1], L_AC[i][j-2][k][0]+W_diff), max(b[j], L_AC[i][j-2][k][1]+W_diff)),
-                                    (max(b[j], L_AC[i][j-2][k][0]+W_diff), max(b[j-1], L_AC[i][j-2][k][1]+W_diff)),
-                                    (max(b[j-1], L_BB[i][j-2][k][0]+W_same), max(b[j], L_BB[i][j-2][k][1]+W_same)),
-                                    (max(b[j], L_BB[i][j-2][k][0]+W_same), max(b[j-1], L_BB[i][j-2][k][1]+W_same)),
-                                    (max(b[j], max(b[j-1], L_BB[i][j-2][k][0]+W_same)+W_same), L_BB[i][j-2][k][1]),
-                                    (L_BB[i][j-2][k][0], max(b[j], max(b[j-1], L_BB[i][j-2][k][1]+W_same)+W_same)),
-                                    (max(b[j-1], L_BC[i][j-2][k][0]+W_same), max(b[j], L_BC[i][j-2][k][1]+W_diff)),
-                                    (max(b[j], L_BC[i][j-2][k][0]+W_same), max(b[j-1], L_BC[i][j-2][k][1]+W_diff)),
-                                    (L_BC[i][j-2][k][0], max(b[j], max(b[j-1], L_BC[i][j-2][k][1]+W_same)+W_diff)),
-                                    key=max
+                                    Sol((max(b[j-1], L_AB[i][j-2][k].time[0]+W_diff), max(b[j], L_AB[i][j-2][k].time[1]+W_same)), 'AB', 'XY'),
+                                    Sol((max(b[j], L_AB[i][j-2][k].time[0]+W_diff), max(b[j-1], L_AB[i][j-2][k].time[1]+W_same)), 'AB', 'YX'),
+                                    Sol((max(b[j-1], L_AC[i][j-2][k].time[0]+W_diff), max(b[j], L_AC[i][j-2][k].time[1]+W_diff)), 'AC', 'XY'),
+                                    Sol((max(b[j], L_AC[i][j-2][k].time[0]+W_diff), max(b[j-1], L_AC[i][j-2][k].time[1]+W_diff)), 'AC', 'YX'),
+                                    Sol((max(b[j-1], L_BB[i][j-2][k].time[0]+W_same), max(b[j], L_BB[i][j-2][k].time[1]+W_same)), 'BB', 'XY'),
+                                    Sol((max(b[j], L_BB[i][j-2][k].time[0]+W_same), max(b[j-1], L_BB[i][j-2][k].time[1]+W_same)), 'BB', 'YX'),
+                                    Sol((max(b[j], max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)+W_same), L_BB[i][j-2][k].time[1]), 'BB', 'XX'),
+                                    Sol((L_BB[i][j-2][k].time[0], max(b[j], max(b[j-1], L_BB[i][j-2][k].time[1]+W_same)+W_same)), 'BB', 'YY'),
+                                    Sol((max(b[j-1], L_BC[i][j-2][k].time[0]+W_same), max(b[j], L_BC[i][j-2][k].time[1]+W_diff)), 'BC', 'XY'),
+                                    Sol((max(b[j], L_BC[i][j-2][k].time[0]+W_same), max(b[j-1], L_BC[i][j-2][k].time[1]+W_diff)), 'BC', 'YX'),
+                                    Sol((L_BC[i][j-2][k].time[0], max(b[j], max(b[j-1], L_BC[i][j-2][k].time[1]+W_same)+W_diff)), 'BC', 'YY'),
+                                    key=get_obj
                 )
+    print_table(L_AB, 'L_AB')
+    print_table(L_AC, 'L_AC')
+    print_table(L_BB, 'L_BB')
+    print_table(L_BC, 'L_BC')
 
+    #Choose optimal solution
+    stack_X = []
+    stack_Y = []
+    i = alpha
+    j = beta
+    k = gamma
+    opt = min(L_AB[i][j][k], L_AC[i][j][k], L_BB[i][j][k], L_BC[i][j][k], key=get_obj)
+    table = ''
+    lanes = ''
+    while i>0 or j>0 or k>0:
+        print(opt, table, i, j, k)
+        if opt.time == L_AB[i][j][k].time or table == 'AB':
+            print('AB')
+            table = L_AB[i][j][k].table
+            lanes = L_AB[i][j][k].lane
+            if  lanes == 'XY':
+                stack_X.append(('A', i, L_AB[i][j][k].time[0]))
+                stack_Y.append(('B', j, L_AB[i][j][k].time[1]))
+                i -= 1
+                j -= 1
+            elif lanes == 'XX':
+                stack_X.append(('A', i, L_AB[i][j][k].time[0]))
+                stack_X.append(('B', j, L_AB[i-1][j][k].time[0]))
+                i -= 1
+                j -= 1
+            elif lanes[0] == 'X':
+                stack_X.append(('A', i, L_AB[i][j][k].time[0]))
+                i -= 1
+            elif lanes[1] == 'Y':
+                stack_Y.append(('B', j, L_AB[i][j][k].time[1]))
+                j -= 1
+        elif opt.time == L_AC[i][j][k].time or table == 'AC':
+            print('AC')
+            table = L_AC[i][j][k].table
+            lanes = L_AC[i][j][k].lane
+            if lanes == 'XY':
+                stack_X.append(('A', i, L_AC[i][j][k].time[0]))
+                stack_Y.append(('C', k, L_AC[i][j][k].time[1]))
+                i -= 1
+                k -= 1
+            elif lanes[0] == 'X':
+                stack_X.append(('A', i, L_AC[i][j][k].time[0]))
+                i -= 1
+            elif lanes[1] == 'Y':
+                stack_Y.append(('C', k, L_AC[i][j][k].time[1]))
+                k -= 1
+        elif opt.time == L_BB[i][j][k].time or table == 'BB':
+            print('BB')
+            table = L_BB[i][j][k].table
+            lanes = L_BB[i][j][k].lane
+            if lanes == 'XY':
+                stack_X.append(('B', j-1, L_BB[i][j][k].time[0]))
+                stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+            elif lanes == 'YX':
+                stack_Y.append(('B', j-1, L_BB[i][j][k].time[1]))
+                stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+            elif lanes == 'XX':
+                stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+                stack_X.append(('B', j-1, L_BB[i][j-1][k].time[0]))
+            elif lanes == 'YY':
+                stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+                stack_Y.append(('B', j-1, L_BB[i][j-1][k].time[1]))
+            j -= 2
+        elif opt.time == L_BC[i][j][k].time or table == 'BC':
+            print('BC')
+            table = L_BC[i][j][k].table
+            lanes = L_BC[i][j][k].lane
+            if lanes == 'XY':
+                stack_X.append(('B', j, L_BC[i][j][k].time[0]))
+                stack_Y.append(('C', k, L_BC[i][j][k].time[1]))
+                j -= 1
+                k -= 1
+            elif lanes == 'YY':
+                stack_Y.append(('C', k, L_BC[i][j][k].time[1]))
+                stack_Y.append(('B', j, L_BC[i][j][k-1].time[1]))
+                j -= 1
+                k -= 1
+            elif lanes[0] == 'X':
+                stack_X.append(('B', j, L_BC[i][j][k].time[0]))
+                j -= 1
+            elif lanes[1] == 'Y':
+                stack_Y.append(('C', k, L_BC[i][j][k].time[1]))
+                k -= 1
 
-def fcfg(a, b, c, W_same, W_diff):  # v4
+    computeTime = time.time() - t0
+    T_last = stack_X[0][2] if stack_X[0][2] >= stack_Y[0][2] else stack_Y[0][2]
+    
+    # Delete the redundent element (i==0 or j==0 or k==0)
+    while stack_X[-1][1] <= 0:
+        stack_X.pop()
+    while stack_Y[-1][1] <= 0:
+        stack_Y.pop()
+
+    # Output order
+    print('lane X:')
+    while len(stack_X) > 0:
+        print(stack_X.pop())
+    print('-----------------------')
+    while len(stack_Y) > 0:
+        print(stack_Y.pop())
+
+    return T_last, computeTime
+    
+
+def fcfg(timeStep, a, b, c, W_same, W_diff):  # v5
     a = a[1:]
     b = b[1:]
     c = c[1:]
     t = 0   # time
     B_prevTo = 'Y'
-    X_lastT = 0
-    Y_lastT = 0
+    X_lastT = -W_diff
+    Y_lastT = -W_diff
     X_lastFrom = ''
     Y_lastFrom = ''
-
-    # Decide first vehicles of lane X and lane Y
-    # to initialize X_lastT, Y_lastT, X_lastFrom, and Y_lastFrom
-    minT = min(a[0], b[0], c[0])
-    if a[0] == minT and b[0] == minT and c[0] == minT:
-        if max(a[1], b[1], c[1]) == b[1]:
-            X_lastT = a.pop(0)
-            X_lastFrom = 'A'
-            Y_lastT = c.pop(0)
-            Y_lastFrom = 'C'
-        elif c[1] >= a[1]:
-            X_lastT = a.pop(0)
-            X_lastFrom = 'A'
-            Y_lastT = b.pop(0)
-            Y_lastFrom = 'B'
-        else:
-            X_lastT = b.pop(0)
-            X_lastFrom = 'B'
-            Y_lastT = c.pop(0)
-            Y_lastFrom = 'C'
-    elif a[0] == minT and c[0] == minT:
-        X_lastT = a.pop(0)
-        X_lastFrom = 'A'
-        Y_lastT = c.pop(0)
-        Y_lastFrom = 'C'
-    elif a[0] == minT and b[0] == minT:
-        X_lastT = a.pop(0)
-        X_lastFrom = 'A'
-        Y_lastT = b.pop(0)
-        Y_lastFrom = 'B'
-    elif b[0] == minT and c[0] == minT:
-        X_lastT = b.pop(0)
-        X_lastFrom = 'B'
-        Y_lastT = c.pop(0)
-        Y_lastFrom = 'C'
-    elif a[0] == minT:
-        X_lastT = a.pop(0)
-        X_lastFrom = 'A'
-        if b[0] == c[0]:
-            if b[1] >= c[1]:
-                Y_lastT = c.pop(0)
-                Y_lastFrom = 'C'
-            else:
-                Y_lastT = b.pop(0)
-                Y_lastFrom = 'B'
-        elif c[0] < b[0]:
-            Y_lastT = c.pop(0)
-            Y_lastFrom = 'C'
-        else:
-            Y_lastT = b.pop(0)
-            Y_lastFrom = 'B'
-    elif c[0] == minT:
-        Y_lastT = c.pop(0)
-        Y_lastFrom = 'C'
-        if b[0] == a[0]:
-            if b[1] >= a[1]:
-                X_lastT = a.pop(0)
-                X_lastFrom = 'A'
-            else:
-                X_lastT = b.pop(0)
-                X_lastFrom = 'B'
-        elif a[0] < b[0]:
-            X_lastT = a.pop(0)
-            X_lastFrom = 'A'
-        else:
-            X_lastT = b.pop(0)
-            X_lastFrom = 'B'
-    elif b[0] == minT:
-        if a[0] >= c[0]:
-            X_lastT = b.pop(0)
-            X_lastFrom = 'B'
-            if b[0] == c[0]:
-                if b[1] >= c[1]:
-                    Y_lastT = c.pop(0)
-                    Y_lastFrom = 'C'
-                else:
-                    Y_lastT = b.pop(0)
-                    Y_lastFrom = 'B'
-            elif c[0] < b[0]:
-                Y_lastT = c.pop(0)
-                Y_lastFrom = 'C'
-            else:
-                Y_lastT = b.pop(0)
-                Y_lastFrom = 'B'
-        else:
-            Y_lastT = b.pop(0)
-            Y_lastFrom = 'B'
-            if b[0] == a[0]:
-                if b[1] >= a[1]:
-                    X_lastT = a.pop(0)
-                    X_lastFrom = 'A'
-                else:
-                    X_lastT = b.pop(0)
-                    X_lastFrom = 'B'
-            elif a[0] < b[0]:
-                X_lastT = a.pop(0)
-                X_lastFrom = 'A'
-            else:
-                X_lastT = b.pop(0)
-                X_lastFrom = 'B'
-    print('X:', X_lastFrom, X_lastT)
-    print('Y:', Y_lastFrom, Y_lastT)
-
         
     while len(a) > 0 or len(b) > 0 or len(c) > 0:
-        t = round(t+0.1, 2)
+        t = round(t+timeStep, 2)
         if len(a) > 0 and len(b) > 0 and len(c) > 0:
             if a[0] == t and b[0] == t and c[0] == t:
                 if len(a) > 1 and len(b) > 1 and len(c) > 1: 
@@ -516,14 +624,14 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                         else:
                             Y_lastT = max(b.pop(0), Y_lastT+W_diff)
                         Y_lastFrom = 'B'
-                        print('Y:', Y_lastFrom, Y_lastT)   
+                        # print('Y:', Y_lastFrom, Y_lastT)   
                     else:
                         if X_lastFrom == 'B':
                             X_lastT = max(b.pop(0), X_lastT+W_same)
                         else:
                             X_lastT = max(b.pop(0), X_lastT+W_diff)
                         X_lastFrom = 'B'
-                        print('X:', X_lastFrom, X_lastT)
+                        # print('X:', X_lastFrom, X_lastT)
                 else:
                     if X_lastT <= t and Y_lastT <= t:
                         if c[0] > a[0]:
@@ -532,14 +640,14 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                             else:
                                 Y_lastT = max(b.pop(0), Y_lastT+W_diff)
                             Y_lastFrom = 'B'
-                            print('Y:', Y_lastFrom, Y_lastT)   
+                            # print('Y:', Y_lastFrom, Y_lastT)   
                         else:
                             if X_lastFrom == 'B':
                                 X_lastT = max(b.pop(0), X_lastT+W_same)
                             else:
                                 X_lastT = max(b.pop(0), X_lastT+W_diff)
                             X_lastFrom = 'B'
-                            print('X:', X_lastFrom, X_lastT)
+                            # print('X:', X_lastFrom, X_lastT)
                     else:
                         if X_lastT < Y_lastT:
                             if X_lastFrom == 'B':
@@ -560,28 +668,28 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                                 else:
                                     Y_lastT = max(b.pop(0), Y_lastT+W_diff)
                                 Y_lastFrom = 'B'
-                                print('Y:', Y_lastFrom, Y_lastT)   
+                                # print('Y:', Y_lastFrom, Y_lastT)   
                             else:
                                 if X_lastFrom == 'B':
                                     X_lastT = max(b.pop(0), X_lastT+W_same)
                                 else:
                                     X_lastT = max(b.pop(0), X_lastT+W_diff)
                                 X_lastFrom = 'B'
-                                print('X:', X_lastFrom, X_lastT)
+                                # print('X:', X_lastFrom, X_lastT)
             elif a[0] == t:
                 if X_lastFrom == 'A':
                     X_lastT = max(a.pop(0), X_lastT+W_same)
                 else:
                     X_lastT = max(a.pop(0), X_lastT+W_diff)
                 X_lastFrom = 'A'
-                print('X:', X_lastFrom, X_lastT)
+                # print('X:', X_lastFrom, X_lastT)
             elif c[0] == t:
                 if Y_lastFrom == 'C':
                     Y_lastT = max(c.pop(0), Y_lastT+W_same)
                 else:
                     Y_lastT = max(c.pop(0), Y_lastT+W_diff)
                 Y_lastFrom = 'C'
-                print('Y:', Y_lastFrom, Y_lastT)  
+                # print('Y:', Y_lastFrom, Y_lastT)  
         elif len(a) > 0 and len(c) > 0: 
             if a[0] == t and c[0] == t:
                 if X_lastFrom == 'A':
@@ -600,14 +708,14 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                 else:
                     X_lastT = max(a.pop(0), X_lastT+W_diff)
                 X_lastFrom = 'A'
-                print('X:', X_lastFrom, X_lastT)  
+                # print('X:', X_lastFrom, X_lastT)  
             elif c[0] == t:
                 if Y_lastFrom == 'C':
                     Y_lastT = max(c.pop(0), Y_lastT+W_same)
                 else:
                     Y_lastT = max(c.pop(0), Y_lastT+W_diff)
                 Y_lastFrom = 'C' 
-                print('Y:', Y_lastFrom, Y_lastT)
+                # print('Y:', Y_lastFrom, Y_lastT)
         elif len(a) > 0 and len(b) > 0:
             if a[0] == t and b[0] == t:
                 if X_lastFrom == 'A':
@@ -626,7 +734,7 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                 else:
                     X_lastT = max(a.pop(0), X_lastT+W_diff)
                 X_lastFrom = 'A'
-                print('X:', X_lastFrom, X_lastT)
+                # print('X:', X_lastFrom, X_lastT)
             elif b[0] == t:
                 if X_lastT <= t and Y_lastT <= t:
                     if Y_lastFrom == 'B':
@@ -634,7 +742,7 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                     else:
                         Y_lastT = max(b.pop(0), Y_lastT+W_diff)
                     Y_lastFrom = 'B'
-                    print('Y:', Y_lastFrom, Y_lastT)
+                    # print('Y:', Y_lastFrom, Y_lastT)
                 else:
                     if X_lastT < Y_lastT:
                         if X_lastFrom == 'B':
@@ -642,21 +750,21 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                         else:
                             X_lastT = max(b.pop(0), X_lastT+W_diff)
                         X_lastFrom = 'B'
-                        print('X:', X_lastFrom, X_lastT)
+                        # print('X:', X_lastFrom, X_lastT)
                     elif Y_lastT < X_lastT:
                         if Y_lastFrom == 'B':
                             Y_lastT = max(b.pop(0), Y_lastT+W_same)
                         else:
                             Y_lastT = max(b.pop(0), Y_lastT+W_diff)
                         Y_lastFrom = 'B'
-                        print('Y:', Y_lastFrom, Y_lastT)
+                        # print('Y:', Y_lastFrom, Y_lastT)
                     else:
                         if Y_lastFrom == 'B':
                             Y_lastT = max(b.pop(0), Y_lastT+W_same)
                         else:
                             Y_lastT = max(b.pop(0), Y_lastT+W_diff)
                         Y_lastFrom = 'B'
-                        print('Y:', Y_lastFrom, Y_lastT)
+                        # print('Y:', Y_lastFrom, Y_lastT)
         elif len(b) > 0 and len(c) > 0:
             if b[0] == t and c[0] == t:
                 if X_lastFrom == 'B':
@@ -675,7 +783,7 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                 else:
                     Y_lastT = max(c.pop(0), Y_lastT+W_diff)
                 Y_lastFrom = 'C'
-                print('Y:', Y_lastFrom, Y_lastT)
+                # print('Y:', Y_lastFrom, Y_lastT)
             elif b[0] == t:
                 if X_lastT <= t and Y_lastT <= t:
                     if X_lastFrom == 'B':
@@ -683,7 +791,7 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                     else:
                         X_lastT = max(b.pop(0), X_lastT+W_diff)
                     X_lastFrom = 'B'
-                    print('X:', X_lastFrom, X_lastT)
+                    # print('X:', X_lastFrom, X_lastT)
                 else:
                     if X_lastT < Y_lastT:
                         if X_lastFrom == 'B':
@@ -691,35 +799,35 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                         else:
                             X_lastT = max(b.pop(0), X_lastT+W_diff)
                         X_lastFrom = 'B'
-                        print('X:', X_lastFrom, X_lastT)
+                        # print('X:', X_lastFrom, X_lastT)
                     elif Y_lastT < X_lastT:
                         if Y_lastFrom == 'B':
                             Y_lastT = max(b.pop(0), Y_lastT+W_same)
                         else:
                             Y_lastT = max(b.pop(0), Y_lastT+W_diff)
                         Y_lastFrom = 'B'
-                        print('Y:', Y_lastFrom, Y_lastT)
+                        # print('Y:', Y_lastFrom, Y_lastT)
                     else:
                         if X_lastFrom == 'B':
                             X_lastT = max(b.pop(0), X_lastT+W_same)
                         else:
                             X_lastT = max(b.pop(0), X_lastT+W_diff)
                         X_lastFrom = 'B'
-                        print('X:', X_lastFrom, X_lastT)
+                        # print('X:', X_lastFrom, X_lastT)
         elif len(a) > 0:
             if X_lastFrom == 'A':
                 X_lastT = max(a.pop(0), X_lastT+W_same)
             else:
                 X_lastT = max(a.pop(0), X_lastT+W_diff)
             X_lastFrom = 'A'
-            print('X:', X_lastFrom, X_lastT)
+            # print('X:', X_lastFrom, X_lastT)
         elif len(c) > 0:
             if Y_lastFrom == 'C':
                 Y_lastT = max(c.pop(0), Y_lastT+W_same)
             else:
                 Y_lastT = max(c.pop(0), Y_lastT+W_diff)
             Y_lastFrom = 'C'
-            print('Y:', Y_lastFrom, Y_lastT)
+            # print('Y:', Y_lastFrom, Y_lastT)
         elif len(b) > 0:
             if B_prevTo == 'Y':
                 if X_lastFrom == 'B':
@@ -727,7 +835,7 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                 else:
                     X_lastT = max(b.pop(0), X_lastT+W_diff)
                 X_lastFrom = 'B'
-                print('X:', X_lastFrom, X_lastT)
+                # print('X:', X_lastFrom, X_lastT)
                 B_prevTo = 'X'
             else:
                 if Y_lastFrom == 'B':
@@ -735,7 +843,7 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
                 else:
                     Y_lastT = max(b.pop(0), Y_lastT+W_diff)
                 Y_lastFrom = 'B'
-                print('Y:', Y_lastFrom, Y_lastT)
+                # print('Y:', Y_lastFrom, Y_lastT)
                 B_prevTo = 'Y'
 
     return max(X_lastT, Y_lastT)
@@ -743,25 +851,38 @@ def fcfg(a, b, c, W_same, W_diff):  # v4
 
 # Command line arguments: lambda, N, W=, W+
 def main():
-    W_same = float(sys.argv[3]) # the waiting time if two consecutive vehicles are from the same lane
-    W_diff = float(sys.argv[4])  # the waiting time if two consecutive vehicles are from different lanes
-    alpha = int(sys.argv[2])
-    beta = int(sys.argv[2])
-    gamma = int(sys.argv[2])
-    pA = float(sys.argv[1])
-    pB = float(sys.argv[1])
-    pC = float(sys.argv[1])
-    a, b, c = generate_traffic(alpha, beta, gamma, pA, pB, pC)
-    a = [0, 7.9, 10.3, 12.4]
-    b = [0, 4.2, 7.1, 11.8]
-    c = [0, 7.8, 9.5, 11.0]
+    timeStep = 1
+    try:
+        W_same = float(sys.argv[3]) # the waiting time if two consecutive vehicles are from the same lane
+        W_diff = float(sys.argv[4])  # the waiting time if two consecutive vehicles are from different lanes
+        alpha = int(sys.argv[2])
+        beta = int(sys.argv[2])
+        gamma = int(sys.argv[2])
+        pA = float(sys.argv[1])
+        pB = float(sys.argv[1])
+        pC = float(sys.argv[1])
+    except:
+        print('Arguments: lambda, N, W=, W+')
+        return
+    a, b, c = generate_traffic(timeStep, alpha, beta, gamma, pA, pB, pC)
+    # a = [0, 7.9, 10.3, 12.4]
+    # b = [0, 4.2, 7.1, 11.8]
+    # c = [0, 7.8, 9.5, 11.0]
+    # a = [0, 1.0, 2.0, 4.0]
+    # b = [0, 3.0, 4.0, 8.0]
+    # c = [0, 4.0, 7.0, 8.0]
+    a = [0, 2.0, 3.0]
+    b = [0, 1.0, 2.0]
+    c = [0, 1.0, 4.0]
     print(a)
     print(b)
     print(c)
 
-    ret = twoDim_dp(copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff)
+    # ret = twoDim_dp(copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff)
+    # print('dp:', ret[0], ret[1])
+    ret = multiDim_dp(copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff)
     print('dp:', ret[0], ret[1])
-    print('fcfg:', fcfg(copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff))
+    print('fcfg:', fcfg(timeStep, copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff))
 
 
 
