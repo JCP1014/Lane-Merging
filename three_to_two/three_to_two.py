@@ -329,18 +329,94 @@ def multiDim_dp(a, b, c, W_same, W_diff):
     print_table(L_BB, 'L_BB')
     print_table(L_BC, 'L_BC')
 
-    #Choose optimal solution
+    # Push order to stack
     stack_X = []
     stack_Y = []
     i = alpha
     j = beta
     k = gamma
+    # Choose the optimal solution and the table to start backtracking
     opt = min(L_AB[i][j][k], L_AC[i][j][k], L_BB[i][j][k], L_BC[i][j][k], key=get_obj)
     table = ''
     lanes = ''
+    print(opt)
+    if  opt.time == L_AB[i][j][k].time:
+        print('AB')
+        table = L_AB[i][j][k].table
+        lanes = L_AB[i][j][k].lane
+        if  lanes == 'XY':
+            stack_X.append(('A', i, L_AB[i][j][k].time[0]))
+            stack_Y.append(('B', j, L_AB[i][j][k].time[1]))
+            i -= 1
+            j -= 1
+        elif lanes == 'XX':
+            stack_X.append(('A', i, L_AB[i][j][k].time[0]))
+            stack_X.append(('B', j, L_AB[i-1][j][k].time[0]))
+            i -= 1
+            j -= 1
+        elif lanes[0] == 'X':
+            stack_X.append(('A', i, L_AB[i][j][k].time[0]))
+            i -= 1
+        elif lanes[1] == 'Y':
+            stack_Y.append(('B', j, L_AB[i][j][k].time[1]))
+            j -= 1
+    elif opt.time == L_AC[i][j][k].time:
+        print('AC')
+        table = L_AC[i][j][k].table
+        lanes = L_AC[i][j][k].lane
+        if lanes == 'XY':
+            stack_X.append(('A', i, L_AC[i][j][k].time[0]))
+            stack_Y.append(('C', k, L_AC[i][j][k].time[1]))
+            i -= 1
+            k -= 1
+        elif lanes[0] == 'X':
+            stack_X.append(('A', i, L_AC[i][j][k].time[0]))
+            i -= 1
+        elif lanes[1] == 'Y':
+            stack_Y.append(('C', k, L_AC[i][j][k].time[1]))
+            k -= 1
+    elif opt.time == L_BB[i][j][k].time:
+        print('BB')
+        table = L_BB[i][j][k].table
+        lanes = L_BB[i][j][k].lane
+        if lanes == 'XY':
+            stack_X.append(('B', j-1, L_BB[i][j][k].time[0]))
+            stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+        elif lanes == 'YX':
+            stack_Y.append(('B', j-1, L_BB[i][j][k].time[1]))
+            stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+        elif lanes == 'XX':
+            stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+            stack_X.append(('B', j-1, L_BB[i][j-1][k].time[0]))
+        elif lanes == 'YY':
+            stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+            stack_Y.append(('B', j-1, L_BB[i][j-1][k].time[1]))
+        j -= 2
+    elif opt.time == L_BC[i][j][k].time:
+        print('BC')
+        table = L_BC[i][j][k].table
+        lanes = L_BC[i][j][k].lane
+        if lanes == 'XY':
+            stack_X.append(('B', j, L_BC[i][j][k].time[0]))
+            stack_Y.append(('C', k, L_BC[i][j][k].time[1]))
+            j -= 1
+            k -= 1
+        elif lanes == 'YY':
+            stack_Y.append(('C', k, L_BC[i][j][k].time[1]))
+            stack_Y.append(('B', j, L_BC[i][j][k-1].time[1]))
+            j -= 1
+            k -= 1
+        elif lanes[0] == 'X':
+            stack_X.append(('B', j, L_BC[i][j][k].time[0]))
+            j -= 1
+        elif lanes[1] == 'Y':
+            stack_Y.append(('C', k, L_BC[i][j][k].time[1]))
+            k -= 1
+
+    # Backtracking
     while i>0 or j>0 or k>0:
-        print(opt, table, i, j, k)
-        if opt.time == L_AB[i][j][k].time or table == 'AB':
+        print(table, i, j, k)
+        if  table == 'AB':
             print('AB')
             table = L_AB[i][j][k].table
             lanes = L_AB[i][j][k].lane
@@ -360,7 +436,7 @@ def multiDim_dp(a, b, c, W_same, W_diff):
             elif lanes[1] == 'Y':
                 stack_Y.append(('B', j, L_AB[i][j][k].time[1]))
                 j -= 1
-        elif opt.time == L_AC[i][j][k].time or table == 'AC':
+        elif table == 'AC':
             print('AC')
             table = L_AC[i][j][k].table
             lanes = L_AC[i][j][k].lane
@@ -375,7 +451,7 @@ def multiDim_dp(a, b, c, W_same, W_diff):
             elif lanes[1] == 'Y':
                 stack_Y.append(('C', k, L_AC[i][j][k].time[1]))
                 k -= 1
-        elif opt.time == L_BB[i][j][k].time or table == 'BB':
+        elif  table == 'BB':
             print('BB')
             table = L_BB[i][j][k].table
             lanes = L_BB[i][j][k].lane
@@ -392,7 +468,7 @@ def multiDim_dp(a, b, c, W_same, W_diff):
                 stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
                 stack_Y.append(('B', j-1, L_BB[i][j-1][k].time[1]))
             j -= 2
-        elif opt.time == L_BC[i][j][k].time or table == 'BC':
+        elif  table == 'BC':
             print('BC')
             table = L_BC[i][j][k].table
             lanes = L_BC[i][j][k].lane
@@ -861,12 +937,6 @@ def main():
         print('Arguments: lambda, N, W=, W+')
         return
     a, b, c = generate_traffic(timeStep, alpha, beta, gamma, pA, pB, pC)
-    # a = [0, 7.9, 10.3, 12.4]
-    # b = [0, 4.2, 7.1, 11.8]
-    # c = [0, 7.8, 9.5, 11.0]
-    # a = [0, 1.0, 2.0, 4.0]
-    # b = [0, 3.0, 4.0, 8.0]
-    # c = [0, 4.0, 7.0, 8.0]
     print(a)
     print(b)
     print(c)
