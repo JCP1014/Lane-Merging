@@ -7,13 +7,12 @@ from collections import namedtuple
 
 # The tuple of solution stored in each "square" in the table
 Sol = namedtuple("Sol", "time table lane")  # Each solution has three fields.
-                                            # "time" means the scheduled entering time of the last vehicle
-                                            # "table" means which table the optimal solution is from
-                                            # "lane" means which lane the last vehicle go to
+                                            # time means the scheduled entering time of the last vehicle
+                                            # table means which table the optimal solution is from
+                                            # lane means which lane the last vehicle go to
 
-Lane = namedtuple("Lane", "traffic num")    # Each lane has two fields
-                                            # "traffic" field means the list of earliest arrival time of vehicles in this lane 
-                                            # "num" field means the expected number of vehicles to generate in this lane
+Lane = namedtuple("Lane", "traffic num num_tmp")
+
 # (Version 1)
 # Randomly generate earliest arrival time
 def generate_traffic_v1(timeStep, alpha, beta, gamma, pA, pB, pC):
@@ -82,9 +81,26 @@ def generate_traffic_v2(timeStep, alpha, beta, gamma, p):
             del lanes[laneIndex]
             laneNum -= 1
         carIndex += 1
-    return a, b, c
+        
 
+def split_traffic(a, b, c, p):
+    gap = (1. / p) * 2
+    a_cut = []
+    b_cut = []
+    c_cut = []
 
+    for i in range(len(a)):
+        if a[i+1] - a[i] > gap:
+            a_cut.append((a[i], a[i+1]))
+    for i in range(len(b)):
+        if b[i+1] - b[i] > gap:
+            b_cut.append((b[i], b[i+1]))
+    for i in range(len(c)):
+        if c[i+1] - c[i] > gap:
+            c_cut.append((c[i], c[i+1]))
+    print('a_cut', a_cut)
+    print('b_cut', b_cut)
+    print('c_cut', c_cut)
 # Print the content of dp table
 def print_table(L, name):
     print(name)
@@ -983,7 +999,6 @@ def main():
         print('Arguments: lambda, N, W=, W+')
         return
     a, b, c = generate_traffic_v1(timeStep, alpha, beta, gamma, pA, pB, pC)
-    # a, b, c = generate_traffic_v2(timeStep, alpha, beta, gamma, p)
     print(a)
     print(b)
     print(c)
