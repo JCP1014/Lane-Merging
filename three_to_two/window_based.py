@@ -2,16 +2,60 @@ import numpy as np
 import sys
 import time
 import random
+import copy
 from collections import namedtuple
 Sol = namedtuple("Sol", "time table lane")
 Lane = namedtuple("Lane", "traffic num num_tmp")
 
-a_all = [0]
-b_all = [0]
-c_all = [0]
+def print_table(L, name):
+    print(name)
+    for k in range(len(L[0][0])):
+        print('k =',k)
+        for i in range(len(L)):
+            for j in range(len(L[0])):
+                print(str(L[i][j][k].time)+'('+L[i][j][k].table+')'+'('+L[i][j][k].lane+')', end=' ')
+            print('')
+        print('')
+
+def generate_traffic_v1(timeStep, alpha, beta, gamma, pA, pB, pC):
+    a = [0] # List of earliest arrival time of vehicles in lane A
+    b = [0] # List of earliest arrival time of vehicles in lane B
+    c = [0] # List of earliest arrival time of vehicles in lane C
+    
+    alpha_tmp = alpha   # temp variable for countdown
+    beta_tmp = beta
+    gamma_tmp = gamma
+
+    # Randomly generate earliest arrival time of vehicles in lane A
+    t = 1.0 # time(sec)
+    while alpha_tmp > 0:
+        if np.random.uniform(0, 1) < pA:
+            a.append(round(t, 1))
+            alpha_tmp -= 1
+        t += timeStep
+    # Randomly generate earliest arrival time of vehicles in lane B
+    t = 1.0
+    while beta_tmp > 0:
+        if np.random.uniform(0, 1) < pB:
+            b.append(round(t, 1))
+            beta_tmp -= 1
+        t += timeStep
+    # Randomly generate earliest arrival time of vehicles in lane C
+    t = 1.0
+    while gamma_tmp > 0:
+        if np.random.uniform(0, 1) < pC:
+            c.append(round(t, 1))
+            gamma_tmp -= 1
+        t += timeStep
+
+    return a, b, c
+
 
 # v2 
-def generate_traffic(timeStep, alpha, beta, gamma, p):    
+def generate_traffic_v2(timeStep, alpha, beta, gamma, p):
+    a_all = [0]
+    b_all = [0]
+    c_all = [0]    
     # Randomly generate earliest arrival time
     # p = 1. / 10 # a vehicle is generated every 10 seconds in average.
     alpha_tmp = alpha
@@ -26,7 +70,6 @@ def generate_traffic(timeStep, alpha, beta, gamma, p):
             num -= 1
         t += timeStep
 
-    # print(a_all)
     A = Lane(a_all, alpha, alpha_tmp)
     B = Lane(b_all, beta, beta_tmp)
     C = Lane(c_all, gamma, gamma_tmp)
@@ -46,6 +89,8 @@ def generate_traffic(timeStep, alpha, beta, gamma, p):
     print(a_all)
     print(b_all)
     print(c_all)
+    return a_all, b_all, c_all
+
 
 def split_traffic(a, b, c, p):
     gap = (1. / p) * 2
@@ -66,64 +111,192 @@ def split_traffic(a, b, c, p):
     print('b_cut', b_cut)
     print('c_cut', c_cut)
 
+
+def get_window_by_time(a_all, b_all, c_all, cutTime, keep):
+    a = [0]
+    b = [0]
+    c = [0]
+    keepTime = cutTime - keep
+    keepNum = 0
+    for i in range(1, len(a_all)):
+        if a_all[i] <= cutTime:
+            a.append(a_all[i])
+            if a_all[i] >= keepTime:
+                keepNum += 1
+        else:
+            del a_all[1:(i-keepNum)]
+    keepNum = 0
+    for i in range(1, len(b_all)):
+        if b_all[i] <= cutTime:
+            b.append(b_all[i])
+            if b_all[i] >= keepTime:
+                keepNum += 1
+        else:
+            del b_all[1:(i-keepNum)]
+    keepNum = 0
+    for i in range(1, len(c_all)):
+        if c_all[i] <= cutTime:
+            c.append(c_all[i])
+            if c_all[i] >= keepTime:
+                keepNum += 1
+        else:
+            del c_all[1:(i-keepNum)]
+    return a, b, c, a_all, b_all, c_all
+
+
+def get_window_by_num(a_all, b_all, c_all, carNum, keep):
+    a  = a_all[:(carNum+1)]
+    b = b_all[:(carNum+1)]
+    c  = c_all[:(carNum+1)]
+    del a_all[1:(carNum+1-keep)]
+    del b_all[1:(carNum+1-keep)]
+    del c_all[1:(carNum+1-keep)]
+    return a, b, c, a_all, b_all, c_all
+
+
 def get_obj(sol):
     return max(sol.time)
 
-def multiDim_dp(W_same, W_diff):
-    # Set the current window
-    windowSize = 3
-    a  = a_all[:(windowSize+1)]
-    b = b_all[:(windowSize+1)]
-    c  = c_all[:(windowSize+1)]
-    del a_all[1:(windowSize+1)]
-    del b_all[1:(windowSize+1)]
-    del c_all[1:(windowSize+1)]
-
-    alpha = windowSize
-    beta = windowSize
-    gamma = windowSize
+def window_multiDim_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
+    t0 = time.time()
+    alpha = len(a) - 1
+    beta = len(b) - 1 
+    gamma = len(c) - 1
     L_AB = [[[ Sol((float('inf'), float('inf')), '', '') for k in range(gamma+1) ] for j in range(beta+1)] for i in range(alpha+1)]
     L_AC = [[[ Sol((float('inf'), float('inf')), '', '') for k in range(gamma+1) ] for j in range(beta+1)] for i in range(alpha+1)]
     L_BB = [[[ Sol((float('inf'), float('inf')), '', '') for k in range(gamma+1) ] for j in range(beta+1)] for i in range(alpha+1)]
     L_BC = [[[ Sol((float('inf'), float('inf')), '', '') for k in range(gamma+1) ] for j in range(beta+1)] for i in range(alpha+1)]
 
-    t0 = time.time()
     # Initialize
-    L_AB[0][0][0] = Sol((0.0, 0.0), '', '')
-    L_AC[0][0][0] = Sol((0.0, 0.0), '', '')
-    L_BB[0][0][0] = Sol((0.0, 0.0), '', '')
-    L_BC[0][0][0] = Sol((0.0, 0.0), '', '')
+    L_AB[0][0][0] = Sol((last_X[2], last_Y[2]), '', '')
+    L_AC[0][0][0] = Sol((last_X[2], last_Y[2]), '', '')
+    L_BB[0][0][0] = Sol((last_X[2], last_Y[2]), '', '')
+    L_BC[0][0][0] = Sol((last_X[2], last_Y[2]), '', '')
 
-    L_AB[1][1][0] = Sol((a[1], b[1]), 'AB', 'XY')
-    L_AC[1][0][1] = Sol((a[1], c[1]), 'AC', 'XY')
-    L_BC[0][1][1] = Sol((b[1], c[1]), 'BC', 'XY')
-    L_BB[0][1][0] = Sol((b[1], b[1]), 'BB', 'XY')
-    if beta >= 2:
-        L_BB[0][2][0] = Sol((b[1], b[2]), 'BB', 'XY') if a[1] <= c[1] else Sol((b[2], b[1]), 'BB', 'YX')
-    if beta >= 3:
-        L_BB[0][3][0] = min(
-                            Sol((b[1], max(b[3], b[2]+W_same)), 'BB', 'YY'),
-                            Sol((max(b[3], b[1]+W_same), b[2]), 'BB', 'YX'),
-                            Sol((max(b[2], b[1]+W_same), b[3]), 'BB', 'XY'),
+    last_XY = last_X[0] + last_Y[0]
+    T_X = last_X[2]
+    T_Y = last_Y[2]
+    print('last_XY', last_XY, T_X, T_Y)
+    if last_XY == 'AB':
+        L_AB[1][1][0] = Sol((max(a[1], T_X+W_same), max(b[1], T_Y+W_same)), 'AB', 'XY')
+        L_AC[1][0][1] = Sol((max(a[1], T_X+W_same), max(c[1], T_Y+W_diff)), 'AC', 'XY')
+        L_BC[0][1][1] = Sol((max(b[1], T_X+W_diff), max(c[1], T_Y+W_diff)), 'BC', 'XY')
+        L_BB[0][1][0] = min(
+                            Sol((max(b[1], T_X+W_diff), T_Y), 'BB', 'X0'),
+                            Sol((T_X, max(b[1], T_Y+W_same)), 'BB', '0Y'),
                             key=get_obj
         )
-        # if L_BB[0][3][0][0] > L_BB[0][3][0][1]:
-        #     if a[1] < c[1]:
-        #         L_BB[0][3][0] = L_BB[0][3][0][::-1]
-        # elif L_BB[0][3][0][0] < L_BB[0][3][0][1]:
-        #     if c[1] < a[1]:
-        #         L_BB[0][3][0] = L_BB[0][3][0][::-1]
-            
+        if beta >= 2:
+                L_BB[0][2][0] = min(
+                                    Sol((max(b[1], T_X+W_diff), max(b[2], T_Y+W_same)), 'BB', 'XY'),
+                                    Sol((max(b[2], T_X+W_diff), max(b[1], T_Y+W_same)), 'BB', 'YX'),
+                                    key=get_obj
+                )
+        L_AB[1][0][0] = Sol((max(a[1], T_X+W_same), T_Y), 'AB', 'X0')
+        L_AB[0][1][0] = Sol((T_X, max(b[1], T_Y+W_same)), 'AB', '0Y')
+        L_AC[1][0][0] = Sol((max(a[1], T_X+W_same), T_Y), 'AC', 'X0')
+        L_AC[0][0][1] = Sol((T_X, max(c[1], T_Y+W_diff)), 'AC', '0Y')
+        L_BC[0][1][0] = Sol((max(b[1], T_X+W_diff), T_Y), 'BC', 'X0')
+        L_BC[0][0][1] = Sol((T_X, max(c[1], T_Y+W_diff)), 'BC', '0Y')
+    elif last_XY == 'AC':
+        L_AB[1][1][0] = Sol((max(a[1], T_X+W_same), max(b[1], T_Y+W_diff)), 'AB', 'XY')
+        L_AC[1][0][1] = Sol((max(a[1], T_X+W_same), max(c[1], T_Y+W_same)), 'AC', 'XY')
+        L_BC[0][1][1] = Sol((max(b[1], T_X+W_diff), max(c[1], T_Y+W_same)), 'BC', 'XY')
+        L_BB[0][1][0] = min(
+                            Sol((max(b[1], T_X+W_diff), T_Y), 'BB', 'X0'),
+                            Sol((T_X, max(b[1], T_Y+W_diff)), 'BB', '0Y'),
+                            key=get_obj
+        )
+        if beta >= 2:
+                L_BB[0][2][0] = min(
+                                    Sol((max(b[1], T_X+W_diff), max(b[2], T_Y+W_diff)), 'BB', 'XY'),
+                                    Sol((max(b[2], T_X+W_diff), max(b[1], T_Y+W_diff)), 'BB', 'YX'),
+                                    key=get_obj
+                )
+        L_AB[1][0][0] = Sol((max(a[1], T_X+W_same), T_Y), 'AB', 'X0')
+        L_AB[0][1][0] = Sol((T_X, max(b[1], T_Y+W_diff)), 'AB', '0Y')
+        L_AC[1][0][0] = Sol((max(a[1], T_X+W_same), T_Y), 'AC', 'X0')
+        L_AC[0][0][1] = Sol((T_X, max(c[1], T_Y+W_same)), 'AC', '0Y')
+        L_BC[0][1][0] = Sol((max(b[1], T_X+W_diff), T_Y), 'BC', 'X0')
+        L_BC[0][0][1] = Sol((T_X, max(c[1], T_Y+W_same)), 'BC', '0Y')
+    elif last_XY == 'BB':
+        L_AB[1][1][0] = Sol((max(a[1], T_X+W_diff), max(b[1], T_Y+W_same)), 'AB', 'XY')
+        L_AC[1][0][1] = Sol((max(a[1], T_X+W_diff), max(c[1], T_Y+W_diff)), 'AC', 'XY')
+        L_BC[0][1][1] = Sol((max(b[1], T_X+W_same), max(c[1], T_Y+W_diff)), 'BC', 'XY')
+        L_BB[0][1][0] = min(
+                            Sol((max(b[1], T_X+W_same), T_Y), 'BB', 'X0'),
+                            Sol((T_X, max(b[1], T_Y+W_same)), 'BB', '0Y'),
+                            key=get_obj
+        )
+        if beta >= 2:
+                L_BB[0][2][0] = min(
+                                    Sol((max(b[1], T_X+W_same), max(b[2], T_Y+W_same)), 'BB', 'XY'),
+                                    Sol((max(b[2], T_X+W_same), max(b[1], T_Y+W_same)), 'BB', 'YX'),
+                                    key=get_obj
+                )
+        L_AB[1][0][0] = Sol((max(a[1], T_X+W_diff), T_Y), 'AB', 'X0')
+        L_AB[0][1][0] = Sol((T_X, max(b[1], T_Y+W_same)), 'AB', '0Y')
+        L_AC[1][0][0] = Sol((max(a[1], T_X+W_diff), T_Y), 'AC', 'X0')
+        L_AC[0][0][1] = Sol((T_X, max(c[1], T_Y+W_diff)), 'AC', '0Y')
+        L_BC[0][1][0] = Sol((max(b[1], T_X+W_same), T_Y), 'BC', 'X0')
+        L_BC[0][0][1] = Sol((T_X, max(c[1], T_Y+W_diff)), 'BC', '0Y')
+    elif last_XY == 'BC':
+        L_AB[1][1][0] = Sol((max(a[1], T_X+W_diff), max(b[1], T_Y+W_diff)), 'AB', 'XY')
+        L_AC[1][0][1] = Sol((max(a[1], T_X+W_diff), max(c[1], T_Y+W_same)), 'AC', 'XY')
+        L_BC[0][1][1] = Sol((max(b[1], T_X+W_same), max(c[1], T_Y+W_same)), 'BC', 'XY')
+        L_BB[0][1][0] = min(
+                            Sol((max(b[1], T_X+W_same), T_Y), 'BB', 'X0'),
+                            Sol((T_X, max(b[1], T_Y+W_diff)), 'BB', '0Y'),
+                            key=get_obj
+        )
+        if beta >= 2:
+                L_BB[0][2][0] = min(
+                                    Sol((max(b[1], T_X+W_same), max(b[2], T_Y+W_diff)), 'BB', 'XY'),
+                                    Sol((max(b[2], T_X+W_same), max(b[1], T_Y+W_diff)), 'BB', 'YX'),
+                                    key=get_obj
+                )
+        L_AB[1][0][0] = Sol((max(a[1], T_X+W_diff), T_Y), 'AB', 'X0')
+        L_AB[0][1][0] = Sol((T_X, max(b[1], T_Y+W_diff)), 'AB', '0Y')
+        L_AC[1][0][0] = Sol((max(a[1], T_X+W_diff), T_Y), 'AC', 'X0')
+        L_AC[0][0][1] = Sol((T_X, max(c[1], T_Y+W_same)), 'AC', '0Y')
+        L_BC[0][1][0] = Sol((max(b[1], T_X+W_same), T_Y), 'BC', 'X0')
+        L_BC[0][0][1] = Sol((T_X, max(c[1], T_Y+W_same)), 'BC', '0Y')
+    else:
+        L_AB[1][1][0] = Sol((a[1], b[1]), 'AB', 'XY')
+        L_AC[1][0][1] = Sol((a[1], c[1]), 'AC', 'XY')
+        L_BC[0][1][1] = Sol((b[1], c[1]), 'BC', 'XY')
+        L_BB[0][1][0] = Sol((-W_diff, b[1]), 'BB', '0Y') if a[1] <= c[1] else Sol((b[1], -W_diff), 'BB', 'X0')
+        if beta >= 2:
+            L_BB[0][2][0] = Sol((b[1], b[2]), 'BB', 'XY') if a[1] <= c[1] else Sol((b[2], b[1]), 'BB', 'YX')
+        L_AB[1][0][0] = Sol((a[1], -W_diff), 'AB', 'X0')
+        L_AB[0][1][0] = Sol((-W_diff, b[1]), 'AB', '0Y')
+        L_AC[1][0][0] = Sol((a[1], -W_diff), 'AC', 'X0')
+        L_AC[0][0][1] = Sol((-W_diff, c[1]), 'AC', '0Y')
+        L_BC[0][1][0] = Sol((b[1], -W_diff), 'BC', 'X0')
+        L_BC[0][0][1] = Sol((-W_diff, c[1]), 'BC', '0Y')
+        # if beta >= 3:
+        #     L_BB[0][3][0] = min(
+        #                         Sol((b[1], max(b[3], b[2]+W_same)), 'BB', 'YY'),
+        #                         Sol((max(b[3], b[1]+W_same), b[2]), 'BB', 'YX'),
+        #                         Sol((max(b[2], b[1]+W_same), b[3]), 'BB', 'XY'),
+        #                         key=get_obj
+        #     )
+        #     if L_BB[0][3][0][0] > L_BB[0][3][0][1]:
+        #         if a[1] < c[1]:
+        #             L_BB[0][3][0] = L_BB[0][3][0][::-1]
+        #     elif L_BB[0][3][0][0] < L_BB[0][3][0][1]:
+        #         if c[1] < a[1]:
+        #             L_BB[0][3][0] = L_BB[0][3][0][::-1]
     for i in range(2, alpha+1):
-        L_AB[i][1][0] = Sol((max(a[i], L_AB[i-1][1][0].time[0]+W_same), b[1]), 'AB', 'XY')
+        L_AB[i][1][0] = Sol((max(a[i], L_AB[i-1][1][0].time[0]+W_same), L_AB[i-1][1][0].time[1]), 'AB', 'XY')
     for i in range(2, alpha+1):
-        L_AC[i][0][1] = Sol((max(a[i], L_AC[i-1][0][1].time[0]+W_same), c[1]), 'AC', 'XY')
+        L_AC[i][0][1] = Sol((max(a[i], L_AC[i-1][0][1].time[0]+W_same), L_AC[i-1][0][1].time[1]), 'AC', 'XY')
     for k in range(2, gamma+1):
-        L_AC[1][0][k] = Sol((a[1], max(c[k], L_AC[1][0][k-1].time[1]+W_same)), 'AC', 'XY')
+        L_AC[1][0][k] = Sol((L_AC[1][0][k-1].time[0], max(c[k], L_AC[1][0][k-1].time[1]+W_same)), 'AC', 'XY')
     for k in range(2, gamma+1):
-        L_BC[0][1][k] = Sol((b[1], max(c[k], L_BC[0][1][k-1].time[1]+W_same)), 'BC', 'XY')
-    if beta >= 4:
-        for j in range(4, beta+1):
+        L_BC[0][1][k] = Sol((L_BC[0][1][k-1].time[0], max(c[k], L_BC[0][1][k-1].time[1]+W_same)), 'BC', 'XY')
+    if beta >= 3:
+        for j in range(3, beta+1):
             L_BB[0][j][0] = min(
                                 Sol((max(b[j-1], L_BB[i][j-2][0].time[0]+W_same), max(b[j], L_BB[i][j-2][0].time[1]+W_same)), 'BB', 'XY'),
                                 Sol((max(b[j], L_BB[i][j-2][0].time[0]+W_same), max(b[j-1], L_BB[i][j-2][0].time[1]+W_same)), 'BB', 'YX'),
@@ -137,35 +310,86 @@ def multiDim_dp(W_same, W_diff):
             # elif L_BB[0][j][0][0] < L_BB[0][j][0][1]:
             #     if c[1] < a[1]:
             #         L_BB[0][j][0] = L_BB[0][j][0][::-1]
-
-
-    L_AB[1][0][0] = Sol((a[1], -W_diff), 'AB', 'X0')
     for i in range(2, alpha+1):
-        L_AB[i][0][0] = Sol((max(a[i], L_AB[i-1][0][0].time[0]+W_same), -W_diff), 'AB', 'X0')
-    L_AC[1][0][0] = Sol((a[1], -W_diff), 'AC', 'X0')
+        L_AB[i][0][0] = Sol((max(a[i], L_AB[i-1][0][0].time[0]+W_same), L_AB[i-1][0][0].time[1]), 'AB', 'X0')
+    for j in range(2, beta+1):
+        L_AB[0][j][0] = Sol((L_AB[0][j-1][0].time[0], max(b[j], L_AB[0][j-1][0].time[1]+W_same)), 'AB', '0Y')
     for i in range(2, alpha+1):
-        L_AC[i][0][0] = Sol((max(a[i], L_AC[i-1][0][0].time[0]+W_same), -W_diff), 'AC', 'X0')
-    L_AC[0][0][1] = Sol((-W_diff, c[1]), 'AC', '0Y')
+        L_AC[i][0][0] = Sol((max(a[i], L_AC[i-1][0][0].time[0]+W_same), L_AC[i-1][0][0].time[1]), 'AC', 'X0')
     for k in range(2, gamma+1):
-        L_AC[0][0][k] = Sol((-W_diff, max(c[k], L_AC[0][0][k-1].time[1]+W_same)), 'AC', '0Y')
-    L_BC[0][0][1] = Sol((-W_diff, c[1]), 'BC', '0Y')
+        L_AC[0][0][k] = Sol((L_AC[0][0][k-1].time[0], max(c[k], L_AC[0][0][k-1].time[1]+W_same)), 'AC', '0Y')
+    for j in range(2, beta+1):
+        L_BC[0][j][0] = Sol((max(b[j], L_BC[0][j-1][0].time[0]+W_same), L_BC[0][j-1][0].time[1]), 'BC', 'X0')
     for k in range(2, gamma+1):
-        L_BC[0][0][k] = Sol((-W_diff, max(c[k], L_BC[0][0][k-1].time[1]+W_same)), 'BC', '0Y')
+        L_BC[0][0][k] = Sol((L_BC[0][0][k-1].time[0], max(c[k], L_BC[0][0][k-1].time[1]+W_same)), 'BC', '0Y')
+
     if beta >= 2:
-        for i in range(1, alpha+1):
-            L_BB[i][2][0] = min(
-                                Sol((max(b[1], L_AC[i][0][0].time[0]+W_diff), b[2]), 'AC', 'XY'),
-                                Sol((max(b[2], L_AC[i][0][0].time[0]+W_diff), b[1]), 'AC', 'YX'),
-                                key=get_obj
-            )
-        for k in range(1, gamma+1):
-            L_BB[0][2][k] = min(
-                                Sol((b[1], max(b[2], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY'),
-                                Sol((b[2], max(b[1], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX'),
-                                key=get_obj
-            )
+        if last_XY == 'AB':
+            for i in range(1, alpha+1):
+                L_BB[i][2][0] = min(
+                                    Sol((max(b[1], L_AC[i][0][0].time[0]+W_diff), max(b[2], T_Y+W_same)), 'AC', 'XY'),
+                                    Sol((max(b[2], L_AC[i][0][0].time[0]+W_diff), max(b[1], T_Y+W_same)), 'AC', 'YX'),
+                                    key=get_obj
+                )
+            for k in range(1, gamma+1):
+                L_BB[0][2][k] = min(
+                                    Sol((max(b[1], T_X+W_diff), max(b[2], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY'),
+                                    Sol((max(b[2], T_X+W_diff), max(b[1], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX'),
+                                    key=get_obj
+                )
+        elif last_XY == 'AC':
+            for i in range(1, alpha+1):
+                L_BB[i][2][0] = min(
+                                    Sol((max(b[1], L_AC[i][0][0].time[0]+W_diff), max(b[2], T_Y+W_diff)), 'AC', 'XY'),
+                                    Sol((max(b[2], L_AC[i][0][0].time[0]+W_diff), max(b[1], T_Y+W_diff)), 'AC', 'YX'),
+                                    key=get_obj
+                )
+            for k in range(1, gamma+1):
+                L_BB[0][2][k] = min(
+                                    Sol((max(b[1], T_X+W_diff), max(b[2], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY'),
+                                    Sol((max(b[2], T_X+W_diff), max(b[1], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX'),
+                                    key=get_obj
+                )
+        elif last_XY == 'BB':
+            for i in range(1, alpha+1):
+                L_BB[i][2][0] = min(
+                                    Sol((max(b[1], L_AC[i][0][0].time[0]+W_diff), max(b[2], T_Y+W_same)), 'AC', 'XY'),
+                                    Sol((max(b[2], L_AC[i][0][0].time[0]+W_diff), max(b[1], T_Y+W_same)), 'AC', 'YX'),
+                                    key=get_obj
+                )
+            for k in range(1, gamma+1):
+                L_BB[0][2][k] = min(
+                                    Sol((max(b[1], T_X+W_same), max(b[2], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY'),
+                                    Sol((max(b[2], T_X+W_same), max(b[1], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX'),
+                                    key=get_obj
+                )
+        elif last_XY == 'BC':
+            for i in range(1, alpha+1):
+                L_BB[i][2][0] = min(
+                                    Sol((max(b[1], L_AC[i][0][0].time[0]+W_diff), max(b[2], T_Y+W_diff)), 'AC', 'XY'),
+                                    Sol((max(b[2], L_AC[i][0][0].time[0]+W_diff), max(b[1], T_Y+W_diff)), 'AC', 'YX'),
+                                    key=get_obj
+                )
+            for k in range(1, gamma+1):
+                L_BB[0][2][k] = min(
+                                    Sol((max(b[1], T_X+W_same), max(b[2], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY'),
+                                    Sol((max(b[2], T_X+W_same), max(b[1], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX'),
+                                    key=get_obj
+                )
+        else:
+            for i in range(1, alpha+1):
+                L_BB[i][2][0] = min(
+                                    Sol((max(b[1], L_AC[i][0][0].time[0]+W_diff), b[2]), 'AC', 'XY'),
+                                    Sol((max(b[2], L_AC[i][0][0].time[0]+W_diff), b[1]), 'AC', 'YX'),
+                                    key=get_obj
+                )
+            for k in range(1, gamma+1):
+                L_BB[0][2][k] = min(
+                                    Sol((b[1], max(b[2], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY'),
+                                    Sol((b[2], max(b[1], L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX'),
+                                    key=get_obj
+                )
 
-    
     for i in range(1, alpha+1):
         for j in range(2, beta+1):
             L_AB[i][j][0] = min(
@@ -198,9 +422,6 @@ def multiDim_dp(W_same, W_diff):
                                 Sol((L_BB[i][j-2][0].time[0], max(b[j], max(b[j-1], L_BB[i][j-2][0].time[1]+W_same)+W_same)), 'BB', 'YY'),
                                 key=get_obj
             )
-
-    L_AB[0][1][0] = Sol((-W_diff, b[1]), 'AB', '0Y')
-    L_BC[0][1][0] = Sol((b[1], -W_diff), 'BC', 'X0')
 
     
     for i in range(1, alpha+1):
@@ -245,6 +466,10 @@ def multiDim_dp(W_same, W_diff):
                                     Sol((L_BC[i][j-2][k].time[0], max(b[j], max(b[j-1], L_BC[i][j-2][k].time[1]+W_same)+W_diff)), 'BC', 'YY'),
                                     key=get_obj
                 )   
+    # print_table(L_AB, 'L_AB')
+    # print_table(L_AC, 'L_AC')
+    # print_table(L_BB, 'L_BB')
+    # print_table(L_BC, 'L_BC')
 
     # Push order to stack
     stack_X = []
@@ -256,9 +481,9 @@ def multiDim_dp(W_same, W_diff):
     opt = min(L_AB[i][j][k], L_AC[i][j][k], L_BB[i][j][k], L_BC[i][j][k], key=get_obj)
     table = ''
     lanes = ''
-    print(opt)
+    # print(opt)
     if  opt.time == L_AB[i][j][k].time:
-        print('AB')
+        # print('AB')
         table = L_AB[i][j][k].table
         lanes = L_AB[i][j][k].lane
         if  lanes == 'XY':
@@ -268,7 +493,12 @@ def multiDim_dp(W_same, W_diff):
             j -= 1
         elif lanes == 'XX':
             stack_X.append(('A', i, L_AB[i][j][k].time[0]))
-            stack_X.append(('B', j, L_AB[i-1][j][k].time[0]))
+            if table == 'AB':
+                stack_X.append(('B', j, max(b[j], L_AB[i-1][j-1][k].time[0]+W_diff)))
+            elif table == 'BB':
+                stack_X.append(('B', j, max(b[j], L_BB[i-1][j-1][k].time[0]+W_same)))
+            else:
+                print('bug')
             i -= 1
             j -= 1
         elif lanes[0] == 'X':
@@ -278,7 +508,7 @@ def multiDim_dp(W_same, W_diff):
             stack_Y.append(('B', j, L_AB[i][j][k].time[1]))
             j -= 1
     elif opt.time == L_AC[i][j][k].time:
-        print('AC')
+        # print('AC')
         table = L_AC[i][j][k].table
         lanes = L_AC[i][j][k].lane
         if lanes == 'XY':
@@ -293,7 +523,7 @@ def multiDim_dp(W_same, W_diff):
             stack_Y.append(('C', k, L_AC[i][j][k].time[1]))
             k -= 1
     elif opt.time == L_BB[i][j][k].time:
-        print('BB')
+        # print('BB')
         table = L_BB[i][j][k].table
         lanes = L_BB[i][j][k].lane
         if lanes == 'XY':
@@ -304,13 +534,18 @@ def multiDim_dp(W_same, W_diff):
             stack_X.append(('B', j, L_BB[i][j][k].time[0]))
         elif lanes == 'XX':
             stack_X.append(('B', j, L_BB[i][j][k].time[0]))
-            stack_X.append(('B', j-1, L_BB[i][j-1][k].time[0]))
+            stack_X.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
         elif lanes == 'YY':
             stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
-            stack_Y.append(('B', j-1, L_BB[i][j-1][k].time[1]))
+            if table == 'BB':
+                stack_Y.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[1]+W_same)))
+            elif table == 'BC':
+                stack_Y.append(('B', j-1, max(b[j-1], L_BC[i][j-2][k].time[1]+W_same)))
+            else:
+                print('bug')
         j -= 2
     elif opt.time == L_BC[i][j][k].time:
-        print('BC')
+        # print('BC')
         table = L_BC[i][j][k].table
         lanes = L_BC[i][j][k].lane
         if lanes == 'XY':
@@ -320,7 +555,12 @@ def multiDim_dp(W_same, W_diff):
             k -= 1
         elif lanes == 'YY':
             stack_Y.append(('C', k, L_BC[i][j][k].time[1]))
-            stack_Y.append(('B', j, L_BC[i][j][k-1].time[1]))
+            if table == 'BB':
+                stack_Y.append(('B', j, max(b[j], L_BB[i][j-1][k-1].time[1]+W_same)))
+            elif table == 'BC':
+                stack_Y.append(('B', j, max(b[j], L_BC[i][j-1][k-1].time[1]+W_diff)))
+            else:
+                print('bug')
             j -= 1
             k -= 1
         elif lanes[0] == 'X':
@@ -331,10 +571,10 @@ def multiDim_dp(W_same, W_diff):
             k -= 1
 
     # Backtracking
-    while i>0 or j>0 or k>0:
-        print(table, i, j, k)
+    while i>keep or j>keep or k>keep:
+        # print(table, i, j, k)
         if  table == 'AB':
-            print('AB')
+            # print('AB')
             table = L_AB[i][j][k].table
             lanes = L_AB[i][j][k].lane
             if  lanes == 'XY':
@@ -344,7 +584,12 @@ def multiDim_dp(W_same, W_diff):
                 j -= 1
             elif lanes == 'XX':
                 stack_X.append(('A', i, L_AB[i][j][k].time[0]))
-                stack_X.append(('B', j, L_AB[i-1][j][k].time[0]))
+                if table == 'AB':
+                    stack_X.append(('B', j, max(b[j], L_AB[i-1][j-1][k].time[0]+W_diff)))
+                elif table == 'BB':
+                    stack_X.append(('B', j, max(b[j], L_BB[i-1][j-1][k].time[0]+W_same)))
+                else:
+                    print('bug')
                 i -= 1
                 j -= 1
             elif lanes[0] == 'X':
@@ -354,7 +599,7 @@ def multiDim_dp(W_same, W_diff):
                 stack_Y.append(('B', j, L_AB[i][j][k].time[1]))
                 j -= 1
         elif table == 'AC':
-            print('AC')
+            # print('AC')
             table = L_AC[i][j][k].table
             lanes = L_AC[i][j][k].lane
             if lanes == 'XY':
@@ -369,7 +614,7 @@ def multiDim_dp(W_same, W_diff):
                 stack_Y.append(('C', k, L_AC[i][j][k].time[1]))
                 k -= 1
         elif  table == 'BB':
-            print('BB')
+            # print('BB')
             table = L_BB[i][j][k].table
             lanes = L_BB[i][j][k].lane
             if lanes == 'XY':
@@ -380,13 +625,18 @@ def multiDim_dp(W_same, W_diff):
                 stack_X.append(('B', j, L_BB[i][j][k].time[0]))
             elif lanes == 'XX':
                 stack_X.append(('B', j, L_BB[i][j][k].time[0]))
-                stack_X.append(('B', j-1, L_BB[i][j-1][k].time[0]))
+                stack_X.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
             elif lanes == 'YY':
                 stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
-                stack_Y.append(('B', j-1, L_BB[i][j-1][k].time[1]))
+                if table == 'BB':
+                    stack_Y.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[1]+W_same)))
+                elif table == 'BC':
+                    stack_Y.append(('B', j-1, max(b[j-1], L_BC[i][j-2][k].time[1]+W_same)))
+                else:
+                    print('bug')
             j -= 2
         elif  table == 'BC':
-            print('BC')
+            # print('BC')
             table = L_BC[i][j][k].table
             lanes = L_BC[i][j][k].lane
             if lanes == 'XY':
@@ -396,9 +646,12 @@ def multiDim_dp(W_same, W_diff):
                 k -= 1
             elif lanes == 'YY':
                 stack_Y.append(('C', k, L_BC[i][j][k].time[1]))
-                stack_Y.append(('B', j, L_BC[i][j][k-1].time[1]))
-                j -= 1
-                k -= 1
+                if table == 'BB':
+                    stack_Y.append(('B', j, max(b[j], L_BB[i][j-1][k-1].time[1]+W_same)))
+                elif table == 'BC':
+                    stack_Y.append(('B', j, max(b[j], L_BC[i][j-1][k-1].time[1]+W_diff)))
+                else:
+                    print('bug')
             elif lanes[0] == 'X':
                 stack_X.append(('B', j, L_BC[i][j][k].time[0]))
                 j -= 1
@@ -406,7 +659,6 @@ def multiDim_dp(W_same, W_diff):
                 stack_Y.append(('C', k, L_BC[i][j][k].time[1]))
                 k -= 1
 
-    computeTime = time.time() - t0
     T_last = stack_X[0][2] if stack_X[0][2] >= stack_Y[0][2] else stack_Y[0][2]
     
     # Delete the redundant element (i==0 or j==0 or k==0)
@@ -417,12 +669,42 @@ def multiDim_dp(W_same, W_diff):
 
     # Output order
     print('lane X:')
-    while len(stack_X) > 0:
+    while len(stack_X) > 1:
         print(stack_X.pop())
+    last_X = stack_X.pop()
+    print(last_X)
     print('-----------------------')
-    while len(stack_Y) > 0:
+    while len(stack_Y) > 1:
         print(stack_Y.pop())
+    last_Y = stack_Y.pop()
+    print(last_Y)
+    
+    computeTime = time.time()-t0
+    return last_X, last_Y, computeTime
 
+
+ 
+def schedule_by_time_window(a_all, b_all, c_all, W_same, W_diff, cutTime, keep):
+    t0 = time.time()
+    last_X = ('', 0, 0.0)
+    last_Y = ('', 0, 0.0)
+    while (len(a_all)>1 and len(b_all)>1) or (len(b_all)>1 and (len(c_all)>1)) or (len(b_all) > 2):
+        a, b, c, a_all, b_all, c_all = get_window_by_time(a_all, b_all, c_all, cutTime, keep)
+        last_X, last_Y, _ = window_multiDim_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep)
+    computeTime = time.time() - t0
+    T_last = last_X[2] if last_X[2] >= last_Y[2] else last_Y[2]
+    return T_last, computeTime
+
+
+def schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, carNum, keep):
+    t0 = time.time()
+    last_X = ('', 0, 0.0)
+    last_Y = ('', 0, 0.0)
+    while (len(a_all)>1 and len(b_all)>1) or (len(b_all)>1 and (len(c_all)>1)) or (len(b_all) > 2):
+        a, b, c, a_all, b_all, c_all = get_window_by_num(a_all, b_all, c_all, carNum, keep)
+        last_X, last_Y, _ = window_multiDim_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep)
+    computeTime = time.time() - t0
+    T_last = last_X[2] if last_X[2] >= last_Y[2] else last_Y[2]
     return T_last, computeTime
 
 
@@ -439,16 +721,16 @@ def main():
         print('Arguments: lambda, N, W=, W+')
         return
 
-    generate_traffic(timeStep, alpha, beta, gamma, p)
-    a_all = [0, 8.0, 12.0, 38.0, 42.0, 47.0, 72.0, 77.0, 92.0, 109.0, 113.0, 119.0, 121.0, 136.0, 137.0, 138.0, 142.0, 148.0, 149.0, 150.0, 154.0, 157.0, 163.0, 168.0, 175.0, 179.0, 190.0, 198.0, 208.0, 218.0, 232.0, 233.0, 252.0, 254.0, 275.0, 279.0, 295.0, 297.0, 298.0, 304.0, 305.0, 308.0, 317.0, 334.0, 349.0, 355.0, 356.0, 362.0, 363.0, 365.0, 374.0, 383.0, 391.0, 405.0, 426.0, 433.0, 439.0, 470.0, 472.0, 478.0, 481.0, 486.0, 498.0, 502.0, 506.0, 513.0, 530.0, 532.0, 533.0, 537.0, 549.0, 560.0, 595.0, 624.0, 625.0, 628.0, 635.0, 636.0, 637.0, 641.0, 670.0, 671.0, 691.0, 692.0, 700.0, 705.0, 709.0, 713.0, 714.0, 716.0, 725.0, 731.0, 741.0, 751.0, 757.0, 759.0, 770.0, 775.0, 777.0, 779.0, 780.0]
-    b_all = [0, 20.0, 22.0, 24.0, 41.0, 43.0, 48.0, 57.0, 58.0, 59.0, 60.0, 67.0, 81.0, 84.0, 86.0, 87.0, 95.0, 99.0, 144.0, 147.0, 153.0, 161.0, 167.0, 171.0, 174.0, 188.0, 195.0, 201.0, 205.0, 207.0, 209.0, 213.0, 216.0, 220.0, 222.0, 226.0, 235.0, 240.0, 248.0, 249.0, 265.0, 269.0, 276.0, 307.0, 321.0, 323.0, 344.0, 368.0, 377.0, 378.0, 385.0, 388.0, 390.0, 409.0, 410.0, 415.0, 444.0, 448.0, 452.0, 453.0, 459.0, 475.0, 497.0, 499.0, 510.0, 523.0, 524.0, 526.0, 551.0, 556.0, 568.0, 599.0, 600.0, 608.0, 609.0, 611.0, 612.0, 613.0, 617.0, 622.0, 639.0, 648.0, 650.0, 652.0, 667.0, 685.0, 689.0, 695.0, 696.0, 697.0, 698.0, 704.0, 718.0, 722.0, 724.0, 736.0, 743.0, 754.0, 760.0, 766.0, 769.0]
-    c_all = [0, 1.0, 2.0, 10.0, 16.0, 35.0, 39.0, 49.0, 54.0, 75.0, 78.0, 89.0, 91.0, 97.0, 100.0, 103.0, 104.0, 108.0, 111.0, 115.0, 118.0, 131.0, 134.0, 141.0, 152.0, 164.0, 172.0, 180.0, 182.0, 183.0, 186.0, 191.0, 192.0, 193.0, 199.0, 200.0, 217.0, 221.0, 234.0, 259.0, 280.0, 283.0, 284.0, 286.0, 287.0, 289.0, 301.0, 311.0, 312.0, 318.0, 335.0, 337.0, 352.0, 359.0, 361.0, 370.0, 382.0, 395.0, 413.0, 419.0, 421.0, 424.0, 428.0, 445.0, 450.0, 454.0, 471.0, 473.0, 500.0, 503.0, 509.0, 511.0, 520.0, 521.0, 545.0, 550.0, 552.0, 565.0, 578.0, 582.0, 583.0, 586.0, 589.0, 598.0, 610.0, 619.0, 620.0, 626.0, 627.0, 630.0, 638.0, 642.0, 643.0, 645.0, 660.0, 663.0, 665.0, 669.0, 686.0, 699.0, 711.0]
-    split_traffic(a_all, b_all, c_all, p)
-
-    # print('a', a_all)
-    # print('b', b_all)
-    # print('c', c_all)
-    # multiDim_dp(W_same, W_diff)
+    a_all, b_all, c_all = generate_traffic_v1(timeStep, alpha, beta, gamma, p, p, p)
+    # a_all, b_all, c_all = generate_traffic_v2(timeStep, alpha, beta, gamma, p)
+    last_X = ('', 0, 0.0)
+    last_Y = ('', 0, 0.0)
+    last_X, last_Y, computeTime = window_multiDim_dp(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, last_X, last_Y, 0)
+    T_last = last_X[2] if last_X[2] >= last_Y[2] else last_Y[2]
+    print(T_last, computeTime)
+    print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 5, 0))
+    print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 10, 0))
+    print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 20, 0))
 
 if __name__ == '__main__':
     main()

@@ -266,12 +266,18 @@ def multiDim_dp(a, b, c, W_same, W_diff):
     L_AB[1][0][0] = Sol((a[1], -W_diff), 'AB', 'X0')
     for i in range(2, alpha+1):
         L_AB[i][0][0] = Sol((max(a[i], L_AB[i-1][0][0].time[0]+W_same), -W_diff), 'AB', 'X0')
+    L_AB[0][1][0] = Sol((-W_diff, b[1]), 'AB', '0Y')
+    for j in range(2, beta+1):
+        L_AB[0][j][0] = Sol((-W_diff, max(b[j], L_AB[0][j-1][0].time[1]+W_same)), 'AB', '0Y')
     L_AC[1][0][0] = Sol((a[1], -W_diff), 'AC', 'X0')
     for i in range(2, alpha+1):
         L_AC[i][0][0] = Sol((max(a[i], L_AC[i-1][0][0].time[0]+W_same), -W_diff), 'AC', 'X0')
     L_AC[0][0][1] = Sol((-W_diff, c[1]), 'AC', '0Y')
     for k in range(2, gamma+1):
         L_AC[0][0][k] = Sol((-W_diff, max(c[k], L_AC[0][0][k-1].time[1]+W_same)), 'AC', '0Y')
+    L_BC[0][1][0] = Sol((b[1], -W_diff), 'BC', 'X0')
+    for j in range(2, beta+1):
+        L_BC[0][j][0] = Sol((max(b[j], L_BC[0][j-1][0].time[0]+W_same), -W_diff), 'BC', 'X0')
     L_BC[0][0][1] = Sol((-W_diff, c[1]), 'BC', '0Y')
     for k in range(2, gamma+1):
         L_BC[0][0][k] = Sol((-W_diff, max(c[k], L_BC[0][0][k-1].time[1]+W_same)), 'BC', '0Y')
@@ -320,8 +326,6 @@ def multiDim_dp(a, b, c, W_same, W_diff):
                                 Sol((L_BB[i][j-2][0].time[0], max(b[j], max(b[j-1], L_BB[i][j-2][0].time[1]+W_same)+W_same)), 'BB', 'YY'),
                                 key=get_obj
             )
-    L_AB[0][1][0] = Sol((-W_diff, b[1]), 'AB', '0Y')
-    L_BC[0][1][0] = Sol((b[1], -W_diff), 'BC', 'X0')
     
     # Compute tables
     for i in range(1, alpha+1):
@@ -366,10 +370,10 @@ def multiDim_dp(a, b, c, W_same, W_diff):
                                     Sol((L_BC[i][j-2][k].time[0], max(b[j], max(b[j-1], L_BC[i][j-2][k].time[1]+W_same)+W_diff)), 'BC', 'YY'),
                                     key=get_obj
                 )
-    # print_table(L_AB, 'L_AB')
-    # print_table(L_AC, 'L_AC')
-    # print_table(L_BB, 'L_BB')
-    # print_table(L_BC, 'L_BC')
+    print_table(L_AB, 'L_AB')
+    print_table(L_AC, 'L_AC')
+    print_table(L_BB, 'L_BB')
+    print_table(L_BC, 'L_BC')
 
     # Push order to stack
     stack_X = []
@@ -383,7 +387,7 @@ def multiDim_dp(a, b, c, W_same, W_diff):
     lanes = ''
     # print(opt)
     if  opt.time == L_AB[i][j][k].time:
-        # print('AB')
+        print('AB')
         table = L_AB[i][j][k].table
         lanes = L_AB[i][j][k].lane
         if  lanes == 'XY':
@@ -393,7 +397,12 @@ def multiDim_dp(a, b, c, W_same, W_diff):
             j -= 1
         elif lanes == 'XX':
             stack_X.append(('A', i, L_AB[i][j][k].time[0]))
-            stack_X.append(('B', j, L_AB[i-1][j][k].time[0]))
+            if table == 'AB':
+                stack_X.append(('B', j, max(b[j], L_AB[i-1][j-1][k].time[0]+W_diff)))
+            elif table == 'BB':
+                stack_X.append(('B', j, max(b[j], L_BB[i-1][j-1][k].time[0]+W_same)))
+            else:
+                print('bug')
             i -= 1
             j -= 1
         elif lanes[0] == 'X':
@@ -403,7 +412,7 @@ def multiDim_dp(a, b, c, W_same, W_diff):
             stack_Y.append(('B', j, L_AB[i][j][k].time[1]))
             j -= 1
     elif opt.time == L_AC[i][j][k].time:
-        # print('AC')
+        print('AC')
         table = L_AC[i][j][k].table
         lanes = L_AC[i][j][k].lane
         if lanes == 'XY':
@@ -418,7 +427,7 @@ def multiDim_dp(a, b, c, W_same, W_diff):
             stack_Y.append(('C', k, L_AC[i][j][k].time[1]))
             k -= 1
     elif opt.time == L_BB[i][j][k].time:
-        # print('BB')
+        print('BB')
         table = L_BB[i][j][k].table
         lanes = L_BB[i][j][k].lane
         if lanes == 'XY':
@@ -429,13 +438,18 @@ def multiDim_dp(a, b, c, W_same, W_diff):
             stack_X.append(('B', j, L_BB[i][j][k].time[0]))
         elif lanes == 'XX':
             stack_X.append(('B', j, L_BB[i][j][k].time[0]))
-            stack_X.append(('B', j-1, L_BB[i][j-1][k].time[0]))
+            stack_X.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
         elif lanes == 'YY':
             stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
-            stack_Y.append(('B', j-1, L_BB[i][j-1][k].time[1]))
+            if table == 'BB':
+                stack_Y.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[1]+W_same)))
+            elif table == 'BC':
+                stack_Y.append(('B', j-1, max(b[j-1], L_BC[i][j-2][k].time[1]+W_same)))
+            else:
+                print('bug')
         j -= 2
     elif opt.time == L_BC[i][j][k].time:
-        # print('BC')
+        print('BC')
         table = L_BC[i][j][k].table
         lanes = L_BC[i][j][k].lane
         if lanes == 'XY':
@@ -445,7 +459,12 @@ def multiDim_dp(a, b, c, W_same, W_diff):
             k -= 1
         elif lanes == 'YY':
             stack_Y.append(('C', k, L_BC[i][j][k].time[1]))
-            stack_Y.append(('B', j, L_BC[i][j][k-1].time[1]))
+            if table == 'BB':
+                stack_Y.append(('B', j, max(b[j], L_BB[i][j-1][k-1].time[1]+W_same)))
+            elif table == 'BC':
+                stack_Y.append(('B', j, max(b[j], L_BC[i][j-1][k-1].time[1]+W_diff)))
+            else:
+                print('bug')
             j -= 1
             k -= 1
         elif lanes[0] == 'X':
@@ -457,7 +476,7 @@ def multiDim_dp(a, b, c, W_same, W_diff):
 
     # Backtracking
     while i>0 or j>0 or k>0:
-        # print(table, i, j, k)
+        print(table, i, j, k)
         if  table == 'AB':
             # print('AB')
             table = L_AB[i][j][k].table
@@ -469,7 +488,12 @@ def multiDim_dp(a, b, c, W_same, W_diff):
                 j -= 1
             elif lanes == 'XX':
                 stack_X.append(('A', i, L_AB[i][j][k].time[0]))
-                stack_X.append(('B', j, L_AB[i-1][j][k].time[0]))
+                if table == 'AB':
+                    stack_X.append(('B', j, max(b[j], L_AB[i-1][j-1][k].time[0]+W_diff)))
+                elif table == 'BB':
+                    stack_X.append(('B', j, max(b[j], L_BB[i-1][j-1][k].time[0]+W_same)))
+                else:
+                    print('bug')
                 i -= 1
                 j -= 1
             elif lanes[0] == 'X':
@@ -505,10 +529,15 @@ def multiDim_dp(a, b, c, W_same, W_diff):
                 stack_X.append(('B', j, L_BB[i][j][k].time[0]))
             elif lanes == 'XX':
                 stack_X.append(('B', j, L_BB[i][j][k].time[0]))
-                stack_X.append(('B', j-1, L_BB[i][j-1][k].time[0]))
+                stack_X.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
             elif lanes == 'YY':
                 stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
-                stack_Y.append(('B', j-1, L_BB[i][j-1][k].time[1]))
+                if table == 'BB':
+                    stack_Y.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[1]+W_same)))
+                elif table == 'BC':
+                    stack_Y.append(('B', j-1, max(b[j-1], L_BC[i][j-2][k].time[1]+W_same)))
+                else:
+                    print('bug')
             j -= 2
         elif  table == 'BC':
             # print('BC')
@@ -521,9 +550,12 @@ def multiDim_dp(a, b, c, W_same, W_diff):
                 k -= 1
             elif lanes == 'YY':
                 stack_Y.append(('C', k, L_BC[i][j][k].time[1]))
-                stack_Y.append(('B', j, L_BC[i][j][k-1].time[1]))
-                j -= 1
-                k -= 1
+                if table == 'BB':
+                    stack_Y.append(('B', j, max(b[j], L_BB[i][j-1][k-1].time[1]+W_same)))
+                elif table == 'BC':
+                    stack_Y.append(('B', j, max(b[j], L_BC[i][j-1][k-1].time[1]+W_diff)))
+                else:
+                    print('bug')
             elif lanes[0] == 'X':
                 stack_X.append(('B', j, L_BC[i][j][k].time[0]))
                 j -= 1
@@ -984,6 +1016,9 @@ def main():
         return
     a, b, c = generate_traffic_v1(timeStep, alpha, beta, gamma, pA, pB, pC)
     # a, b, c = generate_traffic_v2(timeStep, alpha, beta, gamma, p)
+    a = [0, 1.0, 2.0, 4.0, 5.0, 7.0]
+    b = [0, 5.0, 9.0, 13.0, 14.0, 19.0]
+    c = [0, 1.0, 2.0, 3.0, 6.0, 15.0]
     print(a)
     print(b)
     print(c)
