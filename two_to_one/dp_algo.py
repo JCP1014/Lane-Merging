@@ -26,10 +26,6 @@ def schedule(alpha, beta, a, b):
         L_A[i][0] = Sol(max(a[i], L_A[i-1][0].time+W_same), 'A')
     for j in range(2, beta+1):
         L_B[0][j] = Sol(max(b[j], L_B[0][j-1].time+W_same), 'B')
-    for j in range(1, beta+1):
-        L_A[0][j] = Sol(L_B[0][j].time + W_diff, '')
-    for i in range(1, alpha+1):
-        L_B[i][0] = Sol(L_A[i][0].time + W_diff, '')
     
     # Compute table
     for i in range(1, alpha+1):

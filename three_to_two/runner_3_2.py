@@ -27,7 +27,7 @@ def generate_routefile(N, p):
     pA = 0 # a vehicle is generated every p seconds in average.
     pB = 1. / p
     pC = 1. / p
-    with open("laneMerging.rou.xml", "w") as routes:
+    with open("./sumo_input/laneMerging.rou.xml", "w") as routes:
         print("""<routes>
         <vType id="typeA" type="passenger" length="5" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="yellow"/>
         <vType id="typeB" type="passenger" length="5" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="blue"/>
@@ -494,7 +494,7 @@ def main():
 
         # this is the normal way of using traci. sumo is started as a
         # subprocess and then the python script connects and runs
-        traci.start([sumoBinary, "-c", "laneMerging.sumocfg",
+        traci.start([sumoBinary, "-c", "./sumo_input/laneMerging.sumocfg",
                                 "--tripinfo-output", "tripinfo_dp.xml",
                                 "-S",
                                 "--no-step-log", "true", "-W", "--duration-log.disable", "true"])
