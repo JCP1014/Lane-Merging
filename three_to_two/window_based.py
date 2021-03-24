@@ -75,7 +75,7 @@ def generate_traffic_v2(timeStep, alpha, beta, gamma, p):
     t = 1.0
     cars = []
     while num> 0:
-        if np.random.uniform(0, 1) < p:
+        if np.random.uniform(0, 3) < p:
             cars.append(round(t, 1))
             num -= 1
         t += timeStep
@@ -96,9 +96,9 @@ def generate_traffic_v2(timeStep, alpha, beta, gamma, p):
             del lanes[laneIndex]
             laneNum -= 1
         carIndex += 1
-    print(a_all)
-    print(b_all)
-    print(c_all)
+    # print(a_all)
+    # print(b_all)
+    # print(c_all)
     return a_all, b_all, c_all
 
 
@@ -117,9 +117,9 @@ def split_traffic(a, b, c, p):
     for i in range(len(c)):
         if c[i+1] - c[i] > gap:
             c_cut.append((c[i], c[i+1]))
-    print('a_cut', a_cut)
-    print('b_cut', b_cut)
-    print('c_cut', c_cut)
+    # print('a_cut', a_cut)
+    # print('b_cut', b_cut)
+    # print('c_cut', c_cut)
 
 
 def get_window_by_time(a_all, b_all, c_all, cutTime, keep):
@@ -186,7 +186,7 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
     last_XY = last_X[0] + last_Y[0]
     T_X = last_X[2]
     T_Y = last_Y[2]
-    print('last_XY', last_XY, T_X, T_Y)
+    # print('last_XY', last_XY, T_X, T_Y)
     if last_XY == 'AB':
         L_AB[1][1][0] = Sol((max(a[1], T_X+W_same), max(b[1], T_Y+W_same)), 'AB', 0, 'XY')
         L_AC[1][0][1] = Sol((max(a[1], T_X+W_same), max(c[1], T_Y+W_diff)), 'AC', 0, 'XY')
@@ -680,16 +680,15 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
         stack_Y.pop()
 
     # Output order
-    print('lane X:')
-    while len(stack_X) > 1:
-        print(stack_X.pop())
-    last_X = stack_X.pop()
-    print(last_X)
-    print('-----------------------')
-    while len(stack_Y) > 1:
-        print(stack_Y.pop())
-    last_Y = stack_Y.pop()
-    print(last_Y)
+    # print('lane X:')
+    last_X = stack_X[0]
+    # while len(stack_X) > 0:
+    #     print(stack_X.pop())
+    # print('-----------------------')
+    # print('lane Y:')
+    last_Y = stack_Y[0]
+    # while len(stack_Y) > 0:
+    #     print(stack_Y.pop())
     
     computeTime = time.time()-t0
     return last_X, last_Y, computeTime
@@ -719,7 +718,7 @@ def window_allSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
     last_XY = last_X[0] + last_Y[0]
     T_X = last_X[2]
     T_Y = last_Y[2]
-    print('last_XY', last_XY, T_X, T_Y)
+    # print('last_XY', last_XY, T_X, T_Y)
     if last_XY == 'AB':
         L_AB[1][1][0] = [Sol((max(a[1], T_X+W_same), max(b[1], T_Y+W_same)), 'AB', 0, 'XY')]
         L_AC[1][0][1] = [Sol((max(a[1], T_X+W_same), max(c[1], T_Y+W_diff)), 'AC', 0, 'XY')]
@@ -966,7 +965,7 @@ def window_allSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
 
     # Backtracking
     while i>0 or j>0 or k>0:
-        print(table, i, j, k, idx)
+        # print(table, i, j, k, idx)
         if  table == 'AB':
             # print('AB')
             lanes = L_AB[i][j][k][idx].lane
@@ -1084,15 +1083,13 @@ def window_allSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
 
     # Output order
     print('lane X:')
-    while len(stack_X) > 1:
-        print(stack_X.pop())
-    last_X = stack_X.pop()
-    print(last_X)
-    print('-----------------------')
-    while len(stack_Y) > 1:
-        print(stack_Y.pop())
-    last_Y = stack_Y.pop()
-    print(last_Y)
+    last_X = stack_X[0]
+    # while len(stack_X) > 0:
+    #     print(stack_X.pop())
+    # print('-----------------------')
+    last_Y = stack_Y[0]
+    # while len(stack_Y) > 0:
+    #     print(stack_Y.pop())
 
     computeTime = time.time()-t0
     return last_X, last_Y, computeTime
@@ -1150,9 +1147,9 @@ def main():
         beta = int(sys.argv[2])
         gamma = int(sys.argv[2])
         p = float(sys.argv[1])      # lambda for Poisson distribution
-        pA = p     # lambda for Poisson distribution in lane A
-        pB = p     # lambda for Poisson distribution in lane B
-        pC = p     # lambda for Poisson distribution in lane C
+        pA = p / 3    # lambda for Poisson distribution in lane A
+        pB = p / 3    # lambda for Poisson distribution in lane B
+        pC = p / 3    # lambda for Poisson distribution in lane C
     except:
         print('Arguments: lambda, N, W=, W+')
         return
@@ -1163,12 +1160,12 @@ def main():
     last_Y = ('', 0, 0.0)
     last_X, last_Y, computeTime = window_oneSol_dp(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, last_X, last_Y, 0)
     T_last = last_X[2] if last_X[2] >= last_Y[2] else last_Y[2]
-    print(T_last, computeTime)
+    print((T_last, computeTime))
     print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 5, 0, False))
-    # print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 10, 0, False))
-    # print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 20, 0, False))
+    print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 10, 0, False))
+    print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 20, 0, False))
     print('-------------------------------------------All Solutions---------------------------------------------')
-    print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 5, 0, True))
+    # print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 5, 0, True))
     # print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 10, 0, True))
     # print(schedule_by_num_window(copy.deepcopy(a_all), copy.deepcopy(b_all), copy.deepcopy(c_all), W_same, W_diff, 20, 0, True))
 

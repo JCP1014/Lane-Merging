@@ -1019,9 +1019,9 @@ def main():
         return
     a, b, c = generate_traffic_v1(timeStep, alpha, beta, gamma, pA, pB, pC)
     # a, b, c = generate_traffic_v2(timeStep, alpha, beta, gamma, p)
-    a = [0, 1.0, 2.0, 4.0, 5.0, 7.0]
-    b = [0, 5.0, 9.0, 13.0, 14.0, 19.0]
-    c = [0, 1.0, 2.0, 3.0, 6.0, 15.0]
+    a = [0, 3.0, 4.0, 7.0, 10.0, 13.0]
+    b = [0, 1.0, 7.0, 8.0, 12.0, 13.0]
+    c = [0, 7.0, 10.0, 11.0, 14.0, 15.0]
     print(a)
     print(b)
     print(c)

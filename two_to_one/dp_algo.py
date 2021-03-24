@@ -1,7 +1,7 @@
 import numpy as np
 import time
 from collections import namedtuple
-Sol = namedtuple("Sol", "time last")
+SingleSol = namedtuple("SingleSol", "time last")
 
 def print_table(L):
     for i in range(len(L)):
@@ -12,20 +12,20 @@ def print_table(L):
 def schedule(alpha, beta, a, b):
     W_same = 1  # the waiting time if two consecutive vehicles are from the same lane
     W_diff = 3  # the waiting time if two consecutive vehicles are from different lanes
-    L_A = [[ Sol(float('inf'), '') for j in range(beta+1)] for i in range(alpha+1)]
-    L_B = [[ Sol(float('inf'),'') for j in range(beta+1)] for i in range(alpha+1)]
+    L_A = [[ SingleSol(float('inf'), '') for j in range(beta+1)] for i in range(alpha+1)]
+    L_B = [[ SingleSol(float('inf'),'') for j in range(beta+1)] for i in range(alpha+1)]
     
     t0 = time.time()
 
     # Initialize
-    L_A[0][0] = Sol(0, '')
-    L_B[0][0] = Sol(0, '')
-    L_A[1][0] = Sol(a[1], '')
-    L_B[0][1] = Sol(b[1], '')
+    L_A[0][0] = SingleSol(0, '')
+    L_B[0][0] = SingleSol(0, '')
+    L_A[1][0] = SingleSol(a[1], '')
+    L_B[0][1] = SingleSol(b[1], '')
     for i in range(2, alpha+1):
-        L_A[i][0] = Sol(max(a[i], L_A[i-1][0].time+W_same), 'A')
+        L_A[i][0] = SingleSol(max(a[i], L_A[i-1][0].time+W_same), 'A')
     for j in range(2, beta+1):
-        L_B[0][j] = Sol(max(b[j], L_B[0][j-1].time+W_same), 'B')
+        L_B[0][j] = SingleSol(max(b[j], L_B[0][j-1].time+W_same), 'B')
     
     # Compute table
     for i in range(1, alpha+1):
@@ -34,16 +34,16 @@ def schedule(alpha, beta, a, b):
             val_A = max(a[i], L_A[i-1][j].time+W_same)
             val_B = max(a[i], L_B[i-1][j].time+W_diff)
             if val_A <= val_B:
-                L_A[i][j] = Sol(val_A, 'A')
+                L_A[i][j] = SingleSol(val_A, 'A')
             else:
-                L_A[i][j] = Sol(val_B, 'B')
+                L_A[i][j] = SingleSol(val_B, 'B')
             # Compute L(i, j, B)
             val_A = max(b[j], L_A[i][j-1].time+W_diff)
             val_B = max(b[j], L_B[i][j-1].time+W_same)
             if val_A <= val_B:
-                L_B[i][j] = Sol(val_A, 'A')
+                L_B[i][j] = SingleSol(val_A, 'A')
             else:
-                L_B[i][j] = Sol(val_B, 'B')
+                L_B[i][j] = SingleSol(val_B, 'B')
 
     # print_table(L_A)
     # print_table(L_B)
