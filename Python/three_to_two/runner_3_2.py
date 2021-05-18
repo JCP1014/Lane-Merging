@@ -24,9 +24,9 @@ import traci  # noqa
 def generate_routefile(N, p):
     # random.seed(42)  # make tests reproducible
     # demand per second from different directions
-    pA = 0 # a vehicle is generated every p seconds in average.
-    pB = 1. / p
-    pC = 1. / p
+    pA = 1. / p # a vehicle is generated every p seconds in average.
+    pB = 0
+    pC = 0
     with open("./sumo_input/laneMerging.rou.xml", "w") as routes:
         print("""<routes>
         <vType id="typeA" type="passenger" length="5" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="yellow"/>
@@ -277,6 +277,7 @@ def run():
 
         for vehID in traci.simulation.getLoadedIDList():
             traci.vehicle.setLaneChangeMode(vehID, 0b000000000000)
+        traci.trafficlight.setPhase("TL1", 8)
         traci.simulationStep()
         step += 1
         currentTime = traci.simulation.getTime()

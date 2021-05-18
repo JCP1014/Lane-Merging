@@ -1,0 +1,17 @@
+<routes>
+        <vType id="typeA" type="passenger" length="5" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="yellow"/>
+        <vType id="typeB" type="passenger" length="5" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="blue"/>
+        <vType id="typeC" type="passenger" length="5" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="magenta"/>
+
+        <route id="right" edges="E1 E2" />
+    <vehicle id="A_1" type="typeA" route="right" depart="0" departLane="2" departSpeed="random"/>
+    <vehicle id="A_2" type="typeA" route="right" depart="1" departLane="2" departSpeed="random"/>
+    <vehicle id="A_3" type="typeA" route="right" depart="2" departLane="2" departSpeed="random"/>
+    <vehicle id="A_4" type="typeA" route="right" depart="3" departLane="2" departSpeed="random"/>
+    <vehicle id="A_5" type="typeA" route="right" depart="4" departLane="2" departSpeed="random"/>
+    <vehicle id="A_6" type="typeA" route="right" depart="5" departLane="2" departSpeed="random"/>
+    <vehicle id="A_7" type="typeA" route="right" depart="6" departLane="2" departSpeed="random"/>
+    <vehicle id="A_8" type="typeA" route="right" depart="7" departLane="2" departSpeed="random"/>
+    <vehicle id="A_9" type="typeA" route="right" depart="8" departLane="2" departSpeed="random"/>
+    <vehicle id="A_10" type="typeA" route="right" depart="9" departLane="2" departSpeed="random"/>
+</routes>
