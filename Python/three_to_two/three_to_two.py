@@ -588,8 +588,8 @@ def oneSol_multiDim_dp(a, b, c, W_same, W_diff):
     return T_last, computeTime
     
 
-# First-Come-First-Go
-def fcfg(timeStep, a, b, c, W_same, W_diff):  # v5
+# First-Arrive-First-Go
+def fafg(timeStep, a, b, c, W_same, W_diff):  # v5
     a = a[1:]
     b = b[1:]
     c = c[1:]
@@ -1034,8 +1034,8 @@ def main():
     ret = oneSol_multiDim_dp(copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff)
     print('dp:', ret[0], ret[1])
 
-    # Use FCFG approach
-    print('fcfg:', fcfg(timeStep, copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff))
+    # Use fafg approach
+    print('fafg:', fafg(timeStep, copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff))
 
 
 

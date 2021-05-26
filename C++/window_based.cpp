@@ -26,11 +26,11 @@ float digit_round(float value, int digit)
 {
     return roundf(value * pow(10, digit)) / pow(10, digit);
 }
-vector<float> generate_traffic(float timeStep, int num, float p)
+vector<float> generate_traffic(float timeStep, int num, float p, int seed)
 {
     vector<float> earliestArrivalTimes;
     float t;
-    default_random_engine generator(time(NULL));
+    default_random_engine generator(time(NULL) + seed);
     uniform_real_distribution<float> unif(0.0, 1.0);
 
     earliestArrivalTimes.push_back(0.0);
@@ -131,34 +131,34 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
     int alpha = a.size() - 1;
     int beta = b.size() - 1;
     int gamma = c.size() - 1;
-    Solution L_AB[alpha + 1][beta + 1][gamma + 1];
-    Solution L_AC[alpha + 1][beta + 1][gamma + 1];
-    Solution L_BB[alpha + 1][beta + 1][gamma + 1];
-    Solution L_BC[alpha + 1][beta + 1][gamma + 1];
+    vector< vector< vector<Solution> > > L_AB;
+    vector< vector< vector<Solution> > > L_AC;
+    vector< vector< vector<Solution> > > L_BB;
+    vector< vector< vector<Solution> > > L_BC;
     string last_XY;
     float T_X, T_Y;
     vector<Solution> tmpSolVec;
 
+    L_AB.resize(alpha+1,vector<vector<Solution> >(beta+1,vector<Solution>(gamma+1)));
+    L_AC.resize(alpha+1,vector<vector<Solution> >(beta+1,vector<Solution>(gamma+1)));
+    L_BB.resize(alpha+1,vector<vector<Solution> >(beta+1,vector<Solution>(gamma+1)));
+    L_BC.resize(alpha+1,vector<vector<Solution> >(beta+1,vector<Solution>(gamma+1)));
+
     // Initialize
-    // L_AB[0][0][0].time[0] = get<2>(last_X);
-    // L_AB[0][0][0].time[1] = get<2>(last_Y);
-    // L_AB[0][0][0].table = "0";
-    // L_AB[0][0][0].lane = "0";
     L_AB[0][0][0] = update_sol(L_AB[0][0][0], get<2>(last_X), get<2>(last_Y), "", "");
     L_AC[0][0][0] = update_sol(L_AC[0][0][0], get<2>(last_X), get<2>(last_Y), "", "");
     L_BB[0][0][0] = update_sol(L_BB[0][0][0], get<2>(last_X), get<2>(last_Y), "", "");
     L_BC[0][0][0] = update_sol(L_BC[0][0][0], get<2>(last_X), get<2>(last_Y), "", "");
 
-    last_XY = get<0>(last_X) + get<0>(last_Y);
+    last_XY.push_back(get<0>(last_X));
+    last_XY.push_back(get<0>(last_Y));
     T_X = get<2>(last_X);
     T_Y = get<2>(last_Y);
-
     if (last_XY == "AB")
     {
         L_AB[1][1][0] = update_sol(L_AB[1][1][0], max(a[1], T_X + W_same), max(b[1], T_Y + W_same), "AB", "XY");
         L_AC[1][0][1] = update_sol(L_AC[1][0][1], max(a[1], T_X + W_same), max(c[1], T_Y + W_diff), "AC", "XY");
         L_BC[0][1][1] = update_sol(L_BC[0][1][1], max(b[1], T_X + W_diff), max(c[1], T_Y + W_diff), "BC", "XY");
-        // vector<Solution> solVec(2);
         tmpSolVec.push_back(Solution());
         tmpSolVec.push_back(Solution());
         tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_diff), T_Y, "BB", "X0");
@@ -534,33 +534,87 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
                 tmpSolVec.clear();
 
                 // L_BB
-                tmpSolVec.push_back(Solution());
-                tmpSolVec.push_back(Solution());
-                tmpSolVec.push_back(Solution());
-                tmpSolVec.push_back(Solution());
-                tmpSolVec.push_back(Solution());
-                tmpSolVec.push_back(Solution());
-                tmpSolVec.push_back(Solution());
-                tmpSolVec.push_back(Solution());
-                tmpSolVec.push_back(Solution());
-                tmpSolVec.push_back(Solution());
-                tmpSolVec.push_back(Solution());
-                tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j - 1], L_AB[i][j - 2][k].time[0] + W_diff), max(b[j], L_AB[i][j - 2][k].time[1] + W_same), "AB", "XY");
-                tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AB[i][j - 2][k].time[0] + W_diff), max(b[j - 1], L_AB[i][j - 2][k].time[1] + W_same), "AB", "YX");
-                tmpSolVec[2] = update_sol(tmpSolVec[2], max(b[j - 1], L_AC[i][j - 2][k].time[0] + W_diff), max(b[j], L_AC[i][j - 2][k].time[1] + W_diff), "AC", "XY");
-                tmpSolVec[3] = update_sol(tmpSolVec[3], max(b[j], L_AC[i][j - 2][k].time[0] + W_diff), max(b[j - 1], L_AC[i][j - 2][k].time[1] + W_diff), "AC", "YX");
-                tmpSolVec[4] = update_sol(tmpSolVec[4], max(b[j - 1], L_BB[i][j - 2][k].time[0] + W_same), max(b[j], L_BB[i][j - 2][k].time[1] + W_same), "BB", "XY");
-                tmpSolVec[5] = update_sol(tmpSolVec[5], max(b[j], L_BB[i][j - 2][k].time[0] + W_same), max(b[j - 1], L_BB[i][j - 2][k].time[1] + W_same), "BB", "YX");
-                tmpSolVec[6] = update_sol(tmpSolVec[6], max(b[j], max(b[j - 1], L_BB[i][j - 2][k].time[0] + W_same) + W_same), L_BB[i][j - 2][k].time[1], "BB", "XX");
-                tmpSolVec[7] = update_sol(tmpSolVec[7], L_BB[i][j - 2][k].time[0], max(b[j], max(b[j - 1], L_BB[i][j - 2][k].time[1] + W_same) + W_same), "BB", "YY");
-                tmpSolVec[8] = update_sol(tmpSolVec[8], max(b[j - 1], L_BC[i][j - 2][k].time[0] + W_same), max(b[j], L_BC[i][j - 2][k].time[1] + W_diff), "BC", "XY");
-                tmpSolVec[9] = update_sol(tmpSolVec[9], max(b[j], L_BC[i][j - 2][k].time[0] + W_same), max(b[j - 1], L_BC[i][j - 2][k].time[1] + W_diff), "BC", "YX");
-                tmpSolVec[10] = update_sol(tmpSolVec[10], L_BC[i][j - 2][k].time[0], max(b[j], max(b[j - 1], L_BC[i][j - 2][k].time[1] + W_same) + W_diff), "BC", "YY");
-                L_BB[i][j][k] = update_by_minMax(L_BB[i][j][k], tmpSolVec);
-                tmpSolVec.clear();
+                if (j >= 2)
+                {
+                    tmpSolVec.push_back(Solution());
+                    tmpSolVec.push_back(Solution());
+                    tmpSolVec.push_back(Solution());
+                    tmpSolVec.push_back(Solution());
+                    tmpSolVec.push_back(Solution());
+                    tmpSolVec.push_back(Solution());
+                    tmpSolVec.push_back(Solution());
+                    tmpSolVec.push_back(Solution());
+                    tmpSolVec.push_back(Solution());
+                    tmpSolVec.push_back(Solution());
+                    tmpSolVec.push_back(Solution());
+                    tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j - 1], L_AB[i][j - 2][k].time[0] + W_diff), max(b[j], L_AB[i][j - 2][k].time[1] + W_same), "AB", "XY");
+                    tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AB[i][j - 2][k].time[0] + W_diff), max(b[j - 1], L_AB[i][j - 2][k].time[1] + W_same), "AB", "YX");
+                    tmpSolVec[2] = update_sol(tmpSolVec[2], max(b[j - 1], L_AC[i][j - 2][k].time[0] + W_diff), max(b[j], L_AC[i][j - 2][k].time[1] + W_diff), "AC", "XY");
+                    tmpSolVec[3] = update_sol(tmpSolVec[3], max(b[j], L_AC[i][j - 2][k].time[0] + W_diff), max(b[j - 1], L_AC[i][j - 2][k].time[1] + W_diff), "AC", "YX");
+                    tmpSolVec[4] = update_sol(tmpSolVec[4], max(b[j - 1], L_BB[i][j - 2][k].time[0] + W_same), max(b[j], L_BB[i][j - 2][k].time[1] + W_same), "BB", "XY");
+                    tmpSolVec[5] = update_sol(tmpSolVec[5], max(b[j], L_BB[i][j - 2][k].time[0] + W_same), max(b[j - 1], L_BB[i][j - 2][k].time[1] + W_same), "BB", "YX");
+                    tmpSolVec[6] = update_sol(tmpSolVec[6], max(b[j], max(b[j - 1], L_BB[i][j - 2][k].time[0] + W_same) + W_same), L_BB[i][j - 2][k].time[1], "BB", "XX");
+                    tmpSolVec[7] = update_sol(tmpSolVec[7], L_BB[i][j - 2][k].time[0], max(b[j], max(b[j - 1], L_BB[i][j - 2][k].time[1] + W_same) + W_same), "BB", "YY");
+                    tmpSolVec[8] = update_sol(tmpSolVec[8], max(b[j - 1], L_BC[i][j - 2][k].time[0] + W_same), max(b[j], L_BC[i][j - 2][k].time[1] + W_diff), "BC", "XY");
+                    tmpSolVec[9] = update_sol(tmpSolVec[9], max(b[j], L_BC[i][j - 2][k].time[0] + W_same), max(b[j - 1], L_BC[i][j - 2][k].time[1] + W_diff), "BC", "YX");
+                    tmpSolVec[10] = update_sol(tmpSolVec[10], L_BC[i][j - 2][k].time[0], max(b[j], max(b[j - 1], L_BC[i][j - 2][k].time[1] + W_same) + W_diff), "BC", "YY");
+                    L_BB[i][j][k] = update_by_minMax(L_BB[i][j][k], tmpSolVec);
+                    tmpSolVec.clear();
+                }
             }
         }
     }
+
+    // Print table
+    // cout << "L_AB-------------------------------" << endl;
+    // for (int k = 0; k <= gamma; ++k)
+    // {
+    //     cout << "k = " << k << endl;
+    //     for (int i = 0; i <= alpha; ++i)
+    //     {
+    //         for (int j = 0; j <= beta; ++j)
+    //             cout << L_AB[i][j][k].time[0] << " " << L_AB[i][j][k].time[1] << " " << L_AB[i][j][k].table << " " << L_AB[i][j][k].lane << " || ";
+    //         cout << endl;
+    //     }
+    //     cout << endl;
+    // }
+    // cout << "L_AC-------------------------------" << endl;
+    // for (int k = 0; k <= gamma; ++k)
+    // {
+    //     cout << "k = " << k << endl;
+    //     for (int i = 0; i <= alpha; ++i)
+    //     {
+    //         for (int j = 0; j <= beta; ++j)
+    //             cout << L_AC[i][j][k].time[0] << " " << L_AC[i][j][k].time[1] << " " << L_AC[i][j][k].table << " " << L_AC[i][j][k].lane << " || ";
+    //         cout << endl;
+    //     }
+    //     cout << endl;
+    // }
+    // cout << "L_BB-------------------------------" << endl;
+    // for (int k = 0; k <= gamma; ++k)
+    // {
+    //     cout << "k = " << k << endl;
+    //     for (int i = 0; i <= alpha; ++i)
+    //     {
+    //         for (int j = 0; j <= beta; ++j)
+    //             cout << L_BB[i][j][k].time[0] << " " << L_BB[i][j][k].time[1] << " " << L_BB[i][j][k].table << " " << L_BB[i][j][k].lane << " || ";
+    //         cout << endl;
+    //     }
+    //     cout << endl;
+    // }
+    // cout << "L_BC-------------------------------" << endl;
+    // for (int k = 0; k <= gamma; ++k)
+    // {
+    //     cout << "k = " << k << endl;
+    //     for (int i = 0; i <= alpha; ++i)
+    //     {
+    //         for (int j = 0; j <= beta; ++j)
+    //             cout << L_BC[i][j][k].time[0] << " " << L_BC[i][j][k].time[1] << " " << L_BC[i][j][k].table << " " << L_BC[i][j][k].lane << " || ";
+    //         cout << endl;
+    //     }
+    //     cout << endl;
+    // }
+
     // Push order to stack
     stack<tuple<char, int, float>> stack_X, stack_Y;
     int i = alpha;
@@ -702,8 +756,10 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
     // Backtracking
     while (i > 0 || j > 0 || k > 0)
     {
-        cout << i << " " << j << " " << k << " ";
-        cout << table << " " << lanes << endl;
+        if (i < 0 || j < 0 || k < 0)
+            exit(1);
+        // cout << i << " " << j << " " << k << " ";
+        // cout << table << " " << lanes << endl;
         if (table == "AB")
         {
             table = L_AB[i][j][k].table;
@@ -857,6 +913,8 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
 
 vector<float> get_window_by_num(vector<float> &traffic, int carNum)
 {
+    if(carNum >= traffic.size())
+        carNum = traffic.size() - 1;
     vector<float> subtraffic(traffic.begin(), traffic.begin() + carNum + 1);
     traffic.erase(traffic.begin() + 1, traffic.begin() + carNum + 1);
     return subtraffic;
@@ -869,7 +927,7 @@ tuple<float, double> schedule_by_num_window(vector<float> a_all, vector<float> b
     double tmp;
     float T_last;
     auto t0 = chrono::high_resolution_clock::now();
-    while ((a_all.size() > 1 && a_all.size() > 1) ||
+    while ((a_all.size() > 1 && b_all.size() > 1) ||
            (b_all.size() > 1 && c_all.size() > 1) ||
            (b_all.size() > 2))
     {
@@ -877,8 +935,8 @@ tuple<float, double> schedule_by_num_window(vector<float> a_all, vector<float> b
         vector<float> b = get_window_by_num(b_all, carNum);
         vector<float> c = get_window_by_num(c_all, carNum);
         tie(last_X, last_Y, tmp) = window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y);
-        cout << "last_X: " << get<0>(last_X) << " " << get<1>(last_X) << " " << get<2>(last_X) << endl;
-        cout << "last_Y: " << get<0>(last_Y) << " " << get<1>(last_Y) << " " << get<2>(last_Y) << endl;
+        // cout << "last_X: " << get<0>(last_X) << " " << get<1>(last_X) << " " << get<2>(last_X) << endl;
+        // cout << "last_Y: " << get<0>(last_Y) << " " << get<1>(last_Y) << " " << get<2>(last_Y) << endl;
     }
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
@@ -887,6 +945,647 @@ tuple<float, double> schedule_by_num_window(vector<float> a_all, vector<float> b
     //      << totalComputeTime << setprecision(9);
     // cout << " sec" << endl;
     T_last = (get<2>(last_X) >= get<2>(last_Y)) ? get<2>(last_X) : get<2>(last_Y);
+    cout << "result: " << T_last << " " << totalComputeTime << endl;
+    return make_tuple(T_last, totalComputeTime);
+}
+
+tuple<float, double> first_arrive_first_go(float timeStep, vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff)
+{
+    auto t0 = chrono::high_resolution_clock::now();
+    vector<float> a(a_all.begin() + 1, a_all.end());
+    vector<float> b(b_all.begin() + 1, b_all.end());
+    vector<float> c(c_all.begin() + 1, c_all.end());
+    float t = 0;         // time
+    char B_prevTo = 'Y'; // Which lane the previous vehicle in lane B go to
+    float X_lastT = -W_diff;
+    float Y_lastT = -W_diff;
+    char X_lastFrom = '0';
+    char Y_lastFrom = '0';
+
+    while (a.size() > 0 || b.size() > 0 || c.size() > 0)
+    {
+        t = t + timeStep;
+        if (a.size() > 0 && b.size() > 0 && c.size() > 0)
+        {
+            if (a[0] == t && b[0] == t && c[0] == t)
+            {
+                if (a.size() > 1 && b.size() > 1 && c.size() > 1)
+                {
+                    if (b[1] >= a[1] && b[1] >= c[1])
+                    {
+                        if (X_lastFrom == 'A')
+                            X_lastT = max(a[0], X_lastT + W_same);
+                        else
+                            X_lastT = max(a[0], X_lastT + W_diff);
+                        a.erase(a.begin());
+                        X_lastFrom = 'A';
+
+                        if (Y_lastFrom == 'C')
+                            Y_lastT = max(c[0], Y_lastT + W_same);
+                        else
+                            Y_lastT = max(c[0], Y_lastT + W_diff);
+                        c.erase(c.begin());
+                        Y_lastFrom = 'C';
+
+                        if (X_lastT <= t && Y_lastT <= t)
+                        {
+                            if (a[0] >= c[0])
+                            {
+                                X_lastT = max(b[0], X_lastT + W_diff);
+                                b.erase(b.begin());
+                                X_lastFrom = 'B';
+                            }
+                            else
+                            {
+                                Y_lastT = max(b[0], Y_lastT + W_diff);
+                                b.erase(b.begin());
+                                Y_lastFrom = 'B';
+                            }
+                        }
+                        else
+                        {
+                            if (X_lastT < Y_lastT)
+                            {
+                                X_lastT = max(b[0], X_lastT + W_diff);
+                                b.erase(b.begin());
+                                X_lastFrom = 'B';
+                            }
+                            else if (Y_lastT < X_lastT)
+                            {
+                                Y_lastT = max(b[0], Y_lastT + W_diff);
+                                b.erase(b.begin());
+                                Y_lastFrom = 'B';
+                            }
+                            else
+                            {
+                                if (a[0] >= c[0])
+                                {
+                                    X_lastT = max(b[0], X_lastT + W_diff);
+                                    b.erase(b.begin());
+                                    X_lastFrom = 'B';
+                                }
+                                else
+                                {
+                                    Y_lastT = max(b[0], Y_lastT + W_diff);
+                                    b.erase(b.begin());
+                                    Y_lastFrom = 'B';
+                                }
+                            }
+                        }
+                    }
+                    else if (a[1] >= b[1] && a[1] >= c[1])
+                    {
+                        if (X_lastFrom == 'B')
+                            X_lastT = max(b[0], X_lastT + W_same);
+                        else
+                            X_lastT = max(b[0], X_lastT + W_diff);
+                        b.erase(b.begin());
+                        X_lastFrom = 'B';
+
+                        if (Y_lastFrom == 'C')
+                            Y_lastT = max(c[0], Y_lastT + W_same);
+                        else
+                            Y_lastT = max(c[0], Y_lastT + W_diff);
+                        c.erase(c.begin());
+                        Y_lastFrom = 'C';
+
+                        X_lastT = max(a[0], X_lastT + W_diff);
+                        a.erase(a.begin());
+                        X_lastFrom = 'A';
+                    }
+                    else if (c[1] >= a[1] && c[1] >= b[1])
+                    {
+                        if (X_lastFrom == 'A')
+                            X_lastT = max(a[0], X_lastT + W_same);
+                        else
+                            X_lastT = max(a[0], X_lastT + W_diff);
+                        a.erase(a.begin());
+                        X_lastFrom = 'A';
+
+                        if (Y_lastFrom == 'B')
+                            Y_lastT = max(b[0], Y_lastT + W_same);
+                        else
+                            Y_lastT = max(b[0], Y_lastT + W_diff);
+                        b.erase(b.begin());
+                        Y_lastFrom = 'B';
+
+                        Y_lastT = max(c[0], Y_lastT + W_diff);
+                        c.erase(c.begin());
+                        Y_lastFrom = 'C';
+                    }
+                }
+                else if (b.size() < 2)
+                {
+                    if (X_lastFrom == 'A')
+                        X_lastT = max(a[0], X_lastT + W_same);
+                    else
+                        X_lastT = max(a[0], X_lastT + W_diff);
+                    a.erase(a.begin());
+                    X_lastFrom = 'A';
+
+                    if (Y_lastFrom == 'C')
+                        Y_lastT = max(c[0], Y_lastT + W_same);
+                    else
+                        Y_lastT = max(c[0], Y_lastT + W_diff);
+                    c.erase(c.begin());
+                    Y_lastFrom = 'C';
+
+                    if (X_lastT <= t && Y_lastT <= t)
+                    {
+                        if (a.size() < 1)
+                        {
+                            X_lastT = max(b[0], X_lastT + W_diff);
+                            b.erase(b.begin());
+                            X_lastFrom = 'B';
+                        }
+                        else if (c.size() < 1)
+                        {
+                            Y_lastT = max(b[0], Y_lastT + W_diff);
+                            b.erase(b.begin());
+                            Y_lastFrom = 'B';
+                        }
+                        else
+                        {
+                            if (a[0] >= c[0])
+                            {
+                                X_lastT = max(b[0], X_lastT + W_diff);
+                                b.erase(b.begin());
+                                X_lastFrom = 'B';
+                            }
+                            else
+                            {
+                                Y_lastT = max(b[0], Y_lastT + W_diff);
+                                b.erase(b.begin());
+                                Y_lastFrom = 'B';
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (X_lastT < Y_lastT)
+                        {
+                            X_lastT = max(b[0], X_lastT + W_diff);
+                            b.erase(b.begin());
+                            X_lastFrom = 'B';
+                        }
+                        else if (Y_lastT < X_lastT)
+                        {
+                            Y_lastT = max(b[0], Y_lastT + W_diff);
+                            Y_lastFrom = 'B';
+                        }
+                        else
+                        {
+                            if (a.size() < 1)
+                            {
+                                X_lastT = max(b[0], X_lastT + W_diff);
+                                b.erase(b.begin());
+                                X_lastFrom = 'B';
+                            }
+                            else if (c.size() < 1)
+                            {
+                                Y_lastT = max(b[0], Y_lastT + W_diff);
+                                b.erase(b.begin());
+                                Y_lastFrom = 'B';
+                            }
+                            else
+                            {
+                                if (a[0] >= c[0])
+                                {
+                                    X_lastT = max(b[0], X_lastT + W_diff);
+                                    b.erase(b.begin());
+                                    X_lastFrom = 'B';
+                                }
+                                else
+                                {
+                                    Y_lastT = max(b[0], Y_lastT + W_diff);
+                                    b.erase(b.begin());
+                                    Y_lastFrom = 'B';
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (a.size() < 2)
+                {
+                    if (X_lastFrom == 'B')
+                        X_lastT = max(b[0], X_lastT + W_same);
+                    else
+                        X_lastT = max(b[0], X_lastT + W_diff);
+                    b.erase(b.begin());
+                    X_lastFrom = 'B';
+
+                    if (Y_lastFrom == 'C')
+                        Y_lastT = max(c[0], Y_lastT + W_same);
+                    else
+                        Y_lastT = max(c[0], Y_lastT + W_diff);
+                    c.erase(c.begin());
+                    Y_lastFrom = 'C';
+
+                    X_lastT = max(a[0], Y_lastT + W_diff);
+                    a.erase(a.begin());
+                    X_lastFrom = 'A';
+                }
+                else if (c.size() < 2)
+                {
+                    if (X_lastFrom == 'A')
+                        X_lastT = max(a[0], X_lastT + W_same);
+                    else
+                        X_lastT = max(a[0], X_lastT + W_diff);
+                    a.erase(a.begin());
+                    X_lastFrom = 'A';
+
+                    if (Y_lastFrom == 'B')
+                        Y_lastT = max(b[0], Y_lastT + W_same);
+                    else
+                        Y_lastT = max(b[0], Y_lastT + W_diff);
+                    Y_lastFrom = 'B';
+
+                    Y_lastT = max(c[0], Y_lastT + W_diff);
+                    c.erase(c.begin());
+                    Y_lastFrom = 'C';
+                }
+            }
+            else if (a[0] == t && c[0] == t)
+            {
+                if (X_lastFrom == 'A')
+                    X_lastT = max(a[0], X_lastT + W_same);
+                else
+                    X_lastT = max(a[0], X_lastT + W_diff);
+                a.erase(a.begin());
+                X_lastFrom = 'A';
+
+                if (Y_lastFrom == 'C')
+                    Y_lastT = max(c[0], Y_lastT + W_same);
+                else
+                    Y_lastT = max(c[0], Y_lastT + W_diff);
+                c.erase(c.begin());
+                Y_lastFrom = 'C';
+            }
+            else if (a[0] == t && b[0] == t)
+            {
+                if (X_lastFrom == 'A')
+                    X_lastT = max(a[0], X_lastT + W_same);
+                else
+                    X_lastT = max(a[0], X_lastT + W_diff);
+                a.erase(a.begin());
+                X_lastFrom = 'A';
+
+                if (Y_lastFrom == 'B')
+                    Y_lastT = max(b[0], Y_lastT + W_same);
+                else
+                    Y_lastT = max(b[0], Y_lastT + W_diff);
+                b.erase(b.begin());
+                Y_lastFrom = 'B';
+            }
+            else if (b[0] == t && c[0] == t)
+            {
+                if (X_lastFrom == 'B')
+                    X_lastT = max(b[0], X_lastT + W_same);
+                else
+                    X_lastT = max(b[0], X_lastT + W_diff);
+                b.erase(b.begin());
+                X_lastFrom = 'B';
+
+                if (Y_lastFrom == 'C')
+                    Y_lastT = max(c[0], Y_lastT + W_same);
+                else
+                    Y_lastT = max(c[0], Y_lastT + W_diff);
+                c.erase(c.begin());
+                Y_lastFrom = 'C';
+            }
+            else if (b[0] == t)
+            {
+                if (X_lastT <= t && Y_lastT <= t)
+                {
+                    if (c[0] > a[0])
+                    {
+                        if (Y_lastFrom == 'B')
+                            Y_lastT = max(b[0], Y_lastT + W_same);
+                        else
+                            Y_lastT = max(b[0], Y_lastT + W_diff);
+                        b.erase(b.begin());
+                        Y_lastFrom = 'B';
+                    }
+                    else
+                    {
+                        if (X_lastFrom == 'B')
+                            X_lastT = max(b[0], X_lastT + W_same);
+                        else
+                            X_lastT = max(b[0], X_lastT + W_diff);
+                        b.erase(b.begin());
+                        X_lastFrom = 'B';
+                    }
+                }
+                else
+                {
+                    if (X_lastT <= t && Y_lastT <= t)
+                    {
+                        if (c[0] > a[0])
+                        {
+                            if (Y_lastFrom == 'B')
+                                Y_lastT = max(b[0], Y_lastT + W_same);
+                            else
+                                Y_lastT = max(b[0], Y_lastT + W_diff);
+                            b.erase(b.begin());
+                            Y_lastFrom = 'B';
+                        }
+                        else
+                        {
+                            if (X_lastFrom == 'B')
+                                X_lastT = max(b[0], X_lastT + W_same);
+                            else
+                                X_lastT = max(b[0], X_lastT + W_diff);
+                            b.erase(b.begin());
+                            X_lastFrom = 'B';
+                        }
+                    }
+                    else
+                    {
+                        if (X_lastT < Y_lastT)
+                        {
+                            if (X_lastFrom == 'B')
+                                X_lastT = max(b[0], X_lastT + W_same);
+                            else
+                                X_lastT = max(b[0], X_lastT + W_diff);
+                            b.erase(b.begin());
+                            X_lastFrom = 'B';
+                        }
+                        else if (Y_lastT < X_lastT)
+                        {
+                            if (Y_lastFrom == 'B')
+                                Y_lastT = max(b[0], Y_lastT + W_same);
+                            else
+                                Y_lastT = max(b[0], Y_lastT + W_diff);
+                            b.erase(b.begin());
+                            Y_lastFrom = 'B';
+                        }
+                        else
+                        {
+                            if (c[0] > a[0])
+                            {
+                                if (Y_lastFrom == 'B')
+                                    Y_lastT = max(b[0], Y_lastT + W_same);
+                                else
+                                    Y_lastT = max(b[0], Y_lastT + W_diff);
+                                b.erase(b.begin());
+                                Y_lastFrom = 'B';
+                            }
+                            else
+                            {
+                                if (X_lastFrom == 'B')
+                                    X_lastT = max(b[0], X_lastT + W_same);
+                                else
+                                    X_lastT = max(b[0], X_lastT + W_diff);
+                                b.erase(b.begin());
+                                X_lastFrom = 'B';
+                            }
+                        }
+                    }
+                }
+            }
+            else if (a[0] == t)
+            {
+                if (X_lastFrom == 'A')
+                    X_lastT = max(a[0], X_lastT + W_same);
+                else
+                    X_lastT = max(a[0], X_lastT + W_diff);
+                a.erase(a.begin());
+                X_lastFrom = 'A';
+            }
+            else if (c[0] == t)
+            {
+                if (Y_lastFrom == 'C')
+                    Y_lastT = max(c[0], Y_lastT + W_same);
+                else
+                    Y_lastT = max(c[0], Y_lastT + W_diff);
+                c.erase(c.begin());
+                Y_lastFrom = 'C';
+            }
+        }
+        else if (a.size() > 0 && c.size() > 0)
+        {
+            if (a[0] == t && c[0] == t)
+            {
+                if (X_lastFrom == 'A')
+                    X_lastT = max(a[0], X_lastT + W_same);
+                else
+                    X_lastT = max(a[0], X_lastT + W_diff);
+                a.erase(a.begin());
+                X_lastFrom = 'A';
+
+                if (Y_lastFrom == 'C')
+                    Y_lastT = max(c[0], Y_lastT + W_same);
+                else
+                    Y_lastT = max(c[0], Y_lastT + W_diff);
+                c.erase(c.begin());
+                Y_lastFrom = 'C';
+            }
+            else if (a[0] == t)
+            {
+                if (X_lastFrom == 'A')
+                    X_lastT = max(a[0], X_lastT + W_same);
+                else
+                    X_lastT = max(a[0], X_lastT + W_diff);
+                a.erase(a.begin());
+                X_lastFrom = 'A';
+            }
+            else if (c[0] == t)
+            {
+                if (Y_lastFrom == 'C')
+                    Y_lastT = max(c[0], Y_lastT + W_same);
+                else
+                    Y_lastT = max(c[0], Y_lastT + W_diff);
+                c.erase(c.begin());
+                Y_lastFrom = 'C';
+            }
+        }
+        else if (a.size() > 0 && b.size() > 0)
+        {
+            if (a[0] == t && b[0] == t)
+            {
+                if (X_lastFrom == 'A')
+                    X_lastT = max(a[0], X_lastT + W_same);
+                else
+                    X_lastT = max(a[0], X_lastT + W_diff);
+                a.erase(a.begin());
+                X_lastFrom = 'A';
+
+                if (Y_lastFrom == 'B')
+                    Y_lastT = max(b[0], Y_lastT + W_same);
+                else
+                    Y_lastT = max(b[0], Y_lastT + W_diff);
+                b.erase(b.begin());
+                Y_lastFrom = 'B';
+            }
+            else if (a[0] == t)
+            {
+                if (X_lastFrom == 'A')
+                    X_lastT = max(a[0], X_lastT + W_same);
+                else
+                    X_lastT = max(a[0], X_lastT + W_diff);
+                a.erase(a.begin());
+                X_lastFrom = 'A';
+            }
+            else if (b[0] == t)
+            {
+                if (X_lastT <= t && Y_lastT <= t)
+                {
+                    if (Y_lastFrom == 'B')
+                        Y_lastT = max(b[0], Y_lastT + W_same);
+                    else
+                        Y_lastT = max(b[0], Y_lastT + W_diff);
+                    b.erase(b.begin());
+                    Y_lastFrom = 'B';
+                }
+                else
+                {
+                    if (X_lastT < Y_lastT)
+                    {
+                        if (X_lastFrom == 'B')
+                            X_lastT = max(b[0], X_lastT + W_same);
+                        else
+                            X_lastT = max(b[0], X_lastT + W_diff);
+                        b.erase(b.begin());
+                        X_lastFrom = 'B';
+                    }
+                    else if (Y_lastT < X_lastT)
+                    {
+                        if (Y_lastFrom == 'B')
+                            Y_lastT = max(b[0], Y_lastT + W_same);
+                        else
+                            Y_lastT = max(b[0], Y_lastT + W_diff);
+                        b.erase(b.begin());
+                        Y_lastFrom = 'B';
+                    }
+                    else
+                    {
+                        if (Y_lastFrom == 'B')
+                            Y_lastT = max(b[0], Y_lastT + W_same);
+                        else
+                            Y_lastT = max(b[0], Y_lastT + W_diff);
+                        b.erase(b.begin());
+                        Y_lastFrom = 'B';
+                    }
+                }
+            }
+        }
+        else if (b.size() > 0 && c.size() > 0)
+        {
+            if (b[0] == t && c[0] == t)
+            {
+                if (X_lastFrom == 'B')
+                    X_lastFrom = max(b[0], X_lastT + W_same);
+                else
+                    X_lastT = max(b[0], X_lastT + W_diff);
+                b.erase(b.begin());
+                X_lastFrom = 'B';
+
+                if (Y_lastFrom == 'C')
+                    Y_lastT = max(c[0], Y_lastT + W_same);
+                else
+                    Y_lastT = max(c[0], Y_lastT + W_diff);
+                c.erase(c.begin());
+                Y_lastFrom = 'C';
+            }
+            else if (c[0] == t)
+            {
+                if (Y_lastFrom == 'C')
+                    Y_lastT = max(c[0], Y_lastT + W_same);
+                else
+                    Y_lastT = max(c[0], Y_lastT + W_diff);
+                c.erase(c.begin());
+                Y_lastFrom = 'C';
+            }
+            else if (b[0] == t)
+            {
+                if (X_lastT <= t && Y_lastT <= t)
+                {
+                    if (X_lastFrom == 'B')
+                        X_lastT = max(b[0], X_lastT + W_same);
+                    else
+                        X_lastT = max(b[0], X_lastT + W_diff);
+                    b.erase(b.begin());
+                    X_lastFrom = 'B';
+                }
+                else
+                {
+                    if (X_lastT < Y_lastT)
+                    {
+                        if (X_lastFrom == 'B')
+                            X_lastT = max(b[0], X_lastT + W_same);
+                        else
+                            X_lastT = max(b[0], X_lastT + W_diff);
+                        b.erase(b.begin());
+                        X_lastFrom = 'B';
+                    }
+                    else if (Y_lastT < X_lastT)
+                    {
+                        if (Y_lastFrom == 'B')
+                            Y_lastT = max(b[0], Y_lastT + W_same);
+                        else
+                            Y_lastT = max(b[0], Y_lastT + W_diff);
+                        b.erase(b.begin());
+                        Y_lastFrom = 'B';
+                    }
+                    else
+                    {
+                        if (X_lastFrom == 'B')
+                            X_lastT = max(b[0], X_lastT + W_same);
+                        else
+                            X_lastT = max(b[0], X_lastT + W_diff);
+                        b.erase(b.begin());
+                        X_lastFrom = 'B';
+                    }
+                }
+            }
+        }
+        else if (a.size() > 0)
+        {
+            if (X_lastFrom == 'A')
+                X_lastT = max(a[0], X_lastT + W_same);
+            else
+                X_lastT = max(a[0], X_lastT + W_diff);
+            a.erase(a.begin());
+            X_lastFrom = 'A';
+        }
+        else if (c.size() > 0)
+        {
+            if (Y_lastFrom == 'C')
+                Y_lastT = max(c[0], Y_lastT + W_same);
+            else
+                Y_lastT = max(c[0], Y_lastT + W_diff);
+            c.erase(c.begin());
+            Y_lastFrom = 'C';
+        }
+        else if (b.size() > 0)
+        {
+            if (B_prevTo == 'Y')
+            {
+                if (X_lastFrom == 'B')
+                    X_lastT = max(b[0], X_lastT + W_same);
+                else
+                    X_lastT = max(b[0], X_lastT + W_diff);
+                b.erase(b.begin());
+                X_lastFrom = 'B';
+                B_prevTo = 'X';
+            }
+            else
+            {
+                if (Y_lastFrom == 'B')
+                    Y_lastT = max(b[0], Y_lastT + W_same);
+                else
+                    Y_lastT = max(b[0], Y_lastT + W_diff);
+                b.erase(b.begin());
+                Y_lastFrom = 'B';
+                B_prevTo = 'Y';
+            }
+        }
+    }
+    auto t1 = chrono::high_resolution_clock::now();
+    double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
+    totalComputeTime *= 1e-9;
+    float T_last = max(X_lastT, Y_lastT);
+    cout << "result: " << T_last << " " << totalComputeTime << endl;
     return make_tuple(T_last, totalComputeTime);
 }
 
@@ -919,10 +1618,28 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    a_all = generate_traffic(timeStep, alpha, pA);
-    b_all = generate_traffic(timeStep, beta, pB);
-    c_all = generate_traffic(timeStep, gamma, pC);
+    a_all = generate_traffic(timeStep, alpha, p, 0);
+    b_all = generate_traffic(timeStep, beta, p, 1);
+    c_all = generate_traffic(timeStep, gamma, p, 2);
+
     schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, 5);
+    schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, 10);
+    schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, 20);
+    schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, 100);
+    first_arrive_first_go(timeStep, a_all, b_all, c_all, W_same, W_diff);
+
+    // cout << a_all.size() << endl;
+    // for (int i = 0; i < a_all.size(); ++i)
+    //     cout << a_all[i] << " ";
+    // cout << endl;
+    // cout << b_all.size() << endl;
+    // for (int i = 0; i < b_all.size(); ++i)
+    //     cout << b_all[i] << " ";
+    // cout << endl;
+    // cout << c_all.size() << endl;
+    // for (int i = 0; i < c_all.size(); ++i)
+    //     cout << c_all[i] << " ";
+    // cout << endl;
 
     return 0;
 }
