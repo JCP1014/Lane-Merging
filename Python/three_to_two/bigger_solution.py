@@ -217,17 +217,19 @@ def allSol_multiDim_dp(a, b, c, W_same, W_diff):
                                 [ Sol((max(b[j], s.time[0]+W_same), max(c[k], s.time[1]+W_same)), 'BC', idx, 'XY') for idx, s in enumerate(L_BC[i][j-1][k-1]) if not float('inf') in s.time ] + \
                                 [ Sol((s.time[0], max(c[k], max(b[j], s.time[1]+W_diff)+W_diff)), 'BC', idx, 'YY') for idx, s in enumerate(L_BC[i][j-1][k-1]) if not float('inf') in s.time ]
 
-                L_BB[i][j][k] = [ Sol((max(b[j-1], s.time[0]+W_diff), max(b[j], s.time[1]+W_same)), 'AB', idx, 'XY') for idx, s in enumerate(L_AB[i][j-2][k]) if not float('inf') in s.time ] + \
-                                [ Sol((max(b[j], s.time[0]+W_diff), max(b[j-1], s.time[1]+W_same)), 'AB', idx, 'YX') for idx, s in enumerate(L_AB[i][j-2][k]) if not float('inf') in s.time ] + \
-                                [ Sol((max(b[j-1], s.time[0]+W_diff), max(b[j], s.time[1]+W_diff)), 'AC', idx, 'XY') for idx, s in enumerate(L_AC[i][j-2][k]) if not float('inf') in s.time ] + \
-                                [ Sol((max(b[j], s.time[0]+W_diff), max(b[j-1], s.time[1]+W_diff)), 'AC', idx, 'YX') for idx, s in enumerate(L_AC[i][j-2][k]) if not float('inf') in s.time ] + \
-                                [ Sol((max(b[j-1], s.time[0]+W_same), max(b[j], s.time[1]+W_same)), 'BB', idx, 'XY') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time ] + \
-                                [ Sol((max(b[j], s.time[0]+W_same), max(b[j-1], s.time[1]+W_same)), 'BB', idx, 'YX') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time ] + \
-                                [ Sol((max(b[j], max(b[j-1], s.time[0]+W_same)+W_same), s.time[1]), 'BB', idx, 'XX') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time ] + \
-                                [ Sol((s.time[0], max(b[j], max(b[j-1], s.time[1]+W_same)+W_same)), 'BB', idx, 'YY') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time ] + \
-                                [ Sol((max(b[j-1], s.time[0]+W_same), max(b[j], s.time[1]+W_diff)), 'BC', idx, 'XY') for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time ] + \
-                                [ Sol((max(b[j], s.time[0]+W_same), max(b[j-1], s.time[1]+W_diff)), 'BC', idx, 'YX') for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time ] + \
-                                [ Sol((s.time[0], max(b[j], max(b[j-1], s.time[1]+W_same)+W_diff)), 'BC', idx, 'YY') for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time ]
+                if j >= 2:
+                    L_BB[i][j][k] = [ Sol((max(b[j-1], s.time[0]+W_diff), max(b[j], s.time[1]+W_same)), 'AB', idx, 'XY') for idx, s in enumerate(L_AB[i][j-2][k]) if not float('inf') in s.time ] + \
+                                    [ Sol((max(b[j], s.time[0]+W_diff), max(b[j-1], s.time[1]+W_same)), 'AB', idx, 'YX') for idx, s in enumerate(L_AB[i][j-2][k]) if not float('inf') in s.time ] + \
+                                    [ Sol((max(b[j], max(b[j-1], s.time[0]+W_diff)+W_same), s.time[1]), 'AB', idx, 'XX') for idx, s in enumerate(L_AB[i][j-2][k]) if not float('inf') in s.time ] + \
+                                    [ Sol((max(b[j-1], s.time[0]+W_diff), max(b[j], s.time[1]+W_diff)), 'AC', idx, 'XY') for idx, s in enumerate(L_AC[i][j-2][k]) if not float('inf') in s.time ] + \
+                                    [ Sol((max(b[j], s.time[0]+W_diff), max(b[j-1], s.time[1]+W_diff)), 'AC', idx, 'YX') for idx, s in enumerate(L_AC[i][j-2][k]) if not float('inf') in s.time ] + \
+                                    [ Sol((max(b[j-1], s.time[0]+W_same), max(b[j], s.time[1]+W_same)), 'BB', idx, 'XY') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time ] + \
+                                    [ Sol((max(b[j], s.time[0]+W_same), max(b[j-1], s.time[1]+W_same)), 'BB', idx, 'YX') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time ] + \
+                                    [ Sol((max(b[j], max(b[j-1], s.time[0]+W_same)+W_same), s.time[1]), 'BB', idx, 'XX') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time ] + \
+                                    [ Sol((s.time[0], max(b[j], max(b[j-1], s.time[1]+W_same)+W_same)), 'BB', idx, 'YY') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time ] + \
+                                    [ Sol((max(b[j-1], s.time[0]+W_same), max(b[j], s.time[1]+W_diff)), 'BC', idx, 'XY') for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time ] + \
+                                    [ Sol((max(b[j], s.time[0]+W_same), max(b[j-1], s.time[1]+W_diff)), 'BC', idx, 'YX') for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time ] + \
+                                    [ Sol((s.time[0], max(b[j], max(b[j-1], s.time[1]+W_diff)+W_same)), 'BC', idx, 'YY') for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time ]
 
     # print_table(L_AB, 'L_AB')
     # print_table(L_AC, 'L_AC')

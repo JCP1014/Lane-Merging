@@ -158,14 +158,20 @@ def get_window_by_time(a_all, b_all, c_all, cutTime, keep):
     return a, b, c, a_all, b_all, c_all
 
 
-def get_window_by_num(a_all, b_all, c_all, carNum, keep):
-    a = a_all[:(carNum+1)]
-    b = b_all[:(carNum+1)]
-    c = c_all[:(carNum+1)]
-    del a_all[1:(carNum+1-keep)]
-    del b_all[1:(carNum+1-keep)]
-    del c_all[1:(carNum+1-keep)]
-    return a, b, c, a_all, b_all, c_all
+# def get_window_by_num(a_all, b_all, c_all, carNum, keep):
+#     a = a_all[:(carNum+1)]
+#     b = b_all[:(carNum+1)]
+#     c = c_all[:(carNum+1)]
+#     del a_all[1:(carNum+1-keep)]
+#     del b_all[1:(carNum+1-keep)]
+#     del c_all[1:(carNum+1-keep)]
+#     return a, b, c, a_all, b_all, c_all
+def get_window_by_num(traffic, carNum, keep):
+    if carNum >= len(traffic):
+        carNum = len(traffic) - 1
+    window = traffic[:(carNum+1)]
+    del traffic[1:(carNum+1-keep)]
+    return window, traffic
 
 
 def get_obj(sol):
@@ -563,6 +569,8 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
                              max(b[j], L_AB[i][j-2][k].time[1]+W_same)), 'AB', 0, 'XY'),
                         Sol((max(b[j], L_AB[i][j-2][k].time[0]+W_diff),
                              max(b[j-1], L_AB[i][j-2][k].time[1]+W_same)), 'AB', 0, 'YX'),
+                        Sol((max(b[j], max(b[j-1], L_AB[i][j-2][k].time[0]+W_diff) +
+                                 W_same), L_AB[i][j-2][k].time[1]), 'AB', 0, 'XX'),
                         Sol((max(b[j-1], L_AC[i][j-2][k].time[0]+W_diff),
                              max(b[j], L_AC[i][j-2][k].time[1]+W_diff)), 'AC', 0, 'XY'),
                         Sol((max(b[j], L_AC[i][j-2][k].time[0]+W_diff),
@@ -580,9 +588,10 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
                         Sol((max(b[j], L_BC[i][j-2][k].time[0]+W_same),
                              max(b[j-1], L_BC[i][j-2][k].time[1]+W_diff)), 'BC', 0, 'YX'),
                         Sol((L_BC[i][j-2][k].time[0], max(b[j], max(b[j-1],
-                                                                    L_BC[i][j-2][k].time[1]+W_same)+W_diff)), 'BC', 0, 'YY'),
+                                                                    L_BC[i][j-2][k].time[1]+W_diff)+W_same)), 'BC', 0, 'YY'),
                         key=get_obj
                     )
+    
     # print_table(L_AB, 'L_AB')
     # print_table(L_AC, 'L_AC')
     # print_table(L_BB, 'L_BB')
@@ -599,7 +608,7 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
               [j][k], L_BC[i][j][k], key=get_obj)
     table = ''
     lanes = ''
-    # print(opt)
+    # print('opt',opt)
     if opt.time == L_AB[i][j][k].time:
         # print('AB')
         table = L_AB[i][j][k].table
@@ -654,8 +663,10 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
             stack_X.append(('B', j, L_BB[i][j][k].time[0]))
         elif lanes == 'XX':
             stack_X.append(('B', j, L_BB[i][j][k].time[0]))
-            stack_X.append(
-                ('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
+            if table == 'AB':
+                stack_X.append(('B', j-1, max(b[j-1], L_AB[i][j-2][k].time[0]+W_diff)))
+            elif table == 'BB':
+                stack_X.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
         elif lanes == 'YY':
             stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
             if table == 'BB':
@@ -696,7 +707,7 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
             k -= 1
 
     # Backtracking
-    while i > keep or j > keep or k > keep:
+    while i > 0 or j > 0 or k > 0:
         # print(table, i, j, k)
         if table == 'AB':
             # print('AB')
@@ -752,8 +763,10 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
                 stack_X.append(('B', j, L_BB[i][j][k].time[0]))
             elif lanes == 'XX':
                 stack_X.append(('B', j, L_BB[i][j][k].time[0]))
-                stack_X.append(
-                    ('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
+                if table == 'AB':
+                    stack_X.append(('B', j-1, max(b[j-1], L_AB[i][j-2][k].time[0]+W_diff)))
+                elif table == 'BB':
+                    stack_X.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
             elif lanes == 'YY':
                 stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
                 if table == 'BB':
@@ -802,15 +815,15 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
         stack_Y.pop()
 
     # Output order
-    # print('lane X:')
+    print('lane X:')
     last_X = stack_X[0]
-    # while len(stack_X) > 0:
-    #     print(stack_X.pop())
-    # print('-----------------------')
-    # print('lane Y:')
+    while len(stack_X) > 0:
+        print(stack_X.pop())
+    print('-----------------------')
+    print('lane Y:')
     last_Y = stack_Y[0]
-    # while len(stack_Y) > 0:
-    #     print(stack_Y.pop())
+    while len(stack_Y) > 0:
+        print(stack_Y.pop())
 
     computeTime = time.time()-t0
     return last_X, last_Y, computeTime
@@ -1261,6 +1274,22 @@ def window_allSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
     return last_X, last_Y, computeTime
 
 
+def schedule_single_lane(lane, traffic, W_same, W_diff, prev):
+    prevLane = prev[0]
+    prevTime = prev[2]
+    last = ('', 0, 0)
+    if prevLane == '':
+        last = (lane, 1, traffic[1])
+    elif lane == prevLane:
+        last = (lane, 1, max(traffic[1], prevTime+W_same))
+    else:
+        last = (lane, 1, max(traffic[1], prevTime+W_diff))
+    for i in range(2, len(traffic)):
+        prevTime = last[2]
+        last = (lane, i, max(traffic[i], prevTime+W_same))
+    return last
+
+
 def schedule_by_time_window(a_all, b_all, c_all, W_same, W_diff, cutTime, keep, allSol):
     last_X = ('', 0, 0.0)
     last_Y = ('', 0, 0.0)
@@ -1291,21 +1320,125 @@ def schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, carNum, keep, al
     last_Y = ('', 0, 0.0)
     if allSol:
         t0 = time.time()
-        while (len(a_all) > 1 and len(b_all) > 1) or (len(b_all) > 1 and (len(c_all) > 1)) or (len(b_all) > 2):
-            a, b, c, a_all, b_all, c_all = get_window_by_num(
-                a_all, b_all, c_all, carNum, keep)
-            last_X, last_Y, _ = window_allSol_dp(
-                a, b, c, W_same, W_diff, last_X, last_Y, keep)
+        # while (len(a_all) > 1 and len(b_all) > 1) or (len(b_all) > 1 and (len(c_all) > 1)) or (len(b_all) > 2):
+        while len(a_all) > 1 or len(b_all) > 1 or len(c_all) > 1:
+            # a, b, c, a_all, b_all, c_all = get_window_by_num(
+            #     a_all, b_all, c_all, carNum, keep)
+            a, a_all = get_window_by_num(a_all, carNum, keep)
+            b, b_all = get_window_by_num(b_all, carNum, keep)
+            c, c_all = get_window_by_num(c_all, carNum, keep)
+            if len(a) > 1 and len(b) > 1 and len(c) > 1:
+                last_X, last_Y, _ = window_allSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep)
+            elif len(a) > 1 and len(b) > 1:
+                last_X = schedule_single_lane('A', a, W_same, W_diff, last_X)
+                last_Y = schedule_single_lane('B', b, W_same, W_diff, last_Y)
+            elif len(a) > 1 and len(c) > 1:
+                last_X = schedule_single_lane('A', a, W_same, W_diff, last_X)
+                last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y)
+            elif len(b) > 1 and len(c) > 1:
+                last_X = schedule_single_lane('B', b, W_same, W_diff, last_X)
+                last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y)
+            elif len(a) > 1:
+                last_X = schedule_single_lane('A', a, W_same, W_diff, last_X)
+            elif len(c) > 1:
+                last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y)
+            elif len(b) > 1:
+                if last_X[2] < last_Y[2]:
+                    if last_X[0] == '':
+                        last_X = ('B', 1, b[1])
+                    elif last_X[0] == 'A':
+                        last_X = ('B', 1, max(b[1], last_X[2]+W_diff))
+                    else:
+                        last_X = ('B', 1, max(b[1], last_X[2]+W_same))
+                    if len(b) > 2:
+                        if last_Y[0] == '':
+                            last_Y = ('B', 2, b[2])
+                        elif last_Y[0] == 'C':
+                            last_Y = ('B', 2, max(b[2], last_Y[2]+W_diff))
+                        else:
+                            last_Y = ('B', 2, max(b[2], last_Y[2]+W_same))
+                        for i in range(3, len(b), 2):
+                            last_X = ('B', i, max(b[i], last_X[2]+W_same))
+                            last_Y = ('B', i+1, max(b[i+1], last_Y[2]+W_same))
+                else:
+                    if last_Y[0] == '':
+                        last_Y = ('B', 1, b[1])
+                    elif last_Y[0] == 'C':
+                        last_Y = ('B', 1, max(b[1], last_Y[2]+W_diff))
+                    else:
+                        last_Y = ('B', 1, max(b[1], last_Y[2]+W_same))
+                    if len(b) > 2:
+                        if last_X[0] == '':
+                            last_X = ('B', 2, b[2])
+                        elif last_X[0] == 'A':
+                            last_X = ('B', 2, max(b[2], last_X[2]+W_diff))
+                        else:
+                            last_X = ('B', 2, max(b[2], last_X[2]+W_same))
+                        for i in range(3, len(b), 2):
+                            last_Y = ('B', i, max(b[i], last_Y[2]+W_same))
+                            last_X = ('B', i+1, max(b[i+1], last_X[2]+W_same))
+        
         computeTime = time.time() - t0
         T_last = last_X[2] if last_X[2] >= last_Y[2] else last_Y[2]
         return T_last, computeTime
     else:
         t0 = time.time()
-        while (len(a_all) > 1 and len(b_all) > 1) or (len(b_all) > 1 and (len(c_all) > 1)) or (len(b_all) > 2):
-            a, b, c, a_all, b_all, c_all = get_window_by_num(
-                a_all, b_all, c_all, carNum, keep)
-            last_X, last_Y, _ = window_oneSol_dp(
-                a, b, c, W_same, W_diff, last_X, last_Y, keep)
+        # while (len(a_all) > 1 and len(b_all) > 1) or (len(b_all) > 1 and (len(c_all) > 1)) or (len(b_all) > 2):
+        while len(a_all) > 1 or len(b_all) > 1 or len(c_all) > 1:
+            # a, b, c, a_all, b_all, c_all = get_window_by_num(
+            #     a_all, b_all, c_all, carNum, keep)
+            a, a_all = get_window_by_num(a_all, carNum, keep)
+            b, b_all = get_window_by_num(b_all, carNum, keep)
+            c, c_all = get_window_by_num(c_all, carNum, keep)
+            if len(a) > 1 and len(b) > 1 and len(c) > 1:
+                last_X, last_Y, _ = window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep)
+            elif len(a) > 1 and len(b) > 1:
+                last_X = schedule_single_lane('A', a, W_same, W_diff, last_X)
+                last_Y = schedule_single_lane('B', b, W_same, W_diff, last_Y)
+            elif len(a) > 1 and len(c) > 1:
+                last_X = schedule_single_lane('A', a, W_same, W_diff, last_X)
+                last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y)
+            elif len(b) > 1 and len(c) > 1:
+                last_X = schedule_single_lane('B', b, W_same, W_diff, last_X)
+                last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y)
+            elif len(a) > 1:
+                last_X = schedule_single_lane('A', a, W_same, W_diff, last_X)
+            elif len(c) > 1:
+                last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y)
+            elif len(b) > 1:
+                if last_X[2] < last_Y[2]:
+                    if last_X[0] == '':
+                        last_X = ('B', 1, b[1])
+                    elif last_X[0] == 'A':
+                        last_X = ('B', 1, max(b[1], last_X[2]+W_diff))
+                    else:
+                        last_X = ('B', 1, max(b[1], last_X[2]+W_same))
+                    if last_Y[0] == '':
+                        last_Y = ('B', 2, b[2])
+                    elif last_Y[0] == 'C':
+                        last_Y = ('B', 2, max(b[2], last_Y[2]+W_diff))
+                    else:
+                        last_Y = ('B', 2, max(b[2], last_Y[2]+W_same))
+                    for i in range(3, len(b), 2):
+                        last_X = ('B', i, max(b[i], last_X[2]+W_same))
+                        last_Y = ('B', i+1, max(b[i+1], last_Y[2]+W_same))
+                else:
+                    if last_Y[0] == '':
+                        last_Y = ('B', 1, b[1])
+                    elif last_Y[0] == 'C':
+                        last_Y = ('B', 1, max(b[1], last_Y[2]+W_diff))
+                    else:
+                        last_Y = ('B', 1, max(b[1], last_Y[2]+W_same))
+                    if last_X[0] == '':
+                        last_X = ('B', 2, b[2])
+                    elif last_X[0] == 'A':
+                        last_X = ('B', 2, max(b[2], last_X[2]+W_diff))
+                    else:
+                        last_X = ('B', 2, max(b[2], last_X[2]+W_same))
+                    for i in range(3, len(b), 2):
+                        last_Y = ('B', i, max(b[i], last_Y[2]+W_same))
+                        last_X = ('B', i+1, max(b[i+1], last_X[2]+W_same))
+        
             # print(f'last_X: {last_X}')
             # print(f'last_Y: {last_Y}')
         computeTime = time.time() - t0
@@ -1335,9 +1468,9 @@ def main():
         timeStep, alpha, beta, gamma, p, p, p)
         
     a_all, b_all, c_all = generate_traffic_v2(timeStep, alpha, beta, gamma, p)
-    # a_all = [0, 2, 3, 4, 5, 7, 8, 11, 12, 14, 15]
-    # b_all = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-    # c_all = [0, 2, 4, 5, 6, 7, 9, 10, 11, 12, 13]
+    a_all = [0, 70.27, 71.27, 72.27, 73.27, 74.27]
+    b_all = [0, 69.27]
+    c_all = [0, 72.27, 73.27, 74.27, 75.27]
     # print(a_all)
     # print(b_all)
     # print(c_all)

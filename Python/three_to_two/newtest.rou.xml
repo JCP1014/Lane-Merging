@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 二  4/27 15:13:15 2021 by Eclipse SUMO netedit Version 1.8.0
+<!-- generated on 一  5/ 3 21:45:45 2021 by Eclipse SUMO netedit Version 1.8.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <output>
-        <output-file value="/Users/huangshaofu/Desktop/cwlab/test.net.xml"/>
+        <output-file value="/Users/huangshaofu/Desktop/cwlab/Lane-Merging/three_to_two/newtest.net.xml"/>
     </output>
 
     <processing>
@@ -16,7 +16,7 @@
     </junctions>
 
     <netedit>
-        <route-files value="/Users/huangshaofu/Desktop/cwlab/test1.rou.xml"/>
+        <route-files value="/Users/huangshaofu/Desktop/cwlab/Lane-Merging/three_to_two/newtest.rou.xml"/>
     </netedit>
 
     <report>
@@ -27,7 +27,8 @@
 -->
 
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
-    <route edges="gneE0 gneE1 gneE6 gneE9 gneE11" color="yellow" id="route_0"/>
-    <route edges="gneE0 gneE1 gneE6 gneE10" color="yellow" id="route_1"/>
-    <vehicle id="vehicle_0" depart="0.00" route="route_0"/>
+    <route edges="gneE16 gneE19 gneE22 gneE25" color="yellow" id="route_0"/>
+    <route edges="gneE17 gneE20 gneE23 gneE25" color="yellow" id="route_1"/>
+    <route edges="gneE17 gneE20 gneE23 gneE26" color="yellow" id="route_2"/>
+    <route edges="gneE18 gneE21 gneE24 gneE26" color="yellow" id="route_3"/>
 </routes>

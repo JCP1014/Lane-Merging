@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Wed Mar 10 08:25:15 2021 by Eclipse SUMO netedit Version 1.7.0
+<!-- generated on 二  1/19 14:15:12 2021 by Eclipse SUMO netedit Version 1.7.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
-        <sumo-net-file value="/Users/jcp/Desktop/OneDrive%20-%20國立成功大學/Lab/Lane-Merging/three_to_two/sumo_input/laneMerging.net.xml"/>
+        <sumo-net-file value="/Users/jcp/Desktop/OneDrive%20-%20國立成功大學/Intelligent%20Vehicles/Project/Lane-Merging/laneMerging.net.xml"/>
     </input>
 
     <output>
-        <output-file value="/Users/jcp/Desktop/OneDrive%20-%20國立成功大學/Lab/Lane-Merging/three_to_two/sumo_input/laneMerging.net.xml"/>
+        <output-file value="/Users/jcp/Desktop/OneDrive%20-%20國立成功大學/Intelligent%20Vehicles/Project/Lane-Merging/three_to.net.xml"/>
     </output>
 
     <processing>
@@ -53,18 +53,29 @@
     </edge>
 
     <tlLogic id="TL1" type="static" programID="0" offset="0">
+        <!-- 0 -->
         <phase duration="1000" state="GGGG"/>
+        <!-- 1 -->
         <phase duration="1000" state="rrrr"/>
+        <!-- 2 -->
         <phase duration="1"  state="rGrG"/>
         <phase duration="1000" state="rrrr"/>
+        <!-- 4 -->
         <phase duration="1"  state="GrrG"/>
         <phase duration="1000" state="rrrr"/>
-        <phase duration="1"  state="GrGG"/>
+        <!-- 6 -->
+        <phase duration="1"  state="GrGr"/>
         <phase duration="1000" state="rrrr"/>
+        <!-- 8 -->
+        <phase duration="1"  state="rrrG"/>
+        <phase duration="1000" state="rrrr"/>
+        <!-- 10 -->
         <phase duration="1"  state="rrGr"/>
         <phase duration="1000" state="rrrr"/>
+        <!-- 12 -->
         <phase duration="1"  state="rGrr"/>
         <phase duration="1000" state="rrrr"/>
+        <!-- 14 -->
         <phase duration="1"  state="Grrr"/>
         <phase duration="1000" state="rrrr"/>
     </tlLogic>
@@ -81,6 +92,6 @@
     <connection from="E1" to="E2" fromLane="0" toLane="0" tl="TL1" linkIndex="0" dir="s" state="o"/>
     <connection from="E1" to="E2" fromLane="1" toLane="0" tl="TL1" linkIndex="1" dir="s" state="O"/>
     <connection from="E1" to="E2" fromLane="1" toLane="1" tl="TL1" linkIndex="2" dir="s" state="o"/>
-    <connection from="E1" to="E2" fromLane="2" toLane="1" tl="TL1" linkIndex="3" dir="s" state="O"/>
+    <connection from="E1" to="E2" fromLane="2" toLane="1" keepClear="0" tl="TL1" linkIndex="3" dir="s" state="O"/>
 
 </net>
