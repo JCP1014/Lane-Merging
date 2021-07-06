@@ -697,11 +697,13 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         {
             stack_X.push(make_tuple('B', j - 1, L_BB[i][j][k].time[0]));
             stack_Y.push(make_tuple('B', j, L_BB[i][j][k].time[1]));
+            j -= 2;
         }
         else if (lanes == "YX")
         {
             stack_Y.push(make_tuple('B', j - 1, L_BB[i][j][k].time[1]));
             stack_X.push(make_tuple('B', j, L_BB[i][j][k].time[0]));
+            j -= 2;
         }
         else if (lanes == "XX")
         {
@@ -710,6 +712,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
                 stack_X.push(make_tuple('B', j - 1, max(b[j - 1], L_AB[i][j - 2][k].time[0] + W_diff)));
             else if (table == "BB")
                 stack_X.push(make_tuple('B', j - 1, max(b[j - 1], L_BB[i][j - 2][k].time[0] + W_same)));
+            j -= 2;
         }
         else if (lanes == "YY")
         {
@@ -720,8 +723,18 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
                 stack_Y.push(make_tuple('B', j - 1, max(b[j - 1], L_BC[i][j - 2][k].time[1] + W_same)));
             else
                 cout << "bug" << endl;
+            j -= 2;
         }
-        j -= 2;
+        else if (lanes[0] == 'X')
+        {
+            stack_X.push(make_tuple('B', j, L_BB[i][j][k].time[0]));
+            --j;
+        }
+        else if (lanes[1] == 'Y')
+        {
+            stack_Y.push(make_tuple('B', j, L_BB[i][j][k].time[1]));
+            --j;
+        }
     }
     else if (optTable == "BC")
     {
@@ -829,11 +842,13 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             {
                 stack_X.push(make_tuple('B', j - 1, L_BB[i][j][k].time[0]));
                 stack_Y.push(make_tuple('B', j, L_BB[i][j][k].time[1]));
+                j -= 2;
             }
             else if (lanes == "YX")
             {
                 stack_Y.push(make_tuple('B', j - 1, L_BB[i][j][k].time[1]));
                 stack_X.push(make_tuple('B', j, L_BB[i][j][k].time[0]));
+                j -= 2;
             }
             else if (lanes == "XX")
             {
@@ -842,6 +857,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
                     stack_X.push(make_tuple('B', j - 1, max(b[j - 1], L_AB[i][j - 2][k].time[0] + W_diff)));
                 else if (table == "BB")
                     stack_X.push(make_tuple('B', j - 1, max(b[j - 1], L_BB[i][j - 2][k].time[0] + W_same)));
+                j -= 2;
             }
             else if (lanes == "YY")
             {
@@ -852,8 +868,18 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
                     stack_Y.push(make_tuple('B', j - 1, max(b[j - 1], L_BC[i][j - 2][k].time[1] + W_same)));
                 else
                     cout << "bug" << endl;
+                j -= 2;  
             }
-            j -= 2;
+            else if (lanes[0] == 'X')
+            {
+                stack_X.push(make_tuple('B', j, L_BB[i][j][k].time[0]));
+                --j;
+            }
+            else if (lanes[1] == 'Y')
+            {
+                stack_Y.push(make_tuple('B', j, L_BB[i][j][k].time[1]));
+                --j;
+            }
         }
         else if (table == "BC")
         {

@@ -608,9 +608,9 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
               [j][k], L_BC[i][j][k], key=get_obj)
     table = ''
     lanes = ''
-    # print('opt',opt)
+    print('opt',opt)
     if opt.time == L_AB[i][j][k].time:
-        # print('AB')
+        print('AB')
         table = L_AB[i][j][k].table
         lanes = L_AB[i][j][k].lane
         if lanes == 'XY':
@@ -637,7 +637,7 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
             stack_Y.append(('B', j, L_AB[i][j][k].time[1]))
             j -= 1
     elif opt.time == L_AC[i][j][k].time:
-        # print('AC')
+        print('AC')
         table = L_AC[i][j][k].table
         lanes = L_AC[i][j][k].lane
         if lanes == 'XY':
@@ -652,21 +652,24 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
             stack_Y.append(('C', k, L_AC[i][j][k].time[1]))
             k -= 1
     elif opt.time == L_BB[i][j][k].time:
-        # print('BB')
+        print('BB')
         table = L_BB[i][j][k].table
         lanes = L_BB[i][j][k].lane
         if lanes == 'XY':
             stack_X.append(('B', j-1, L_BB[i][j][k].time[0]))
             stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+            j -= 2
         elif lanes == 'YX':
             stack_Y.append(('B', j-1, L_BB[i][j][k].time[1]))
             stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+            j -= 2
         elif lanes == 'XX':
             stack_X.append(('B', j, L_BB[i][j][k].time[0]))
             if table == 'AB':
                 stack_X.append(('B', j-1, max(b[j-1], L_AB[i][j-2][k].time[0]+W_diff)))
             elif table == 'BB':
                 stack_X.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
+            j -= 2
         elif lanes == 'YY':
             stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
             if table == 'BB':
@@ -677,9 +680,15 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
                     ('B', j-1, max(b[j-1], L_BC[i][j-2][k].time[1]+W_same)))
             else:
                 print('bug')
-        j -= 2
+            j -= 2
+        elif lanes[0] == 'X':
+            stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+            j -= 1
+        elif lanes[1] == 'Y':
+            stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+            j -= 1
     elif opt.time == L_BC[i][j][k].time:
-        # print('BC')
+        print('BC')
         table = L_BC[i][j][k].table
         lanes = L_BC[i][j][k].lane
         if lanes == 'XY':
@@ -708,9 +717,9 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
 
     # Backtracking
     while i > 0 or j > 0 or k > 0:
-        # print(table, i, j, k)
+        print(table, i, j, k)
         if table == 'AB':
-            # print('AB')
+            print('AB')
             table = L_AB[i][j][k].table
             lanes = L_AB[i][j][k].lane
             if lanes == 'XY':
@@ -737,7 +746,7 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
                 stack_Y.append(('B', j, L_AB[i][j][k].time[1]))
                 j -= 1
         elif table == 'AC':
-            # print('AC')
+            print('AC')
             table = L_AC[i][j][k].table
             lanes = L_AC[i][j][k].lane
             if lanes == 'XY':
@@ -752,21 +761,24 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
                 stack_Y.append(('C', k, L_AC[i][j][k].time[1]))
                 k -= 1
         elif table == 'BB':
-            # print('BB')
+            print('BB')
             table = L_BB[i][j][k].table
             lanes = L_BB[i][j][k].lane
             if lanes == 'XY':
                 stack_X.append(('B', j-1, L_BB[i][j][k].time[0]))
                 stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+                j -= 2
             elif lanes == 'YX':
                 stack_Y.append(('B', j-1, L_BB[i][j][k].time[1]))
                 stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+                j -= 2
             elif lanes == 'XX':
                 stack_X.append(('B', j, L_BB[i][j][k].time[0]))
                 if table == 'AB':
                     stack_X.append(('B', j-1, max(b[j-1], L_AB[i][j-2][k].time[0]+W_diff)))
                 elif table == 'BB':
                     stack_X.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
+                j -= 2
             elif lanes == 'YY':
                 stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
                 if table == 'BB':
@@ -777,9 +789,15 @@ def window_oneSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
                         ('B', j-1, max(b[j-1], L_BC[i][j-2][k].time[1]+W_same)))
                 else:
                     print('bug')
-            j -= 2
+                j -= 2
+            elif lanes[0] == 'X':
+                stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+                j -= 1
+            elif lanes[1] == 'Y':
+                stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+                j -= 1
         elif table == 'BC':
-            # print('BC')
+            print('BC')
             table = L_BC[i][j][k].table
             lanes = L_BC[i][j][k].lane
             if lanes == 'XY':
@@ -1068,35 +1086,33 @@ def window_allSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
                                 [Sol((max(a[i], s.time[0]+W_same), max(b[j], s.time[1]+W_diff)), 'AC', idx, 'XY') for idx, s in enumerate(L_AC[i-1][j-1][k]) if not float('inf') in s.time] + \
                                 [Sol((max(a[i], s.time[0]+W_diff), max(b[j], s.time[1]+W_same)), 'BB', idx, 'XY') for idx, s in enumerate(L_BB[i-1][j-1][k]) if not float('inf') in s.time] + \
                                 [Sol((max(a[i], max(b[j], s.time[0]+W_same)+W_diff), s.time[1]), 'BB', idx, 'XX') for idx, s in enumerate(L_BB[i-1][j-1][k]) if not float('inf') in s.time] + \
-                                [Sol((max(a[i], s.time[0]+W_diff), max(b[j], s.time[1]+W_diff)), 'BC', idx, 'XY')
-                                 for idx, s in enumerate(L_BC[i-1][j-1][k]) if not float('inf') in s.time]
+                                [Sol((max(a[i], s.time[0]+W_diff), max(b[j], s.time[1]+W_diff)), 'BC', idx, 'XY') for idx, s in enumerate(L_BC[i-1][j-1][k]) if not float('inf') in s.time]
 
                 L_AC[i][j][k] = [Sol((max(a[i], s.time[0]+W_same), max(c[k], s.time[1]+W_diff)), 'AB', idx, 'XY') for idx, s in enumerate(L_AB[i-1][j][k-1]) if not float('inf') in s.time] + \
                                 [Sol((max(a[i], s.time[0]+W_same), max(c[k], s.time[1]+W_same)), 'AC', idx, 'XY') for idx, s in enumerate(L_AC[i-1][j][k-1]) if not float('inf') in s.time] + \
                                 [Sol((max(a[i], s.time[0]+W_diff), max(c[k], s.time[1]+W_diff)), 'BB', idx, 'XY') for idx, s in enumerate(L_BB[i-1][j][k-1]) if not float('inf') in s.time] + \
-                                [Sol((max(a[i], s.time[0]+W_diff), max(c[k], s.time[1]+W_same)), 'BC', idx, 'XY')
-                                 for idx, s in enumerate(L_BC[i-1][j][k-1]) if not float('inf') in s.time]
+                                [Sol((max(a[i], s.time[0]+W_diff), max(c[k], s.time[1]+W_same)), 'BC', idx, 'XY') for idx, s in enumerate(L_BC[i-1][j][k-1]) if not float('inf') in s.time]
 
                 L_BC[i][j][k] = [Sol((max(b[j], s.time[0]+W_diff), max(c[k], s.time[1]+W_diff)), 'AB', idx, 'XY') for idx, s in enumerate(L_AB[i][j-1][k-1]) if not float('inf') in s.time] + \
                                 [Sol((max(b[j], s.time[0]+W_diff), max(c[k], s.time[1]+W_same)), 'AC', idx, 'XY') for idx, s in enumerate(L_AC[i][j-1][k-1]) if not float('inf') in s.time] + \
                                 [Sol((max(b[j], s.time[0]+W_same), max(c[k], s.time[1]+W_diff)), 'BB', idx, 'XY') for idx, s in enumerate(L_BB[i][j-1][k-1]) if not float('inf') in s.time] + \
                                 [Sol((s.time[0], max(c[k], max(b[j], s.time[1]+W_same)+W_diff)), 'BB', idx, 'YY') for idx, s in enumerate(L_BB[i][j-1][k-1]) if not float('inf') in s.time] + \
                                 [Sol((max(b[j], s.time[0]+W_same), max(c[k], s.time[1]+W_same)), 'BC', idx, 'XY') for idx, s in enumerate(L_BC[i][j-1][k-1]) if not float('inf') in s.time] + \
-                                [Sol((s.time[0], max(c[k], max(b[j], s.time[1]+W_diff)+W_diff)), 'BC', idx, 'YY')
-                                 for idx, s in enumerate(L_BC[i][j-1][k-1]) if not float('inf') in s.time]
+                                [Sol((s.time[0], max(c[k], max(b[j], s.time[1]+W_diff)+W_diff)), 'BC', idx, 'YY') for idx, s in enumerate(L_BC[i][j-1][k-1]) if not float('inf') in s.time]
 
-                L_BB[i][j][k] = [Sol((max(b[j-1], s.time[0]+W_diff), max(b[j], s.time[1]+W_same)), 'AB', idx, 'XY') for idx, s in enumerate(L_AB[i][j-2][k]) if not float('inf') in s.time] + \
-                                [Sol((max(b[j], s.time[0]+W_diff), max(b[j-1], s.time[1]+W_same)), 'AB', idx, 'YX') for idx, s in enumerate(L_AB[i][j-2][k]) if not float('inf') in s.time] + \
-                                [Sol((max(b[j-1], s.time[0]+W_diff), max(b[j], s.time[1]+W_diff)), 'AC', idx, 'XY') for idx, s in enumerate(L_AC[i][j-2][k]) if not float('inf') in s.time] + \
-                                [Sol((max(b[j], s.time[0]+W_diff), max(b[j-1], s.time[1]+W_diff)), 'AC', idx, 'YX') for idx, s in enumerate(L_AC[i][j-2][k]) if not float('inf') in s.time] + \
-                                [Sol((max(b[j-1], s.time[0]+W_same), max(b[j], s.time[1]+W_same)), 'BB', idx, 'XY') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time] + \
-                                [Sol((max(b[j], s.time[0]+W_same), max(b[j-1], s.time[1]+W_same)), 'BB', idx, 'YX') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time] + \
-                                [Sol((max(b[j], max(b[j-1], s.time[0]+W_same)+W_same), s.time[1]), 'BB', idx, 'XX') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time] + \
-                                [Sol((s.time[0], max(b[j], max(b[j-1], s.time[1]+W_same)+W_same)), 'BB', idx, 'YY') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time] + \
-                                [Sol((max(b[j-1], s.time[0]+W_same), max(b[j], s.time[1]+W_diff)), 'BC', idx, 'XY') for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time] + \
-                                [Sol((max(b[j], s.time[0]+W_same), max(b[j-1], s.time[1]+W_diff)), 'BC', idx, 'YX') for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time] + \
-                                [Sol((s.time[0], max(b[j], max(b[j-1], s.time[1]+W_same)+W_diff)), 'BC', idx, 'YY')
-                                 for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time]
+                if j >= 2:
+                    L_BB[i][j][k] = [Sol((max(b[j-1], s.time[0]+W_diff), max(b[j], s.time[1]+W_same)), 'AB', idx, 'XY') for idx, s in enumerate(L_AB[i][j-2][k]) if not float('inf') in s.time] + \
+                                    [Sol((max(b[j], s.time[0]+W_diff), max(b[j-1], s.time[1]+W_same)), 'AB', idx, 'YX') for idx, s in enumerate(L_AB[i][j-2][k]) if not float('inf') in s.time] + \
+                                    [Sol((max(b[j], max(b[j-1], s.time[0]+W_diff)+W_same), s.time[1]), 'AB', idx, 'XX') for idx, s in enumerate(L_AB[i][j-2][k]) if not float('inf') in s.time] + \
+                                    [Sol((max(b[j-1], s.time[0]+W_diff), max(b[j], s.time[1]+W_diff)), 'AC', idx, 'XY') for idx, s in enumerate(L_AC[i][j-2][k]) if not float('inf') in s.time] + \
+                                    [Sol((max(b[j], s.time[0]+W_diff), max(b[j-1], s.time[1]+W_diff)), 'AC', idx, 'YX') for idx, s in enumerate(L_AC[i][j-2][k]) if not float('inf') in s.time] + \
+                                    [Sol((max(b[j-1], s.time[0]+W_same), max(b[j], s.time[1]+W_same)), 'BB', idx, 'XY') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time] + \
+                                    [Sol((max(b[j], s.time[0]+W_same), max(b[j-1], s.time[1]+W_same)), 'BB', idx, 'YX') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time] + \
+                                    [Sol((max(b[j], max(b[j-1], s.time[0]+W_same)+W_same), s.time[1]), 'BB', idx, 'XX') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time] + \
+                                    [Sol((s.time[0], max(b[j], max(b[j-1], s.time[1]+W_same)+W_same)), 'BB', idx, 'YY') for idx, s in enumerate(L_BB[i][j-2][k]) if not float('inf') in s.time] + \
+                                    [Sol((max(b[j-1], s.time[0]+W_same), max(b[j], s.time[1]+W_diff)), 'BC', idx, 'XY') for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time] + \
+                                    [Sol((max(b[j], s.time[0]+W_same), max(b[j-1], s.time[1]+W_diff)), 'BC', idx, 'YX') for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time] + \
+                                    [Sol((s.time[0], max(b[j], max(b[j-1], s.time[1]+W_same)+W_diff)), 'BC', idx, 'YY') for idx, s in enumerate(L_BC[i][j-2][k]) if not float('inf') in s.time]
 
     # print_solNum(L_AB, 'L_AB')
     # print_solNum(L_AC, 'L_AC')
@@ -1200,13 +1216,16 @@ def window_allSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
             if lanes == 'XY':
                 stack_X.append(('B', j-1, L_BB[i][j][k][idx].time[0]))
                 stack_Y.append(('B', j, L_BB[i][j][k][idx].time[1]))
+                j -= 2
             elif lanes == 'YX':
                 stack_Y.append(('B', j-1, L_BB[i][j][k][idx].time[1]))
                 stack_X.append(('B', j, L_BB[i][j][k][idx].time[0]))
+                j -= 2
             elif lanes == 'XX':
                 stack_X.append(('B', j, L_BB[i][j][k][idx].time[0]))
                 # stack_X.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k][idx].time[0]+W_same)))
                 stack_X.append(('B', j-1, 0))
+                j -= 2
             elif lanes == 'YY':
                 stack_Y.append(('B', j, L_BB[i][j][k][idx].time[1]))
                 stack_Y.append(('B', j-1, 0))
@@ -1216,8 +1235,14 @@ def window_allSol_dp(a, b, c, W_same, W_diff, last_X, last_Y, keep):
                 #     stack_Y.append(('B', j-1, max(b[j-1], L_BC[i][j-2][k][idx].time[1]+W_same)))
                 # else:
                 #     print('bug')
+                j -= 2
+            elif lanes[0] == 'X':
+                stack_X.append(('B', j, L_BB[i][j][k][idx].time[0]))
+                j -= 1
+            elif lanes[1] == 'Y':
+                stack_Y.append(('B', j, L_BB[i][j][k][idx].time[1]))
+                j -= 1
             idx = L_BB[i][j][k][idx].idx
-            j -= 2
         elif table == 'BC':
             # print('BC')
             lanes = L_BC[i][j][k][idx].lane
@@ -1468,9 +1493,9 @@ def main():
         timeStep, alpha, beta, gamma, p, p, p)
         
     a_all, b_all, c_all = generate_traffic_v2(timeStep, alpha, beta, gamma, p)
-    a_all = [0, 70.27, 71.27, 72.27, 73.27, 74.27]
-    b_all = [0, 69.27]
-    c_all = [0, 72.27, 73.27, 74.27, 75.27]
+    a_all = [0, 73.58, 74.58]
+    b_all = [0, 68.28, 69.28, 70.58]
+    c_all = [0, 72.28, 73.28, 74.28, 75.28]
     # print(a_all)
     # print(b_all)
     # print(c_all)

@@ -1,6 +1,0 @@
-<routes>
-    <vType id="typeA" type="passenger" length="2" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="yellow"/>
-    <route id="right" edges="E1 E2" />
-    <vehicle id="C_1" type="typeA" route="right" depart="1" departLane="2" arrivalLane="2"/>
-    <vehicle id="C_2" type="typeA" route="right" depart="3" departLane="0"/>
-</routes>

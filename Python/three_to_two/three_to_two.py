@@ -435,12 +435,15 @@ def oneSol_multiDim_dp(a, b, c, W_same, W_diff):
         if lanes == 'XY':
             stack_X.append(('B', j-1, L_BB[i][j][k].time[0]))
             stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+            j -= 2
         elif lanes == 'YX':
             stack_Y.append(('B', j-1, L_BB[i][j][k].time[1]))
             stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+            j -= 2
         elif lanes == 'XX':
             stack_X.append(('B', j, L_BB[i][j][k].time[0]))
             stack_X.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
+            j -= 2
         elif lanes == 'YY':
             stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
             if table == 'BB':
@@ -449,7 +452,13 @@ def oneSol_multiDim_dp(a, b, c, W_same, W_diff):
                 stack_Y.append(('B', j-1, max(b[j-1], L_BC[i][j-2][k].time[1]+W_same)))
             else:
                 print('bug')
-        j -= 2
+            j -= 2
+        elif lanes[0] == 'X':
+            stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+            j -= 1
+        elif lanes[1] == 'Y':
+            stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+            j -= 1
     elif opt.time == L_BC[i][j][k].time:
         print('BC')
         table = L_BC[i][j][k].table
@@ -526,12 +535,15 @@ def oneSol_multiDim_dp(a, b, c, W_same, W_diff):
             if lanes == 'XY':
                 stack_X.append(('B', j-1, L_BB[i][j][k].time[0]))
                 stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+                j -= 2
             elif lanes == 'YX':
                 stack_Y.append(('B', j-1, L_BB[i][j][k].time[1]))
                 stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+                j -= 2
             elif lanes == 'XX':
                 stack_X.append(('B', j, L_BB[i][j][k].time[0]))
                 stack_X.append(('B', j-1, max(b[j-1], L_BB[i][j-2][k].time[0]+W_same)))
+                j -= 2
             elif lanes == 'YY':
                 stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
                 if table == 'BB':
@@ -540,7 +552,13 @@ def oneSol_multiDim_dp(a, b, c, W_same, W_diff):
                     stack_Y.append(('B', j-1, max(b[j-1], L_BC[i][j-2][k].time[1]+W_same)))
                 else:
                     print('bug')
-            j -= 2
+                j -= 2
+            elif lanes[0] == 'X':
+                stack_X.append(('B', j, L_BB[i][j][k].time[0]))
+                j -= 1
+            elif lanes[1] == 'Y':
+                stack_Y.append(('B', j, L_BB[i][j][k].time[1]))
+                j -= 1
         elif  table == 'BC':
             # print('BC')
             table = L_BC[i][j][k].table
@@ -590,8 +608,8 @@ def oneSol_multiDim_dp(a, b, c, W_same, W_diff):
     return T_last, computeTime
     
 
-# First-Arrive-First-Go
-def fafg(timeStep, a, b, c, W_same, W_diff):  # v5
+# First-Come-First-Go
+def fcfg(timeStep, a, b, c, W_same, W_diff):  # v5
     a = a[1:]
     b = b[1:]
     c = c[1:]
@@ -1036,8 +1054,8 @@ def main():
     ret = oneSol_multiDim_dp(copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff)
     print('dp:', ret[0], ret[1])
 
-    # Use fafg approach
-    print('fafg:', fafg(timeStep, copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff))
+    # Use fcfg approach
+    print('fcfg:', fcfg(timeStep, copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff))
 
 
 

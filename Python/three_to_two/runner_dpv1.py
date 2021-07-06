@@ -28,7 +28,7 @@ def generate_routefile(N, p):
     pB = 1. / p
     pC = 1. / p
     print("11")
-    with open("laneMerging.rou.xml", "w") as routes:
+    with open("sumo_input/newtest.rou.xml", "w") as routes:
         print("""<routes>
         <vType id="typeA" type="passenger" length="5" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="yellow"/>
         <vType id="typeB" type="passenger" length="5" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="blue"/>
