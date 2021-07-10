@@ -107,6 +107,19 @@ def compute_earliest_arrival(laneLength, schedule_A, schedule_BX, schedule_BY, s
     return a, b, c
 
 
+def simple_compute_entering_time(lane, traffic, W_same, W_diff, prevLane, prevTime):
+    schedule = []
+    if prevLane == '':
+        schedule.append(Vehicle(traffic[1].id, traffic[1].time))
+    elif lane == prevLane:
+        schedule.append(Vehicle(traffic[1].id, max(traffic[1].time, prevTime+W_same)))
+    else:
+        schedule.append(Vehicle(traffic[1].id, max(traffic[1].time, prevTime+W_diff)))
+    for i in range(2, len(traffic)):
+        prevTime = schedule[-1].time
+        schedule.append(Vehicle(traffic[i].id, max(traffic[i].time, prevTime+W_same)))
+    return schedule
+
 
 def fcfs_compute_entering_time(a, b, c, W_same, W_diff, X_lastT, Y_lastT):
     a = a[1:]
@@ -121,104 +134,6 @@ def fcfs_compute_entering_time(a, b, c, W_same, W_diff, X_lastT, Y_lastT):
 
     while len(a) > 0 or len(b) > 0 or len(c) > 0:
         if len(a) > 0 and len(b) > 0 and len(c) > 0:
-            '''
-            if a[0] <= b[0] and c[0] <= b[0]:
-                if X_lastFrom == 'A':
-                    X_lastT = max(a[0].time, X_lastT+W_same)
-                else:
-                    X_lastT = max(a[0].time, X_lastT+W_diff)
-                X_lastFrom = 'A'
-                schedule_A.append(Vehicle(a[0].id, X_lastT))
-                a.pop(0)
-                if Y_lastFrom == 'C':
-                    Y_lastT = max(c[0].time, Y_lastT+W_same)
-                else:
-                    Y_lastT = max(c[0].time, Y_lastT+W_diff)
-                Y_lastFrom = 'C'
-                schedule_C.append(Vehicle(c[0].id, Y_lastT))
-                c.pop(0)
-            elif a[0] <= b[0]:
-                if X_lastFrom == 'A':
-                    X_lastT = max(a[0].time, X_lastT+W_same)
-                else:
-                    X_lastT = max(a[0].time, X_lastT+W_diff)
-                X_lastFrom = 'A'
-                schedule_A.append(Vehicle(a[0].id, X_lastT))
-                a.pop(0)
-                if Y_lastFrom == 'B':
-                    Y_lastT = max(b[0].time, Y_lastT+W_same)
-                else:
-                    Y_lastT = max(b[0].time, Y_lastT+W_diff)
-                Y_lastFrom = 'B'
-                schedule_BY.append(Vehicle(b[0].id, Y_lastT))
-                b.pop(0)
-            elif c[0] <= b[0]:
-                if X_lastFrom == 'B':
-                    X_lastT = max(b[0].time, X_lastT+W_same)
-                else:
-                    X_lastT = max(b[0].time, X_lastT+W_diff)
-                X_lastFrom = 'B'
-                schedule_BX.append(Vehicle(b[0].id, X_lastT))
-                b.pop(0)
-                if Y_lastFrom == 'C':
-                    Y_lastT = max(c[0].time, Y_lastT+W_same)
-                else:
-                    Y_lastT = max(c[0].time, Y_lastT+W_diff)
-                Y_lastFrom = 'C'
-                schedule_C.append(Vehicle(c[0].id, Y_lastT))
-                c.pop(0)
-            else:   # b[0] < a[0] and b[0] < c[0]
-                if X_lastT < Y_lastT:
-                    if X_lastFrom == 'B':
-                        X_lastT = max(b[0].time, X_lastT+W_same)
-                    else:
-                        X_lastT = max(b[0].time, X_lastT+W_diff)
-                    X_lastFrom = 'B'
-                    schedule_BX.append(Vehicle(b[0].id, X_lastT))
-                    b.pop(0)
-                elif Y_lastT < X_lastT:
-                    if Y_lastFrom == 'B':
-                        Y_lastT = max(b[0].time, Y_lastT+W_same)
-                    else:
-                        Y_lastT = max(b[0].time, Y_lastT+W_diff)
-                    Y_lastFrom = 'B'
-                    schedule_BY.append(Vehicle(b[0].id, Y_lastT))
-                    b.pop(0)
-                else: # X_lastT == Y_lastT
-                    if a[0] > c[0]:
-                        if X_lastFrom == 'B':
-                            X_lastT = max(b[0].time, X_lastT+W_same)
-                        else:
-                            X_lastT = max(b[0].time, X_lastT+W_diff)
-                        X_lastFrom = 'B'
-                        schedule_BX.append(Vehicle(b[0].id, X_lastT))
-                        b.pop(0)
-                    elif c[0] > a[0]:
-                        if Y_lastFrom == 'B':
-                            Y_lastT = max(b[0].time, Y_lastT+W_same)
-                        else:
-                            Y_lastT = max(b[0].time, Y_lastT+W_diff)
-                        Y_lastFrom = 'B'
-                        schedule_BY.append(Vehicle(b[0].id, Y_lastT))
-                        b.pop(0)
-                    else:
-                        if random.randint(0,1) == 0:
-                            if X_lastFrom == 'B':
-                                X_lastT = max(b[0].time, X_lastT+W_same)
-                            else:
-                                X_lastT = max(b[0].time, X_lastT+W_diff)
-                            X_lastFrom = 'B'
-                            schedule_BX.append(Vehicle(b[0].id, X_lastT))
-                            b.pop(0)
-                        else:
-                            if Y_lastFrom == 'B':
-                                Y_lastT = max(b[0].time, Y_lastT+W_same)
-                            else:
-                                Y_lastT = max(b[0].time, Y_lastT+W_diff)
-                            Y_lastFrom = 'B'
-                            schedule_BY.append(Vehicle(b[0].id, Y_lastT))
-                            b.pop(0)
-                '''
             first = min(a[0].time, b[0].time, c[0].time)
             if first == a[0].time:
                 if X_lastFrom == 'A':
@@ -287,112 +202,127 @@ def fcfs_compute_entering_time(a, b, c, W_same, W_diff, X_lastT, Y_lastT):
                             Y_lastFrom = 'B'
                             schedule_BY.append(Vehicle(b[0].id, Y_lastT))
                             b.pop(0)
-
         
         elif len(a) > 0 and len(b) > 0:
-            first = min(a[0].time, b[0].time)
-            if first == a[0].time:
-                if X_lastFrom == 'A':
-                    X_lastT = max(a[0].time, X_lastT+W_same)
-                else:
-                    X_lastT = max(a[0].time, X_lastT+W_diff)
-                X_lastFrom = 'A'
-                schedule_A.append(Vehicle(a[0].id, X_lastT))
-                a.pop(0)
-            if first == b[0].time:
-                if X_lastT < Y_lastT:
-                    if X_lastFrom == 'B':
-                        X_lastT = max(b[0].time, X_lastT+W_same)
-                    else:
-                        X_lastT = max(b[0].time, X_lastT+W_diff)
-                    X_lastFrom = 'B'
-                    schedule_BX.append(Vehicle(b[0].id, X_lastT))
-                    b.pop(0)
-                else:
-                    if Y_lastFrom == 'B':
-                        Y_lastT = max(b[0].time, Y_lastT+W_same)
-                    else:
-                        Y_lastT = max(b[0].time, Y_lastT+W_diff)
-                    Y_lastFrom = 'B'
-                    schedule_BY.append(Vehicle(b[0].id, Y_lastT))
-                    b.pop(0)
+            schedule_A += simple_compute_entering_time('A', a, W_same, W_diff, X_lastFrom, X_lastT)
+            schedule_BY += simple_compute_entering_time('B', b, W_same, W_diff, Y_lastFrom, Y_lastT)
+            a.clear()
+            b.clear()
+            # first = min(a[0].time, b[0].time)
+            # if first == a[0].time:
+            #     if X_lastFrom == 'A':
+            #         X_lastT = max(a[0].time, X_lastT+W_same)
+            #     else:
+            #         X_lastT = max(a[0].time, X_lastT+W_diff)
+            #     X_lastFrom = 'A'
+            #     schedule_A.append(Vehicle(a[0].id, X_lastT))
+            #     a.pop(0)
+            # if first == b[0].time:
+            #     if X_lastT < Y_lastT:
+            #         if X_lastFrom == 'B':
+            #             X_lastT = max(b[0].time, X_lastT+W_same)
+            #         else:
+            #             X_lastT = max(b[0].time, X_lastT+W_diff)
+            #         X_lastFrom = 'B'
+            #         schedule_BX.append(Vehicle(b[0].id, X_lastT))
+            #         b.pop(0)
+            #     else:
+            #         if Y_lastFrom == 'B':
+            #             Y_lastT = max(b[0].time, Y_lastT+W_same)
+            #         else:
+            #             Y_lastT = max(b[0].time, Y_lastT+W_diff)
+            #         Y_lastFrom = 'B'
+            #         schedule_BY.append(Vehicle(b[0].id, Y_lastT))
+            #         b.pop(0)
         elif len(b) > 0 and len(c) > 0:
-            first = min(b[0].time, c[0].time)
-            if first == c[0].time:
-                if Y_lastFrom == 'C':
-                    Y_lastT = max(c[0].time, Y_lastT+W_same)
-                else:
-                    Y_lastT = max(c[0].time, Y_lastT+W_diff)
-                Y_lastFrom = 'C'
-                schedule_C.append(Vehicle(c[0].id, Y_lastT))
-                c.pop(0)
-            if first == b[0].time:
-                if Y_lastT < X_lastT:
-                    if Y_lastFrom == 'B':
-                        Y_lastT = max(b[0].time, Y_lastT+W_same)
-                    else:
-                        Y_lastT = max(b[0].time, Y_lastT+W_diff)
-                    Y_lastFrom = 'B'
-                    schedule_BY.append(Vehicle(b[0].id, Y_lastT))
-                    b.pop(0)
-                else:
-                    if X_lastFrom == 'B':
-                        X_lastT = max(b[0].time, X_lastT+W_same)
-                    else:
-                        X_lastT = max(b[0].time, X_lastT+W_diff)
-                    X_lastFrom = 'B'
-                    schedule_BX.append(Vehicle(b[0].id, X_lastT))
-                    b.pop(0)
+            schedule_BX += simple_compute_entering_time('B', b, W_same, W_diff, X_lastFrom, X_lastT)
+            schedule_C += simple_compute_entering_time('C', c, W_same, W_diff, Y_lastFrom, Y_lastT)
+            b.clear()
+            c.clear()
+            # first = min(b[0].time, c[0].time)
+            # if first == c[0].time:
+            #     if Y_lastFrom == 'C':
+            #         Y_lastT = max(c[0].time, Y_lastT+W_same)
+            #     else:
+            #         Y_lastT = max(c[0].time, Y_lastT+W_diff)
+            #     Y_lastFrom = 'C'
+            #     schedule_C.append(Vehicle(c[0].id, Y_lastT))
+            #     c.pop(0)
+            # if first == b[0].time:
+            #     if Y_lastT < X_lastT:
+            #         if Y_lastFrom == 'B':
+            #             Y_lastT = max(b[0].time, Y_lastT+W_same)
+            #         else:
+            #             Y_lastT = max(b[0].time, Y_lastT+W_diff)
+            #         Y_lastFrom = 'B'
+            #         schedule_BY.append(Vehicle(b[0].id, Y_lastT))
+            #         b.pop(0)
+            #     else:
+            #         if X_lastFrom == 'B':
+            #             X_lastT = max(b[0].time, X_lastT+W_same)
+            #         else:
+            #             X_lastT = max(b[0].time, X_lastT+W_diff)
+            #         X_lastFrom = 'B'
+            #         schedule_BX.append(Vehicle(b[0].id, X_lastT))
+            #         b.pop(0)
         elif len(a) > 0 and len(c) > 0:
-            # a->X, c->Y
-            if X_lastFrom == 'A':
-                X_lastT = max(a[0].time, X_lastT+W_same)
-            else:
-                X_lastT = max(a[0].time, X_lastT+W_diff)
-            X_lastFrom = 'A'
-            schedule_A.append(Vehicle(a[0].id, X_lastT))
-            a.pop(0)
-            while len(a) > 0:
-                X_lastT = max(a[0].time, X_lastT+W_same)
-                schedule_A.append(Vehicle(a[0].id, X_lastT))
-                a.pop(0)
-            if Y_lastFrom == 'C':
-                Y_lastT = max(c[0].time, Y_lastT+W_same)
-            else:
-                Y_lastT = max(c[0].time, Y_lastT+W_diff)
-            Y_lastFrom = 'C'
-            schedule_C.append(Vehicle(c[0].id, Y_lastT))
-            c.pop(0)
-            while len(c) > 0:
-                Y_lastT = max(c[0].time, Y_lastT+W_same)
-                schedule_C.append(Vehicle(c[0].id, Y_lastT))
-                c.pop(0)
+            schedule_A += simple_compute_entering_time('A', a, W_same, W_diff, X_lastFrom, X_lastT)
+            schedule_C += simple_compute_entering_time('C', c, W_same, W_diff, Y_lastFrom, Y_lastT)
+            a.clear()
+            c.clear()
+            # # a->X, c->Y
+            # if X_lastFrom == 'A':
+            #     X_lastT = max(a[0].time, X_lastT+W_same)
+            # else:
+            #     X_lastT = max(a[0].time, X_lastT+W_diff)
+            # X_lastFrom = 'A'
+            # schedule_A.append(Vehicle(a[0].id, X_lastT))
+            # a.pop(0)
+            # while len(a) > 0:
+            #     X_lastT = max(a[0].time, X_lastT+W_same)
+            #     schedule_A.append(Vehicle(a[0].id, X_lastT))
+            #     a.pop(0)
+            # if Y_lastFrom == 'C':
+            #     Y_lastT = max(c[0].time, Y_lastT+W_same)
+            # else:
+            #     Y_lastT = max(c[0].time, Y_lastT+W_diff)
+            # Y_lastFrom = 'C'
+            # schedule_C.append(Vehicle(c[0].id, Y_lastT))
+            # c.pop(0)
+            # while len(c) > 0:
+            #     Y_lastT = max(c[0].time, Y_lastT+W_same)
+            #     schedule_C.append(Vehicle(c[0].id, Y_lastT))
+            #     c.pop(0)
         elif len(a) > 0:
-            # a->X
-            if X_lastFrom == 'A':
-                X_lastT = max(a[0].time, X_lastT+W_same)
-            else:
-                X_lastT = max(a[0].time, X_lastT+W_diff)
-            X_lastFrom = 'A'
-            schedule_A.append(Vehicle(a[0].id, X_lastT))
-            a.pop(0)
-            while len(a) > 0:
-                X_lastT = max(a[0].time, X_lastT+W_same)
-                schedule_A.append(Vehicle(a[0].id, X_lastT))
-                a.pop(0)
+            schedule_A += simple_compute_entering_time('A', a, W_same, W_diff, X_lastFrom, X_lastT)
+            a.clear()
+            # # a->X
+            # if X_lastFrom == 'A':
+            #     X_lastT = max(a[0].time, X_lastT+W_same)
+            # else:
+            #     X_lastT = max(a[0].time, X_lastT+W_diff)
+            # X_lastFrom = 'A'
+            # schedule_A.append(Vehicle(a[0].id, X_lastT))
+            # a.pop(0)
+            # while len(a) > 0:
+            #     X_lastT = max(a[0].time, X_lastT+W_same)
+            #     schedule_A.append(Vehicle(a[0].id, X_lastT))
+            #     a.pop(0)
         elif len(c) > 0:
-            # c->Y
-            if Y_lastFrom == 'C':
-                Y_lastT = max(c[0].time, Y_lastT+W_same)
-            else:
-                Y_lastT = max(c[0].time, Y_lastT+W_diff)
-            Y_lastFrom = 'C'
-            schedule_C.append(Vehicle(c[0].id, Y_lastT))
-            c.pop(0)
-            while len(c) > 0:
-                Y_lastT = max(c[0].time, Y_lastT+W_same)
-                schedule_C.append(Vehicle(c[0].id, Y_lastT))
-                c.pop(0)
+            schedule_C += simple_compute_entering_time('C', c, W_same, W_diff, Y_lastFrom, Y_lastT)
+            c.clear()
+            # # c->Y
+            # if Y_lastFrom == 'C':
+            #     Y_lastT = max(c[0].time, Y_lastT+W_same)
+            # else:
+            #     Y_lastT = max(c[0].time, Y_lastT+W_diff)
+            # Y_lastFrom = 'C'
+            # schedule_C.append(Vehicle(c[0].id, Y_lastT))
+            # c.pop(0)
+            # while len(c) > 0:
+            #     Y_lastT = max(c[0].time, Y_lastT+W_same)
+            #     schedule_C.append(Vehicle(c[0].id, Y_lastT))
+            #     c.pop(0)
         elif len(b) > 0:
             while len(b) > 0:
                 if X_lastT < Y_lastT:
