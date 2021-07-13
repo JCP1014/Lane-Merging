@@ -333,7 +333,8 @@ def fcfs_compute_entering_time(a, b, c, W_same, W_diff, X_lastT, Y_lastT):
                     X_lastFrom = 'B'
                     schedule_BX.append(Vehicle(b[0].id, X_lastT))
                     b.pop(0)
-                elif Y_lastT < X_lastT:
+                # elif Y_lastT < X_lastT:
+                else:
                     if Y_lastFrom == 'B':
                         Y_lastT = max(b[0].time, Y_lastT+W_same)
                     else:
@@ -341,33 +342,30 @@ def fcfs_compute_entering_time(a, b, c, W_same, W_diff, X_lastT, Y_lastT):
                     Y_lastFrom = 'B'
                     schedule_BY.append(Vehicle(b[0].id, Y_lastT))
                     b.pop(0)
-                else: # X_lastT == Y_lastT
-                    if random.randint(0,1) == 0:
-                        if X_lastFrom == 'B':
-                            X_lastT = max(b[0].time, X_lastT+W_same)
-                        else:
-                            X_lastT = max(b[0].time, X_lastT+W_diff)
-                        X_lastFrom = 'B'
-                        schedule_BX.append(Vehicle(b[0].id, X_lastT))
-                        b.pop(0)
-                    else:
-                        if Y_lastFrom == 'B':
-                            Y_lastT = max(b[0].time, Y_lastT+W_same)
-                        else:
-                            Y_lastT = max(b[0].time, Y_lastT+W_diff)
-                        Y_lastFrom = 'B'
-                        schedule_BY.append(Vehicle(b[0].id, Y_lastT))
-                        b.pop(0)
+                # else: # X_lastT == Y_lastT
+                #     if random.randint(0,1) == 0:
+                #         if X_lastFrom == 'B':
+                #             X_lastT = max(b[0].time, X_lastT+W_same)
+                #         else:
+                #             X_lastT = max(b[0].time, X_lastT+W_diff)
+                #         X_lastFrom = 'B'
+                #         schedule_BX.append(Vehicle(b[0].id, X_lastT))
+                #         b.pop(0)
+                #     else:
+                #         if Y_lastFrom == 'B':
+                #             Y_lastT = max(b[0].time, Y_lastT+W_same)
+                #         else:
+                #             Y_lastT = max(b[0].time, Y_lastT+W_diff)
+                #         Y_lastFrom = 'B'
+                #         schedule_BY.append(Vehicle(b[0].id, Y_lastT))
+                #         b.pop(0)
     
     return schedule_A, schedule_BX, schedule_BY, schedule_C
 
 
 def run(W_same, W_diff):
-    # W_same = 1  # the waiting time if two consecutive vehicles are from the same lane
-    # W_diff = 3  # the waiting time if two consecutive vehicles are from different lanes
     # step = 0
     period = 400
-    start = 300
     # junction_x = traci.junction.getPosition("gneJ20")[0]
     schedule_A = []
     schedule_BX = []

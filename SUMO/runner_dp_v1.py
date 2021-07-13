@@ -852,7 +852,8 @@ def schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, carNum):
                             schedule_BX.append(Vehicle(b[i].id, max(b[i].time, schedule_BX[-1].time+W_same)))
                         else:
                             schedule_BY.append(Vehicle(b[i].id, max(b[i].time, schedule_BY[-1].time+W_same)))
-            elif last_Y[1] < last_X[1]:
+            # elif last_Y[1] < last_X[1]:
+            else:
                 if last_Y[0] == '':
                     schedule_BY.append(Vehicle(b[1].id, b[1].time))
                 elif last_Y[0] == 'C':
@@ -871,45 +872,45 @@ def schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, carNum):
                             schedule_BY.append(Vehicle(b[i].id, max(b[i].time, schedule_BY[-1].time+W_same)))
                         else:
                             schedule_BX.append(Vehicle(b[i].id, max(b[i].time, schedule_BX[-1].time+W_same)))
-            else: # X_lastT == Y_lastT
-                if random.randint(0,1) == 0:
-                    if last_X[0] == '':
-                        schedule_BX.append(Vehicle(b[1].id, b[1].time))
-                    elif last_X[0] == 'A':
-                        schedule_BX.append(Vehicle(b[1].id, max(b[1].time, last_X[1]+W_diff)))
-                    else:
-                        schedule_BX.append(Vehicle(b[1].id, max(b[1].time, last_X[1]+W_same)))
-                    if len(b) > 2:
-                        if last_Y[0] == '':
-                            schedule_BY.append(Vehicle(b[2].id, b[2].time))
-                        elif last_Y[0] == 'C':
-                            schedule_BY.append(Vehicle(b[2].id, max(b[2].time, last_Y[1]+W_diff)))
-                        else:
-                            schedule_BY.append(Vehicle(b[2].id, max(b[2].time, last_Y[1]+W_same)))
-                        for i in range(3, len(b)):
-                            if i % 2 == 1:
-                                schedule_BX.append(Vehicle(b[i].id, max(b[i].time, schedule_BX[-1].time+W_same)))
-                            else:
-                                schedule_BY.append(Vehicle(b[i].id, max(b[i].time, schedule_BY[-1].time+W_same)))
-                else:
-                    if last_Y[0] == '':
-                        schedule_BY.append(Vehicle(b[1].id, b[1].time))
-                    elif last_Y[0] == 'C':
-                        schedule_BY.append(Vehicle(b[1].id, max(b[1].time, last_Y[1]+W_diff)))
-                    else:
-                        schedule_BY.append(Vehicle(b[1].id, max(b[1].time, last_Y[1]+W_same)))                   
-                    if len(b) > 2:
-                        if last_X[0] == '':
-                            schedule_BX.append(Vehicle(b[2].id, b[2].time))
-                        elif last_X[0] == 'A':
-                            schedule_BX.append(Vehicle(b[2].id, max(b[2].time, last_X[1]+W_diff)))
-                        else:
-                            schedule_BX.append(Vehicle(b[2].id, max(b[2].time, last_X[1]+W_same)))
-                        for i in range(3, len(b)):
-                            if i % 2 == 1:
-                                schedule_BY.append(Vehicle(b[i].id, max(b[i].time, schedule_BY[-1].time+W_same)))
-                            else:
-                                schedule_BX.append(Vehicle(b[i].id, max(b[i].time, schedule_BX[-1].time+W_same)))
+            # else: # X_lastT == Y_lastT
+            #     if random.randint(0,1) == 0:
+            #         if last_X[0] == '':
+            #             schedule_BX.append(Vehicle(b[1].id, b[1].time))
+            #         elif last_X[0] == 'A':
+            #             schedule_BX.append(Vehicle(b[1].id, max(b[1].time, last_X[1]+W_diff)))
+            #         else:
+            #             schedule_BX.append(Vehicle(b[1].id, max(b[1].time, last_X[1]+W_same)))
+            #         if len(b) > 2:
+            #             if last_Y[0] == '':
+            #                 schedule_BY.append(Vehicle(b[2].id, b[2].time))
+            #             elif last_Y[0] == 'C':
+            #                 schedule_BY.append(Vehicle(b[2].id, max(b[2].time, last_Y[1]+W_diff)))
+            #             else:
+            #                 schedule_BY.append(Vehicle(b[2].id, max(b[2].time, last_Y[1]+W_same)))
+            #             for i in range(3, len(b)):
+            #                 if i % 2 == 1:
+            #                     schedule_BX.append(Vehicle(b[i].id, max(b[i].time, schedule_BX[-1].time+W_same)))
+            #                 else:
+            #                     schedule_BY.append(Vehicle(b[i].id, max(b[i].time, schedule_BY[-1].time+W_same)))
+            #     else:
+            #         if last_Y[0] == '':
+            #             schedule_BY.append(Vehicle(b[1].id, b[1].time))
+            #         elif last_Y[0] == 'C':
+            #             schedule_BY.append(Vehicle(b[1].id, max(b[1].time, last_Y[1]+W_diff)))
+            #         else:
+            #             schedule_BY.append(Vehicle(b[1].id, max(b[1].time, last_Y[1]+W_same)))                   
+            #         if len(b) > 2:
+            #             if last_X[0] == '':
+            #                 schedule_BX.append(Vehicle(b[2].id, b[2].time))
+            #             elif last_X[0] == 'A':
+            #                 schedule_BX.append(Vehicle(b[2].id, max(b[2].time, last_X[1]+W_diff)))
+            #             else:
+            #                 schedule_BX.append(Vehicle(b[2].id, max(b[2].time, last_X[1]+W_same)))
+            #             for i in range(3, len(b)):
+            #                 if i % 2 == 1:
+            #                     schedule_BY.append(Vehicle(b[i].id, max(b[i].time, schedule_BY[-1].time+W_same)))
+            #                 else:
+            #                     schedule_BX.append(Vehicle(b[i].id, max(b[i].time, schedule_BX[-1].time+W_same)))
 
         # print(f'last_X: {last_X}')
         # print(f'last_Y: {last_Y}')
@@ -919,11 +920,8 @@ def schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, carNum):
 
 
 def run(W_same, W_diff, windowSize):
-    # W_same = 1  # the waiting time if two consecutive vehicles are from the same lane
-    # W_diff = 3  # the waiting time if two consecutive vehicles are from different lanes
     # step = 0
     period = 400
-    start = 300
     # junction_x = traci.junction.getPosition("gneJ20")[0]
     schedule_A = []
     schedule_BX = []
