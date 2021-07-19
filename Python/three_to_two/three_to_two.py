@@ -609,7 +609,7 @@ def oneSol_multiDim_dp(a, b, c, W_same, W_diff):
     
 
 # First-Come-First-Go
-def fcfg(timeStep, a, b, c, W_same, W_diff):  # v5
+def fcfg_v1(timeStep, a, b, c, W_same, W_diff):
     a = a[1:]
     b = b[1:]
     c = c[1:]
@@ -1039,23 +1039,26 @@ def main():
         return
     a, b, c = generate_traffic_v1(timeStep, alpha, beta, gamma, pA, pB, pC)
     # a, b, c = generate_traffic_v2(timeStep, alpha, beta, gamma, p)
-    a = [0, 3.0, 4.0, 7.0, 10.0, 13.0]
-    b = [0, 1.0, 7.0, 8.0, 12.0, 13.0]
-    c = [0, 7.0, 10.0, 11.0, 14.0, 15.0]
-    print(a)
-    print(b)
-    print(c)
+    # a = [0, 3.0, 4.0, 7.0, 10.0, 13.0]
+    # b = [0, 1.0, 7.0, 8.0, 12.0, 13.0]
+    # c = [0, 7.0, 10.0, 11.0, 14.0, 15.0]
+    a = [0, 409, 410]
+    b = [0, 462, 463]
+    c = [0, 433, 526]
+    # print(a)
+    # print(b)
+    # print(c)
 
     # Use the previous two-dimentional approach 
-    # ret = twoDim_dp(copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff)
-    # print('dp:', ret[0], ret[1])
+    ret = twoDim_dp(copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff)
+    print('dp:', ret[0], ret[1])
    
     # Use the three-dimensional approach
     ret = oneSol_multiDim_dp(copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff)
     print('dp:', ret[0], ret[1])
 
     # Use fcfg approach
-    print('fcfg:', fcfg(timeStep, copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff))
+    print('fcfg:', fcfg_v1(timeStep, copy.deepcopy(a), copy.deepcopy(b), copy.deepcopy(c), W_same, W_diff))
 
 
 

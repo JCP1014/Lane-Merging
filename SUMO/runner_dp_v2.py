@@ -10,7 +10,6 @@ import random
 import numpy as np
 from collections import namedtuple
 
-from numpy.core.shape_base import stack
 Sol = namedtuple("Sol", "time table idx lane")
 Lane = namedtuple("Lane", "traffic num num_tmp")  
 Vehicle = namedtuple("Vehicle", "id time")
@@ -141,9 +140,24 @@ def compute_earliest_arrival(laneLength, schedule_A, schedule_BX, schedule_BY, s
     return a, b, c
 
 
-def get_obj(sol):
-    return max(sol.time)
-
+# def get_obj(sol):
+#     return max(sol.time)
+def choose_minMax(sol_list):
+    minMax = max(sol_list[0].time)
+    minMin = min(sol_list[0].time)
+    bestSol = sol_list[0]
+    for i in range(1, len(sol_list)):
+        tmpMax = max(sol_list[i].time)
+        tmpMin = min(sol_list[i].time)
+        if tmpMax < minMax:
+            minMax = tmpMax
+            minMin = tmpMin
+            bestSol = sol_list[i]
+        elif tmpMax == minMax and tmpMin < minMin:
+            minMax = tmpMax
+            minMin = tmpMin
+            bestSol = sol_list[i]
+    return bestSol
 
 def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
     alpha = len(a) - 1
@@ -175,18 +189,16 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
             (max(a[1].time, T_X+W_same), max(c[1].time, T_Y+W_diff)), 'AC', 0, 'XY')
         L_BC[0][1][1] = Sol(
             (max(b[1].time, T_X+W_diff), max(c[1].time, T_Y+W_diff)), 'BC', 0, 'XY')
-        L_BB[0][1][0] = min(
+        L_BB[0][1][0] = choose_minMax([
             Sol((max(b[1].time, T_X+W_diff), T_Y), 'BB', 0, 'X0'),
-            Sol((T_X, max(b[1].time, T_Y+W_same)), 'BB', 0, '0Y'),
-            key=get_obj
+            Sol((T_X, max(b[1].time, T_Y+W_same)), 'BB', 0, '0Y')]
         )
         if beta >= 2:
-            L_BB[0][2][0] = min(
+            L_BB[0][2][0] = choose_minMax([
                 Sol((max(b[1].time, T_X+W_diff), max(b[2].time, T_Y+W_same)),
                     'BB', 0, 'XY'),
                 Sol((max(b[2].time, T_X+W_diff), max(b[1].time, T_Y+W_same)),
-                    'BB', 0, 'YX'),
-                key=get_obj
+                    'BB', 0, 'YX')]
             )
         L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_same), T_Y), 'AB', 0, 'X0')
         L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_same)), 'AB', 0, '0Y')
@@ -201,18 +213,16 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
             (max(a[1].time, T_X+W_same), max(c[1].time, T_Y+W_same)), 'AC', 0, 'XY')
         L_BC[0][1][1] = Sol(
             (max(b[1].time, T_X+W_diff), max(c[1].time, T_Y+W_same)), 'BC', 0, 'XY')
-        L_BB[0][1][0] = min(
+        L_BB[0][1][0] = choose_minMax([
             Sol((max(b[1].time, T_X+W_diff), T_Y), 'BB', 0, 'X0'),
-            Sol((T_X, max(b[1].time, T_Y+W_diff)), 'BB', 0, '0Y'),
-            key=get_obj
+            Sol((T_X, max(b[1].time, T_Y+W_diff)), 'BB', 0, '0Y')]
         )
         if beta >= 2:
-            L_BB[0][2][0] = min(
+            L_BB[0][2][0] = choose_minMax([
                 Sol((max(b[1].time, T_X+W_diff), max(b[2].time, T_Y+W_diff)),
                     'BB', 0, 'XY'),
                 Sol((max(b[2].time, T_X+W_diff), max(b[1].time, T_Y+W_diff)),
-                    'BB', 0, 'YX'),
-                key=get_obj
+                    'BB', 0, 'YX')]
             )
         L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_same), T_Y), 'AB', 0, 'X0')
         L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_diff)), 'AB', 0, '0Y')
@@ -227,18 +237,16 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
             (max(a[1].time, T_X+W_diff), max(c[1].time, T_Y+W_diff)), 'AC', 0, 'XY')
         L_BC[0][1][1] = Sol(
             (max(b[1].time, T_X+W_same), max(c[1].time, T_Y+W_diff)), 'BC', 0, 'XY')
-        L_BB[0][1][0] = min(
+        L_BB[0][1][0] = choose_minMax([
             Sol((max(b[1].time, T_X+W_same), T_Y), 'BB', 0, 'X0'),
-            Sol((T_X, max(b[1].time, T_Y+W_same)), 'BB', 0, '0Y'),
-            key=get_obj
+            Sol((T_X, max(b[1].time, T_Y+W_same)), 'BB', 0, '0Y')]
         )
         if beta >= 2:
-            L_BB[0][2][0] = min(
+            L_BB[0][2][0] = choose_minMax([
                 Sol((max(b[1].time, T_X+W_same), max(b[2].time, T_Y+W_same)),
                     'BB', 0, 'XY'),
                 Sol((max(b[2].time, T_X+W_same), max(b[1].time, T_Y+W_same)),
-                    'BB', 0, 'YX'),
-                key=get_obj
+                    'BB', 0, 'YX')]
             )
         L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_diff), T_Y), 'AB', 0, 'X0')
         L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_same)), 'AB', 0, '0Y')
@@ -253,18 +261,16 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
             (max(a[1].time, T_X+W_diff), max(c[1].time, T_Y+W_same)), 'AC', 0, 'XY')
         L_BC[0][1][1] = Sol(
             (max(b[1].time, T_X+W_same), max(c[1].time, T_Y+W_same)), 'BC', 0, 'XY')
-        L_BB[0][1][0] = min(
+        L_BB[0][1][0] = choose_minMax([
             Sol((max(b[1].time, T_X+W_same), T_Y), 'BB', 0, 'X0'),
-            Sol((T_X, max(b[1].time, T_Y+W_diff)), 'BB', 0, '0Y'),
-            key=get_obj
+            Sol((T_X, max(b[1].time, T_Y+W_diff)), 'BB', 0, '0Y')]
         )
         if beta >= 2:
-            L_BB[0][2][0] = min(
+            L_BB[0][2][0] = choose_minMax([
                 Sol((max(b[1].time, T_X+W_same), max(b[2].time, T_Y+W_diff)),
                     'BB', 0, 'XY'),
                 Sol((max(b[2].time, T_X+W_same), max(b[1].time, T_Y+W_diff)),
-                    'BB', 0, 'YX'),
-                key=get_obj
+                    'BB', 0, 'YX')]
             )
         L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_diff), T_Y), 'AB', 0, 'X0')
         L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_diff)), 'AB', 0, '0Y')
@@ -302,7 +308,7 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
             (L_BC[0][1][k-1].time[0], max(c[k].time, L_BC[0][1][k-1].time[1]+W_same)), 'BC', 0, 'XY')
     if beta >= 3:
         for j in range(3, beta+1):
-            L_BB[0][j][0] = min(
+            L_BB[0][j][0] = choose_minMax([
                 Sol((max(b[j-1].time, L_BB[0][j-2][0].time[0]+W_same),
                      max(b[j].time, L_BB[0][j-2][0].time[1]+W_same)), 'BB', 0, 'XY'),
                 Sol((max(b[j].time, L_BB[0][j-2][0].time[0]+W_same),
@@ -310,8 +316,7 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
                 Sol((max(b[j].time, max(b[j-1].time, L_BB[0][j-2][0].time[0]+W_same) +
                          W_same), L_BB[0][j-2][0].time[1]), 'BB', 0, 'XX'),
                 Sol((L_BB[0][j-2][0].time[0], max(b[j].time, max(b[j-1].time,
-                                                            L_BB[0][j-2][0].time[1]+W_same)+W_same)), 'BB', 0, 'YY'),
-                key=get_obj
+                                                            L_BB[0][j-2][0].time[1]+W_same)+W_same)), 'BB', 0, 'YY')]
             )
 
     for i in range(2, alpha+1):
@@ -336,85 +341,75 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
     if beta >= 2:
         if last_XY == 'AB':
             for i in range(1, alpha+1):
-                L_BB[i][2][0] = min(
+                L_BB[i][2][0] = choose_minMax([
                     Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff),
                          max(b[2].time, T_Y+W_same)), 'AC', 0, 'XY'),
                     Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[1].time, T_Y+W_same)), 'AC', 0, 'YX'),
-                    key=get_obj
+                         max(b[1].time, T_Y+W_same)), 'AC', 0, 'YX')]
                 )
             for k in range(1, gamma+1):
-                L_BB[0][2][k] = min(
+                L_BB[0][2][k] = choose_minMax([
                     Sol((max(b[1].time, T_X+W_diff), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, T_X+W_diff), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX'),
-                    key=get_obj
+                    Sol((max(b[2].time, T_X+W_diff), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX')]
                 )
         elif last_XY == 'AC':
             for i in range(1, alpha+1):
-                L_BB[i][2][0] = min(
+                L_BB[i][2][0] = choose_minMax([
                     Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff),
                          max(b[2].time, T_Y+W_diff)), 'AC', 0, 'XY'),
                     Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[1].time, T_Y+W_diff)), 'AC', 0, 'YX'),
-                    key=get_obj
+                         max(b[1].time, T_Y+W_diff)), 'AC', 0, 'YX')]
                 )
             for k in range(1, gamma+1):
-                L_BB[0][2][k] = min(
+                L_BB[0][2][k] = choose_minMax([
                     Sol((max(b[1].time, T_X+W_diff), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, T_X+W_diff), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX'),
-                    key=get_obj
+                    Sol((max(b[2].time, T_X+W_diff), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX')]
                 )
         elif last_XY == 'BB':
             for i in range(1, alpha+1):
-                L_BB[i][2][0] = min(
+                L_BB[i][2][0] = choose_minMax([
                     Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff),
                          max(b[2].time, T_Y+W_same)), 'AC', 0, 'XY'),
                     Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[1].time, T_Y+W_same)), 'AC', 0, 'YX'),
-                    key=get_obj
+                         max(b[1].time, T_Y+W_same)), 'AC', 0, 'YX')]
                 )
             for k in range(1, gamma+1):
-                L_BB[0][2][k] = min(
+                L_BB[0][2][k] = choose_minMax([
                     Sol((max(b[1].time, T_X+W_same), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, T_X+W_same), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX'),
-                    key=get_obj
+                    Sol((max(b[2].time, T_X+W_same), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX')]
                 )
         elif last_XY == 'BC':
             for i in range(1, alpha+1):
-                L_BB[i][2][0] = min(
+                L_BB[i][2][0] = choose_minMax([
                     Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff),
                          max(b[2].time, T_Y+W_diff)), 'AC', 0, 'XY'),
                     Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[1].time, T_Y+W_diff)), 'AC', 0, 'YX'),
-                    key=get_obj
+                         max(b[1].time, T_Y+W_diff)), 'AC', 0, 'YX')]
                 )
             for k in range(1, gamma+1):
-                L_BB[0][2][k] = min(
+                L_BB[0][2][k] = choose_minMax([
                     Sol((max(b[1].time, T_X+W_same), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, T_X+W_same), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX'),
-                    key=get_obj
+                    Sol((max(b[2].time, T_X+W_same), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX')]
                 )
         else:
             for i in range(1, alpha+1):
-                L_BB[i][2][0] = min(
+                L_BB[i][2][0] = choose_minMax([
                     Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff),
                          b[2].time), 'AC', 0, 'XY'),
                     Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff),
-                         b[1].time), 'AC', 0, 'YX'),
-                    key=get_obj
+                         b[1].time), 'AC', 0, 'YX')]
                 )
             for k in range(1, gamma+1):
-                L_BB[0][2][k] = min(
+                L_BB[0][2][k] = choose_minMax([
                     Sol((b[1].time, max(b[2].time, L_AC[0][0][k].time[1]+W_diff)),
                         'AC', 0, 'XY'),
                     Sol((b[2].time, max(b[1].time, L_AC[0][0][k].time[1]+W_diff)),
-                        'AC', 0, 'YX'),
-                    key=get_obj
+                        'AC', 0, 'YX')]
                 )
 
     for i in range(1, alpha+1):
         for j in range(2, beta+1):
-            L_AB[i][j][0] = min(
+            L_AB[i][j][0] = choose_minMax([
                 Sol((max(a[i].time, L_AB[i-1][j-1][0].time[0]+W_same),
                      max(b[j].time, L_AB[i-1][j-1][0].time[1]+W_same)), 'AB', 0, 'XY'),
                 Sol((max(a[i].time, max(b[j].time, L_AB[i-1][j-1][0].time[0]+W_diff) +
@@ -422,8 +417,7 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
                 Sol((max(a[i].time, L_BB[i-1][j-1][0].time[0]+W_diff),
                      max(b[j].time, L_BB[i-1][j-1][0].time[1]+W_same)), 'BB', 0, 'XY'),
                 Sol((max(a[i].time, max(b[j].time, L_BB[i-1][j-1][0].time[0]+W_same) +
-                         W_diff), L_BB[i-1][j-1][0].time[1]), 'BB', 0, 'XX'),
-                key=get_obj
+                         W_diff), L_BB[i-1][j-1][0].time[1]), 'BB', 0, 'XX')]
             )
     for i in range(2, alpha+1):
         for k in range(2, gamma+1):
@@ -431,18 +425,17 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
                                  max(c[k].time, L_AC[i-1][0][k-1].time[1]+W_same)), 'AC', 0, 'XY')
     for j in range(2, beta+1):
         for k in range(1, gamma+1):
-            L_BC[0][j][k] = min(
+            L_BC[0][j][k] = choose_minMax([
                 Sol((max(b[j].time, L_BB[0][j-1][k-1].time[0]+W_same),
                      max(c[k].time, L_BB[0][j-1][k-1].time[1]+W_diff)), 'BB', 0, 'XY'),
                 Sol((L_BB[0][j-1][k-1].time[0], max(c[k].time, max(b[j].time, L_BB[0][j-1][k-1].time[1]+W_same)+W_diff)), 'BB', 0, 'YY'),
                 Sol((max(b[j].time, L_BC[0][j-1][k-1].time[0]+W_same),
                      max(c[k].time, L_BC[0][j-1][k-1].time[1]+W_same)), 'BC', 0, 'XY'),
-                Sol((L_BC[0][j-1][k-1].time[0], max(c[k].time, max(b[j].time, L_BC[0][j-1][k-1].time[1]+W_diff)+W_diff)), 'BC', 0, 'YY'),
-                key=get_obj
+                Sol((L_BC[0][j-1][k-1].time[0], max(c[k].time, max(b[j].time, L_BC[0][j-1][k-1].time[1]+W_diff)+W_diff)), 'BC', 0, 'YY')]
             )
     for i in range(1, alpha+1):
         for j in range(3, beta+1):
-            L_BB[i][j][0] = min(
+            L_BB[i][j][0] = choose_minMax([
                 Sol((max(b[j-1].time, L_AB[i][j-2][0].time[0]+W_diff),
                      max(b[j].time, L_AB[i][j-2][0].time[1]+W_same)), 'AB', 0, 'XY'),
                 Sol((max(b[j].time, L_AB[i][j-2][0].time[0]+W_diff),
@@ -454,40 +447,35 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
                 Sol((max(b[j].time, max(b[j-1].time, L_BB[i][j-2][0].time[0]+W_same) +
                          W_same), L_BB[i][j-2][0].time[1]), 'BB', 0, 'XX'),
                 Sol((L_BB[i][j-2][0].time[0], max(b[j].time, max(b[j-1].time,
-                                                            L_BB[i][j-2][0].time[1]+W_same)+W_same)), 'BB', 0, 'YY'),
-                key=get_obj
+                                                            L_BB[i][j-2][0].time[1]+W_same)+W_same)), 'BB', 0, 'YY')]
             )
 
     for i in range(1, alpha+1):
         for j in range(1, beta+1):
             for k in range(1, gamma+1):
-                L_AB[i][j][k] = min(
+                L_AB[i][j][k] = choose_minMax([
                     Sol((max(a[i].time, L_AB[i-1][j][k].time[0]+W_same), L_AB[i-1][j][k].time[1]), 'AB', 0, 'X'),
                     Sol((max(a[i].time, L_BB[i-1][j][k].time[0]+W_diff), L_BB[i-1][j][k].time[1]), 'BB', 0, 'X'),
                     Sol((L_AB[i][j-1][k].time[0], max(b[j].time, L_AB[i][j-1][k].time[1]+W_same)), 'AB', 0, 'Y'),
-                    Sol((L_AC[i][j-1][k].time[0], max(b[j].time, L_AC[i][j-1][k].time[1]+W_diff)), 'AC', 0, 'Y'),
-                    key=get_obj
+                    Sol((L_AC[i][j-1][k].time[0], max(b[j].time, L_AC[i][j-1][k].time[1]+W_diff)), 'AC', 0, 'Y')]
                 )
-                L_AC[i][j][k] = min(
+                L_AC[i][j][k] = choose_minMax([
                     Sol((max(a[i].time, L_AC[i-1][j][k].time[0]+W_same), L_AC[i-1][j][k].time[1]), 'AC', 0, 'X'),
                     Sol((max(a[i].time, L_BC[i-1][j][k].time[0]+W_diff), L_BC[i-1][j][k].time[1]), 'BC', 0, 'X'),
                     Sol((L_AC[i][j][k-1].time[0], max(c[k].time, L_AC[i][j][k-1].time[1]+W_same)), 'AC', 0, 'Y'),
-                    Sol((L_AB[i][j][k-1].time[0], max(c[k].time, L_AB[i][j][k-1].time[1]+W_diff)), 'AB', 0, 'Y'),
-                    key=get_obj
+                    Sol((L_AB[i][j][k-1].time[0], max(c[k].time, L_AB[i][j][k-1].time[1]+W_diff)), 'AB', 0, 'Y')]
                 )
-                L_BC[i][j][k] = min(
+                L_BC[i][j][k] = choose_minMax([
                     Sol((max(b[j].time, L_BC[i][j-1][k].time[0]+W_same), L_BC[i][j-1][k].time[1]), 'BC', 0, 'X'),
                     Sol((max(b[j].time, L_AC[i][j-1][k].time[0]+W_diff), L_AC[i][j-1][k].time[1]), 'AC', 0, 'X'),
                     Sol((L_BC[i][j][k-1].time[0], max(c[k].time, L_BC[i][j][k-1].time[1]+W_same)), 'BC', 0, 'Y'),
-                    Sol((L_BB[i][j][k-1].time[0], max(c[k].time, L_BB[i][j][k-1].time[1]+W_diff)), 'BB', 0, 'Y'),
-                    key=get_obj
+                    Sol((L_BB[i][j][k-1].time[0], max(c[k].time, L_BB[i][j][k-1].time[1]+W_diff)), 'BB', 0, 'Y')]
                 )
-                L_BB[i][j][k] = min(
+                L_BB[i][j][k] = choose_minMax([
                     Sol((max(b[j].time, L_BB[i][j-1][k].time[0]+W_same), L_BB[i][j-1][k].time[1]), 'BB', 0, 'X'),
                     Sol((max(b[j].time, L_AB[i][j-1][k].time[0]+W_diff), L_AB[i][j-1][k].time[1]), 'AB', 0, 'X'),
                     Sol((L_BB[i][j-1][k].time[0], max(b[j].time, L_BB[i][j-1][k].time[1]+W_same)), 'BB', 0, 'Y'),
-                    Sol((L_BC[i][j-1][k].time[0], max(b[j].time, L_BC[i][j-1][k].time[1]+W_diff)), 'BC', 0, 'Y'),
-                    key=get_obj
+                    Sol((L_BC[i][j-1][k].time[0], max(b[j].time, L_BC[i][j-1][k].time[1]+W_diff)), 'BC', 0, 'Y')]
                 )
     
     
@@ -499,8 +487,8 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
     j = beta
     k = gamma
     # Choose the optimal solution and the table to start backtracking
-    opt = min(L_AB[i][j][k], L_AC[i][j][k], L_BB[i]
-              [j][k], L_BC[i][j][k], key=get_obj)
+    opt = choose_minMax([L_AB[i][j][k], L_AC[i][j][k], L_BB[i]
+              [j][k], L_BC[i][j][k]])
     table = ''
     lanes = ''
     # print(opt)
@@ -948,7 +936,7 @@ def run(W_same, W_diff, windowSize):
     gBY = False
     gC = False
     timeStep_cnt = 0
-    laneLength = 600
+    laneLength = 6000
     # window_size = 5
     passTime_dX = 0
     passTime_dY = 0
@@ -1000,18 +988,18 @@ def run(W_same, W_diff, windowSize):
         if timeStep_cnt - period == 0:
             if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0 and traci.lanearea.getLastStepVehicleNumber("dC") > 0:
                 a_all, b_all, c_all = compute_earliest_arrival(laneLength, schedule_A, schedule_BX, schedule_BY, schedule_C)
-                # print('a_all', a_all)
-                # print('b_all', b_all)
-                # print('c_all', c_all)
+                print('a_all', a_all)
+                print('b_all', b_all)
+                print('c_all', c_all)
                 schedule_A, schedule_BX, schedule_BY, schedule_C = schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, windowSize)
                 schedule_A.sort(key=lambda x: x[1])
                 schedule_BX.sort(key=lambda x: x[1])
                 schedule_BY.sort(key=lambda x: x[1])
                 schedule_C.sort(key=lambda x: x[1])
-                # print('s_A', schedule_A)
-                # print('s_BX', schedule_BX)
-                # print('s_BY', schedule_BY)
-                # print('s_C', schedule_C)
+                print('s_A', schedule_A)
+                print('s_BX', schedule_BX)
+                print('s_BY', schedule_BY)
+                print('s_C', schedule_C)
                 for veh in schedule_BX:
                     try:
                         traci.vehicle.setRouteID(veh.id,"route_1")
@@ -1040,7 +1028,8 @@ def run(W_same, W_diff, windowSize):
         # print(currentTime)
         # print("Pass", traci.lane.getLastStepVehicleIDs("E2_0"))
                 
-        if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0 and traci.lanearea.getLastStepVehicleNumber("dC") > 0:
+        # if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0 and traci.lanearea.getLastStepVehicleNumber("dC") > 0:
+        if traci.lanearea.getLastStepVehicleNumber("dA") > 0 or traci.lanearea.getLastStepVehicleNumber("dB") > 0 or traci.lanearea.getLastStepVehicleNumber("dC") > 0:
             gA = False
             gBX = False
             gBY = False
@@ -1195,7 +1184,7 @@ def run(W_same, W_diff, windowSize):
                 traci.trafficlight.setPhase("TL1", 14)
             else:
                 traci.trafficlight.setPhase("TL1", 1)
-
+        '''
         elif traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0:
             if (not countdownX) and (not countdownY):
                 traci.trafficlight.setPhase("TL1", 2)
@@ -1256,7 +1245,7 @@ def run(W_same, W_diff, windowSize):
             # elif countdownY:
             #     traci.trafficlight.setPhase("TL1", 18)
             #     countdownY -= 1
-
+        '''
         if countdownX:
             # traci.trafficlight.setPhase("TL1", 16)
             countdownX -= 1
@@ -1311,7 +1300,7 @@ def main():
         windowSize = int(sys.argv[5])
         isNewTest = sys.argv[6]
     except:
-        print('Arguments: lambda, N, W=, W+')
+        print('Arguments: lambda, N, W=, W+, windowSize, isNewTest')
         return
 
     timeStep = 1    # The precision of time (in second)

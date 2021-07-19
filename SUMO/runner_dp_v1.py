@@ -10,7 +10,6 @@ import random
 import numpy as np
 from collections import namedtuple
 
-from numpy.core.shape_base import stack
 Sol = namedtuple("Sol", "time table idx lane")
 Lane = namedtuple("Lane", "traffic num num_tmp")  
 Vehicle = namedtuple("Vehicle", "id time")
@@ -939,7 +938,7 @@ def run(W_same, W_diff, windowSize):
     gBY = False
     gC = False
     timeStep_cnt = 0
-    laneLength = 600
+    laneLength = 6000
     # window_size = 5
     passTime_dX = 0
     passTime_dY = 0
@@ -991,18 +990,18 @@ def run(W_same, W_diff, windowSize):
         if timeStep_cnt - period == 0:
             if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0 and traci.lanearea.getLastStepVehicleNumber("dC") > 0:
                 a_all, b_all, c_all = compute_earliest_arrival(laneLength, schedule_A, schedule_BX, schedule_BY, schedule_C)
-                # print('a_all', a_all)
-                # print('b_all', b_all)
-                # print('c_all', c_all)
+                print('a_all', a_all)
+                print('b_all', b_all)
+                print('c_all', c_all)
                 schedule_A, schedule_BX, schedule_BY, schedule_C = schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, windowSize)
                 schedule_A.sort(key=lambda x: x[1])
                 schedule_BX.sort(key=lambda x: x[1])
                 schedule_BY.sort(key=lambda x: x[1])
                 schedule_C.sort(key=lambda x: x[1])
-                # print('s_A', schedule_A)
-                # print('s_BX', schedule_BX)
-                # print('s_BY', schedule_BY)
-                # print('s_C', schedule_C)
+                print('s_A', schedule_A)
+                print('s_BX', schedule_BX)
+                print('s_BY', schedule_BY)
+                print('s_C', schedule_C)
                 for veh in schedule_BX:
                     try:
                         traci.vehicle.setRouteID(veh.id,"route_1")
@@ -1031,7 +1030,8 @@ def run(W_same, W_diff, windowSize):
         # print(currentTime)
         # print("Pass", traci.lane.getLastStepVehicleIDs("E2_0"))
                 
-        if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0 and traci.lanearea.getLastStepVehicleNumber("dC") > 0:
+        # if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0 and traci.lanearea.getLastStepVehicleNumber("dC") > 0:
+        if traci.lanearea.getLastStepVehicleNumber("dA") > 0 or traci.lanearea.getLastStepVehicleNumber("dB") > 0 or traci.lanearea.getLastStepVehicleNumber("dC") > 0:
             gA = False
             gBX = False
             gBY = False
@@ -1186,7 +1186,7 @@ def run(W_same, W_diff, windowSize):
                 traci.trafficlight.setPhase("TL1", 14)
             else:
                 traci.trafficlight.setPhase("TL1", 1)
-
+        '''
         elif traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0:
             if (not countdownX) and (not countdownY):
                 traci.trafficlight.setPhase("TL1", 2)
@@ -1247,7 +1247,7 @@ def run(W_same, W_diff, windowSize):
             # elif countdownY:
             #     traci.trafficlight.setPhase("TL1", 18)
             #     countdownY -= 1
-
+        '''
         if countdownX:
             # traci.trafficlight.setPhase("TL1", 16)
             countdownX -= 1
@@ -1302,7 +1302,7 @@ def main():
         windowSize = int(sys.argv[5])
         isNewTest = sys.argv[6]
     except:
-        print('Arguments: lambda, N, W=, W+')
+        print('Arguments: lambda, N, W=, W+, windowSize, isNewTest')
         return
 
     timeStep = 1    # The precision of time (in second)

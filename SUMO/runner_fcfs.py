@@ -383,7 +383,7 @@ def run(W_same, W_diff):
     gBY = False
     gC = False
     timeStep_cnt = 0
-    laneLength = 600
+    laneLength = 6000
     passTime_dX = 0
     passTime_dY = 0
     X_lastT = -W_diff   
@@ -745,7 +745,7 @@ def main():
         W_same = float(sys.argv[1]) # the waiting time if two consecutive vehicles are from the same lane
         W_diff = float(sys.argv[2])  # the waiting time if two consecutive vehicles are from different lanes
     except:
-        print('Arguments: lambda, N, W=, W+')
+        print('Arguments: W=, W+')
         return
     
     # this is the normal way of using traci. sumo is started as a
