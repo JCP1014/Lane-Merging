@@ -80,6 +80,10 @@
         "streambuf": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "semaphore": "cpp"
+        "semaphore": "cpp",
+        "__locale": "cpp",
+        "__functional_base": "cpp",
+        "locale": "cpp",
+        "__tuple": "cpp"
     }
 }

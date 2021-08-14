@@ -999,8 +999,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         L_AC[1][0][1] = update_sol(L_AC[1][0][1], max(a[1], T_X + W_same), max(c[1], T_Y + W_diff), "AC", "XY");
         L_BC[0][1][1] = update_sol(L_BC[0][1][1], max(b[1], T_X + W_diff), max(c[1], T_Y + W_diff), "BC", "XY");
         tmpSolVec.resize(2);
-        // tmpSolVec.push_back(Solution());
-        // tmpSolVec.push_back(Solution());
         tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_diff), T_Y, "BB", "X0");
         tmpSolVec[1] = update_sol(tmpSolVec[1], T_X, max(b[1], T_Y + W_same), "BB", "0Y");
         L_BB[0][1][0] = update_by_minMax(L_BB[0][1][0], tmpSolVec);
@@ -1008,8 +1006,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         if (beta >= 2)
         {
             tmpSolVec.resize(2);
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
             tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_diff), max(b[2], T_Y + W_same), "BB", "XY");
             tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], T_X + W_diff), max(b[1], T_Y + W_same), "BB", "YX");
             L_BB[0][2][0] = update_by_minMax(L_BB[0][2][0], tmpSolVec);
@@ -1028,8 +1024,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         L_AC[1][0][1] = update_sol(L_AC[1][0][1], max(a[1], T_X + W_same), max(c[1], T_Y + W_same), "AC", "XY");
         L_BC[0][1][1] = update_sol(L_BC[0][1][1], max(b[1], T_X + W_diff), max(c[1], T_Y + W_same), "BC", "XY");
         tmpSolVec.resize(2);
-        // tmpSolVec.push_back(Solution());
-        // tmpSolVec.push_back(Solution());
         tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_diff), T_Y, "BB", "X0");
         tmpSolVec[1] = update_sol(tmpSolVec[1], T_X, max(b[1], T_Y + W_diff), "BB", "0Y");
         L_BB[0][1][0] = update_by_minMax(L_BB[0][1][0], tmpSolVec);
@@ -1037,8 +1031,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         if (beta >= 2)
         {
             tmpSolVec.resize(2);
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
             tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_diff), max(b[2], T_Y + W_diff), "BB", "XY");
             tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], T_X + W_diff), max(b[1], T_Y + W_diff), "BB", "YX");
             L_BB[0][2][0] = update_by_minMax(L_BB[0][2][0], tmpSolVec);
@@ -1057,8 +1049,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         L_AC[1][0][1] = update_sol(L_AC[1][0][1], max(a[1], T_X + W_diff), max(c[1], T_Y + W_diff), "AC", "XY");
         L_BC[0][1][1] = update_sol(L_BC[0][1][1], max(b[1], T_X + W_same), max(c[1], T_Y + W_diff), "BC", "XY");
         tmpSolVec.resize(2);
-        // tmpSolVec.push_back(Solution());
-        // tmpSolVec.push_back(Solution());
         tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_same), T_Y, "BB", "X0");
         tmpSolVec[1] = update_sol(tmpSolVec[1], T_X, max(b[1], T_Y + W_same), "BB", "0Y");
         L_BB[0][1][0] = update_by_minMax(L_BB[0][1][0], tmpSolVec);
@@ -1066,8 +1056,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         if (beta >= 2)
         {
             tmpSolVec.resize(2);
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
             tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_same), max(b[2], T_Y + W_same), "BB", "XY");
             tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], T_X + W_same), max(b[1], T_Y + W_same), "BB", "YX");
             L_BB[0][2][0] = update_by_minMax(L_BB[0][2][0], tmpSolVec);
@@ -1086,8 +1074,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         L_AC[1][0][1] = update_sol(L_AC[1][0][1], max(a[1], T_X + W_diff), max(c[1], T_Y + W_same), "AC", "XY");
         L_BC[0][1][1] = update_sol(L_BC[0][1][1], max(b[1], T_X + W_same), max(c[1], T_Y + W_same), "BC", "XY");
         tmpSolVec.resize(2);
-        // tmpSolVec.push_back(Solution());
-        // tmpSolVec.push_back(Solution());
         tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_same), T_Y, "BB", "X0");
         tmpSolVec[1] = update_sol(tmpSolVec[1], T_X, max(b[1], T_Y + W_diff), "BB", "0Y");
         L_BB[0][1][0] = update_by_minMax(L_BB[0][1][0], tmpSolVec);
@@ -1095,8 +1081,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         if (beta >= 2)
         {
             tmpSolVec.resize(2);
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
             tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_same), max(b[2], T_Y + W_diff), "BB", "XY");
             tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], T_X + W_same), max(b[1], T_Y + W_diff), "BB", "YX");
             L_BB[0][2][0] = update_by_minMax(L_BB[0][2][0], tmpSolVec);
@@ -1139,10 +1123,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         for (int j = 3; j <= beta; ++j)
         {
             tmpSolVec.resize(4);
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
             tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j - 1], L_BB[0][j - 2][0].time[0] + W_same), max(b[j], L_BB[0][j - 2][0].time[1] + W_same), "BB", "XY");
             tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_BB[0][j - 2][0].time[0] + W_same), max(b[j - 1], L_BB[0][j - 2][0].time[1] + W_same), "BB", "YX");
             tmpSolVec[2] = update_sol(tmpSolVec[2], max(b[j], max(b[j - 1], L_BB[0][j - 2][0].time[0] + W_same) + W_same), L_BB[0][j - 2][0].time[1], "BB", "XX");
@@ -1171,8 +1151,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             for (int i = 1; i <= alpha; ++i)
             {
                 tmpSolVec.resize(2);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], L_AC[i][0][0].time[0] + W_diff), max(b[2], T_Y + W_same), "AC", "XY");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], L_AC[i][0][0].time[0] + W_diff), max(b[1], T_Y + W_same), "AC", "YX");
                 L_BB[i][2][0] = update_by_minMax(L_BB[i][2][0], tmpSolVec);
@@ -1181,8 +1159,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             for (int k = 1; k <= gamma; ++k)
             {
                 tmpSolVec.resize(2);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_diff), max(b[2], L_AC[0][0][k].time[1] + W_diff), "AC", "XY");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], T_X + W_diff), max(b[1], L_AC[0][0][k].time[1] + W_diff), "AC", "YX");
                 L_BB[0][2][k] = update_by_minMax(L_BB[0][2][k], tmpSolVec);
@@ -1194,8 +1170,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             for (int i = 1; i <= alpha; ++i)
             {
                 tmpSolVec.resize(2);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], L_AC[i][0][0].time[0] + W_diff), max(b[2], T_Y + W_diff), "AC", "XY");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], L_AC[i][0][0].time[0] + W_diff), max(b[1], T_Y + W_diff), "AC", "YX");
                 L_BB[i][2][0] = update_by_minMax(L_BB[i][2][0], tmpSolVec);
@@ -1204,8 +1178,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             for (int k = 1; k <= gamma; ++k)
             {
                 tmpSolVec.resize(2);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_diff), max(b[2], L_AC[0][0][k].time[1] + W_diff), "AC", "XY");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], T_X + W_diff), max(b[1], L_AC[0][0][k].time[1] + W_diff), "AC", "YX");
                 L_BB[0][2][k] = update_by_minMax(L_BB[0][2][k], tmpSolVec);
@@ -1217,8 +1189,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             for (int i = 1; i <= alpha; ++i)
             {
                 tmpSolVec.resize(2);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], L_AC[i][0][0].time[0] + W_diff), max(b[2], T_Y + W_same), "AC", "XY");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], L_AC[i][0][0].time[0] + W_diff), max(b[1], T_Y + W_same), "AC", "YX");
                 L_BB[i][2][0] = update_by_minMax(L_BB[i][2][0], tmpSolVec);
@@ -1227,8 +1197,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             for (int k = 1; k <= gamma; ++k)
             {
                 tmpSolVec.resize(2);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_same), max(b[2], L_AC[0][0][k].time[1] + W_diff), "AC", "XY");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], T_X + W_same), max(b[1], L_AC[0][0][k].time[1] + W_diff), "AC", "YX");
                 L_BB[0][2][k] = update_by_minMax(L_BB[0][2][k], tmpSolVec);
@@ -1240,8 +1208,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             for (int i = 1; i <= alpha; ++i)
             {
                 tmpSolVec.resize(2);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], L_AC[i][0][0].time[0] + W_diff), max(b[2], T_Y + W_diff), "AC", "XY");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], L_AC[i][0][0].time[0] + W_diff), max(b[1], T_Y + W_diff), "AC", "YX");
                 L_BB[i][2][0] = update_by_minMax(L_BB[i][2][0], tmpSolVec);
@@ -1250,8 +1216,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             for (int k = 1; k <= gamma; ++k)
             {
                 tmpSolVec.resize(2);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], T_X + W_same), max(b[2], L_AC[0][0][k].time[1] + W_diff), "AC", "XY");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], T_X + W_same), max(b[1], L_AC[0][0][k].time[1] + W_diff), "AC", "YX");
                 L_BB[0][2][k] = update_by_minMax(L_BB[0][2][k], tmpSolVec);
@@ -1263,8 +1227,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             for (int i = 1; i <= alpha; ++i)
             {
                 tmpSolVec.resize(2);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[1], L_AC[i][0][0].time[0] + W_diff), b[2], "AC", "XY");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[2], L_AC[i][0][0].time[0] + W_diff), b[1], "AC", "YX");
                 L_BB[i][2][0] = update_by_minMax(L_BB[i][2][0], tmpSolVec);
@@ -1273,8 +1235,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             for (int k = 1; k <= gamma; ++k)
             {
                 tmpSolVec.resize(2);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], b[1], max(b[2], L_AC[0][0][k].time[1] + W_diff), "AC", "XY");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], b[2], max(b[1], L_AC[0][0][k].time[1] + W_diff), "AC", "YX");
                 L_BB[0][2][k] = update_by_minMax(L_BB[0][2][k], tmpSolVec);
@@ -1288,10 +1248,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         for (int j = 2; j <= beta; ++j)
         {
             tmpSolVec.resize(4);
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
             tmpSolVec[0] = update_sol(tmpSolVec[0], max(a[i], L_AB[i - 1][j - 1][0].time[0] + W_same), max(b[j], L_AB[i - 1][j - 1][0].time[1] + W_same), "AB", "XY");
             tmpSolVec[1] = update_sol(tmpSolVec[1], max(a[i], max(b[j], L_AB[i - 1][j - 1][0].time[0] + W_diff) + W_diff), L_AB[i - 1][j - 1][0].time[1], "AB", "XX");
             tmpSolVec[2] = update_sol(tmpSolVec[2], max(a[i], L_BB[i - 1][j - 1][0].time[0] + W_diff), max(b[j], L_BB[i - 1][j - 1][0].time[1] + W_same), "BB", "XY");
@@ -1310,10 +1266,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         for (int k = 1; k <= gamma; ++k)
         {
             tmpSolVec.resize(4);
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
             tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BB[0][j - 1][k - 1].time[0] + W_same), max(c[k], L_BB[0][j - 1][k - 1].time[1] + W_diff), "BB", "XY");
             tmpSolVec[1] = update_sol(tmpSolVec[1], L_BB[0][j - 1][k - 1].time[0], max(c[k], max(b[j], L_BB[0][j - 1][k - 1].time[1] + W_same) + W_diff), "BB", "YY");
             tmpSolVec[2] = update_sol(tmpSolVec[2], max(b[j], L_BC[0][j - 1][k - 1].time[0] + W_same), max(c[k], L_BC[0][j - 1][k - 1].time[1] + W_same), "BC", "XY");
@@ -1327,12 +1279,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
         for (int j = 3; j <= beta; ++j)
         {
             tmpSolVec.resize(6);
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
-            // tmpSolVec.push_back(Solution());
             tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j - 1], L_AB[i][j - 2][0].time[0] + W_diff), max(b[j], L_AB[i][j - 2][0].time[1] + W_same), "AB", "XY");
             tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AB[i][j - 2][0].time[0] + W_diff), max(b[j - 1], L_AB[i][j - 2][0].time[1] + W_same), "AB", "YX");
             tmpSolVec[2] = update_sol(tmpSolVec[2], max(b[j - 1], L_BB[i][j - 2][0].time[0] + W_same), max(b[j], L_BB[i][j - 2][0].time[1] + W_same), "BB", "XY");
@@ -1352,10 +1298,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
             {
                 // L_AB
                 tmpSolVec.resize(4);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(a[i], L_AB[i - 1][j][k].time[0] + W_same), L_AB[i - 1][j][k].time[1], "AB", "X");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(a[i], L_BB[i - 1][j][k].time[0] + W_diff), L_BB[i - 1][j][k].time[1], "BB", "X");
                 tmpSolVec[2] = update_sol(tmpSolVec[2], L_AB[i][j - 1][k].time[0], max(b[j], L_AB[i][j - 1][k].time[1] + W_same), "AB", "Y");
@@ -1365,10 +1307,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
 
                 // L_AC
                 tmpSolVec.resize(4);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(a[i], L_AC[i - 1][j][k].time[0] + W_same), L_AC[i - 1][j][k].time[1], "AC", "X");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(a[i], L_BC[i - 1][j][k].time[0] + W_diff), L_BC[i - 1][j][k].time[1], "BC", "X");
                 tmpSolVec[2] = update_sol(tmpSolVec[2], L_AC[i][j][k - 1].time[0], max(c[k], L_AC[i][j][k - 1].time[1] + W_same), "AC", "Y");
@@ -1378,10 +1316,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
 
                 // L_BC
                 tmpSolVec.resize(4);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BC[i][j - 1][k].time[0] + W_same), L_BC[i][j - 1][k].time[1], "BC", "X");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AC[i][j - 1][k].time[0] + W_diff), L_AC[i][j - 1][k].time[1], "AC", "X");
                 tmpSolVec[2] = update_sol(tmpSolVec[2], L_BC[i][j][k - 1].time[0], max(c[k], L_BC[i][j][k - 1].time[1] + W_same), "BC", "Y");
@@ -1391,10 +1325,6 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
 
                 // L_BB
                 tmpSolVec.resize(4);
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
-                // tmpSolVec.push_back(Solution());
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BB[i][j - 1][k].time[0] + W_same), L_BB[i][j - 1][k].time[1], "BB", "X");
                 tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AB[i][j - 1][k].time[0] + W_diff), L_AB[i][j - 1][k].time[1], "AB", "X");
                 tmpSolVec[2] = update_sol(tmpSolVec[2], L_BB[i][j - 1][k].time[0], max(b[j], L_BB[i][j - 1][k].time[1] + W_same), "BB", "Y");
