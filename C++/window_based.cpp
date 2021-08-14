@@ -3073,12 +3073,15 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    a_all = generate_traffic(timeStep, alpha, p, 0);
-    b_all = generate_traffic(timeStep, beta, p, 1);
-    c_all = generate_traffic(timeStep, gamma, p, 2);
+    // a_all = generate_traffic(timeStep, alpha, p, 0);
+    // b_all = generate_traffic(timeStep, beta, p, 1);
+    // c_all = generate_traffic(timeStep, gamma, p, 2);
     // a_all = {0, 409, 410};
     // b_all = {0, 462, 463};
     // c_all = {0, 433, 526};
+    a_all = {0, 5, 6, 8, 9, 10, 14, 18, 22, 24, 27, 30, 32, 35, 38, 40, 43, 45, 46, 49, 51, 55, 64, 65, 70, 72, 74, 79, 80, 83, 85, 87, 90, 92, 93, 94, 98, 103, 111, 114, 116, 121, 124, 126, 128, 129, 130, 132, 134, 135, 138};
+    b_all = {0, 5, 7, 12, 13, 15, 16, 17, 19, 21, 27, 39, 41, 44, 46, 49, 51, 52, 54, 55, 57, 58, 61, 62, 63, 67, 69, 70, 71, 73, 74, 78, 80, 83, 86, 93, 94, 96, 99, 103, 105, 107, 111, 112, 119, 120, 121, 122, 123, 126, 127};
+    c_all = {0, 3, 5, 8, 11, 17, 22, 25, 28, 31, 33, 35, 37, 38, 44, 45, 48, 50, 51, 52, 53, 56, 62, 65, 67, 68, 70, 72, 76, 83, 85, 88, 91, 97, 100, 101, 103, 108, 111, 112, 113, 114, 116, 118, 120, 122, 125, 131, 132, 133, 136};
 
     first_come_first_serve_v1(timeStep, a_all, b_all, c_all, W_same, W_diff);
     first_come_first_serve_v2(a_all, b_all, c_all, W_same, W_diff);
@@ -3092,18 +3095,18 @@ int main(int argc, char *argv[])
     schedule_by_num_window_v2(a_all, b_all, c_all, W_same, W_diff, 100);
     greedy_dp(a_all, b_all, c_all, W_same, W_diff);
 
-    cout << "a_all = {" << a_all[0];
-    for (int i = 1; i < a_all.size(); ++i)
-        cout << ", " << a_all[i];
-    cout << "};" << endl;
-    cout << "b_all = {" << b_all[0];
-    for (int i = 1; i < b_all.size(); ++i)
-        cout << ", " << b_all[i];
-    cout << "};" << endl;
-    cout << "c_all = {" << c_all[0];
-    for (int i = 1; i < c_all.size(); ++i)
-        cout << ", " << c_all[i];
-    cout << "};" << endl;
+    // cout << "a_all = {" << a_all[0];
+    // for (int i = 1; i < a_all.size(); ++i)
+    //     cout << ", " << a_all[i];
+    // cout << "};" << endl;
+    // cout << "b_all = {" << b_all[0];
+    // for (int i = 1; i < b_all.size(); ++i)
+    //     cout << ", " << b_all[i];
+    // cout << "};" << endl;
+    // cout << "c_all = {" << c_all[0];
+    // for (int i = 1; i < c_all.size(); ++i)
+    //     cout << ", " << c_all[i];
+    // cout << "};" << endl;
 
     return 0;
 }

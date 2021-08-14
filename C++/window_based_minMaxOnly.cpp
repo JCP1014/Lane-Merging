@@ -76,22 +76,11 @@ Solution update_by_minMax(Solution s, vector<Solution> solVec)
         // int arr_len = sizeof(sol.time) / sizeof(*sol.time);
         // int maxVal = *max_element(sol.time, sol.time + arr_len);
         tmpMax = max(solVec[i].time[0], solVec[i].time[1]);
-        // tmpMin = min(solVec[i].time[0], solVec[i].time[1]);
         if (tmpMax < minMax)
         {
             minMax = tmpMax;
-            // minMin = tmpMin;
             index = i;
         }
-        // else if (tmpMax == minMax)
-        // {
-        //     if (tmpMin < minMin)
-        //     {
-        //         minMax = tmpMax;
-        //         minMin = tmpMin;
-        //         index = i;
-        //     }
-        // }
     }
     s = update_sol(s, solVec[index].time[0], solVec[index].time[1], solVec[index].table, solVec[index].lane);
     return s;
