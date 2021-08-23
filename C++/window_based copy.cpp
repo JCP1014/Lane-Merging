@@ -99,47 +99,27 @@ Solution choose_best_sol(Solution s, vector<Solution> solVec)
 string get_opt_table(vector<Solution> solVec)
 {
     float minMax = max(solVec[0].time[0], solVec[0].time[1]);
-    float minSum;
-    float minSrcSum, minSrcMax;
+    float minSum = solVec[0].time[0] + solVec[0].time[1];
     int index = 0;
-    float tmpMax, tmpMin, tmpSum, tmpSrcMax, tmpSrcMin, tmpSrcSum;
+    float tmpMax, tmpMin, tmpSum;
     string optTable = "AB";
     for (int i = 1; i < solVec.size(); ++i)
     {
         tmpMax = max(solVec[i].time[0], solVec[i].time[1]);
+        tmpSum = solVec[i].time[0] + solVec[i].time[1];
         if (tmpMax < minMax)
         {
             minMax = tmpMax;
+            minSum = tmpSum;
             index = i;
         }
         else if (tmpMax == minMax)
         {
-            tmpSum = solVec[i].time[0] + solVec[i].time[1];
-            minSum = solVec[index].time[0] + solVec[index].time[1];
             if (tmpSum < minSum)
             {
                 minMax = tmpMax;
+                minSum = tmpSum;
                 index = i;
-            }
-            else if (tmpSum == minSum && solVec[i].src)
-            {
-                tmpSrcMax = max(solVec[i].src->time[0], solVec[i].src->time[1]);
-                minSrcMax = max(solVec[index].src->time[0], solVec[index].src->time[1]);
-                if (tmpSrcMax < minSrcMax)
-                {
-                    minMax = tmpMax;
-                    index = i;
-                }
-                else if (tmpSrcMax == minSrcMax)
-                {
-                    tmpSrcSum = solVec[i].src->time[0] + solVec[i].src->time[1];
-                    minSrcSum = solVec[index].src->time[0] + solVec[index].src->time[1];
-                    if (tmpSrcSum < minSrcSum)
-                    {
-                        minMax = tmpMax;
-                        index = i;
-                    }
-                }
             }
         }
     }
@@ -1775,7 +1755,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
     return make_tuple(last_X, last_Y, computeTime);
 }
 
-tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_dp(vector<float> a, vector<float> b, vector<float> c, float W_same, float W_diff, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
+tuple<tuple<char, int, float>, tuple<char, int, float>, double> reduced_dp(vector<float> a, vector<float> b, vector<float> c, float W_same, float W_diff, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
 {
     auto t_start = chrono::high_resolution_clock::now();
     int alpha = a.size() - 1;
@@ -2121,13 +2101,11 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                 tmpSolVec[3] = update_sol(tmpSolVec[3], L_AC[i][j - 1][k].time[0], max(b[j], L_AC[i][j - 1][k].time[1] + W_diff), "AC", "Y", &L_AC[i][j - 1][k]);
                 L_AB[i][j][k] = choose_best_sol(L_AB[i][j][k], tmpSolVec);
                 tmpSolVec.clear();
-                if ((i == alpha || max(L_AB[i][j][k].time[0], L_AB[i][j][k].time[1]) < a[i + 1]) &&
-                    (j == beta || max(L_AB[i][j][k].time[0], L_AB[i][j][k].time[1]) < b[j + 1]) &&
-                    (k == gamma || max(L_AB[i][j][k].time[0], L_AB[i][j][k].time[1]) < c[k + 1]))
-                {
-                    // cout << "Break at AB: " << L_AB[i][j][k].time[0] << ", " << L_AB[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                if ((i == alpha || L_AB[i][j][k].time[0] <= a[i + 1]) &&
+                    (j == beta || L_AB[i][j][k].time[0] <= b[j + 1]) &&
+                    (j == beta || L_AB[i][j][k].time[1] <= b[j + 1]) &&
+                    (k == gamma || L_AB[i][j][k].time[1] <= c[k + 1]))
                     isCut = true;
-                }
 
                 // L_AC
                 tmpSolVec.resize(4);
@@ -2137,13 +2115,12 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                 tmpSolVec[3] = update_sol(tmpSolVec[3], L_AB[i][j][k - 1].time[0], max(c[k], L_AB[i][j][k - 1].time[1] + W_diff), "AB", "Y", &L_AB[i][j][k - 1]);
                 L_AC[i][j][k] = choose_best_sol(L_AC[i][j][k], tmpSolVec);
                 tmpSolVec.clear();
-                if ((i == alpha || max(L_AC[i][j][k].time[0], L_AC[i][j][k].time[1]) < a[i + 1]) &&
-                    (j == beta || max(L_AC[i][j][k].time[0], L_AC[i][j][k].time[1]) < b[j + 1]) &&
-                    (k == gamma || max(L_AC[i][j][k].time[0], L_AC[i][j][k].time[1]) < c[k + 1]))
-                {
-                    // cout << "Break at AC: " << L_AC[i][j][k].time[0] << ", " << L_AC[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                if ((i == alpha || L_AC[i][j][k].time[0] <= a[i + 1]) &&
+                    (j == beta || L_AC[i][j][k].time[0] <= b[j + 1]) &&
+                    (j == beta || L_AC[i][j][k].time[1] <= b[j + 1]) &&
+                    (k == gamma || L_AC[i][j][k].time[1] <= c[k + 1]))
                     isCut = true;
-                }
+
                 // L_BC
                 tmpSolVec.resize(4);
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BC[i][j - 1][k].time[0] + W_same), L_BC[i][j - 1][k].time[1], "BC", "X", &L_BC[i][j - 1][k]);
@@ -2152,13 +2129,12 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                 tmpSolVec[3] = update_sol(tmpSolVec[3], L_BB[i][j][k - 1].time[0], max(c[k], L_BB[i][j][k - 1].time[1] + W_diff), "BB", "Y", &L_BB[i][j][k - 1]);
                 L_BC[i][j][k] = choose_best_sol(L_BC[i][j][k], tmpSolVec);
                 tmpSolVec.clear();
-                if ((i == alpha || max(L_BC[i][j][k].time[0], L_BC[i][j][k].time[1]) < a[i + 1]) &&
-                    (j == beta || max(L_BC[i][j][k].time[0], L_BC[i][j][k].time[1]) < b[j + 1]) &&
-                    (k == gamma || max(L_BC[i][j][k].time[0], L_BC[i][j][k].time[1]) < c[k + 1]))
-                {
-                    // cout << "Break at BC: " << L_BC[i][j][k].time[0] << ", " << L_BC[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                if ((i == alpha || L_BC[i][j][k].time[0] <= a[i + 1]) &&
+                    (j == beta || L_BC[i][j][k].time[0] <= b[j + 1]) &&
+                    (j == beta || L_BC[i][j][k].time[1] <= b[j + 1]) &&
+                    (k == gamma || L_BC[i][j][k].time[1] <= c[k + 1]))
                     isCut = true;
-                }
+
                 // L_BB
                 tmpSolVec.resize(4);
                 tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BB[i][j - 1][k].time[0] + W_same), L_BB[i][j - 1][k].time[1], "BB", "X", &L_BB[i][j - 1][k]);
@@ -2167,13 +2143,11 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                 tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], max(b[j], L_BC[i][j - 1][k].time[1] + W_diff), "BC", "Y", &L_BC[i][j - 1][k]);
                 L_BB[i][j][k] = choose_best_sol(L_BB[i][j][k], tmpSolVec);
                 tmpSolVec.clear();
-                if ((i == alpha || max(L_BB[i][j][k].time[0], L_BB[i][j][k].time[1]) < a[i + 1]) &&
-                    (j == beta || max(L_BB[i][j][k].time[0], L_BB[i][j][k].time[1]) < b[j + 1]) &&
-                    (k == gamma || max(L_BB[i][j][k].time[0], L_BB[i][j][k].time[1]) < c[k + 1]))
-                {
-                    // cout << "Break at BB: " << L_BB[i][j][k].time[0] << ", " << L_BB[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                if ((i == alpha || L_BB[i][j][k].time[0] <= a[i + 1]) &&
+                    (j == beta || L_BB[i][j][k].time[0] <= b[j + 1]) &&
+                    (j == beta || L_BB[i][j][k].time[1] <= b[j + 1]) &&
+                    (k == gamma || L_BB[i][j][k].time[1] <= c[k + 1]))
                     isCut = true;
-                }
 
                 if (isCut)
                 {
@@ -2196,13 +2170,11 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                 tmpSolVec[3] = update_sol(tmpSolVec[3], L_AC[i][j - 1][k].time[0], max(b[j], L_AC[i][j - 1][k].time[1] + W_diff), "AC", "Y", &L_AC[i][j - 1][k]);
                 L_AB[i][j][k] = choose_best_sol(L_AB[i][j][k], tmpSolVec);
                 tmpSolVec.clear();
-                if ((i == alpha || max(L_AB[i][j][k].time[0], L_AB[i][j][k].time[1]) < a[i + 1]) &&
-                    (j == beta || max(L_AB[i][j][k].time[0], L_AB[i][j][k].time[1]) < b[j + 1]) &&
-                    (k == gamma || max(L_AB[i][j][k].time[0], L_AB[i][j][k].time[1]) < c[k + 1]))
-                {
-                    // cout << "Break at AB: " << L_AB[i][j][k].time[0] << ", " << L_AB[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                if ((i == alpha || L_AB[i][j][k].time[0] <= a[i + 1]) &&
+                    (j == beta || L_AB[i][j][k].time[0] <= b[j + 1]) &&
+                    (j == beta || L_AB[i][j][k].time[1] <= b[j + 1]) &&
+                    (k == gamma || L_AB[i][j][k].time[1] <= c[k + 1]))
                     isCut = true;
-                }
 
                 // L_AC
                 tmpSolVec.resize(4);
@@ -2212,13 +2184,11 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                 tmpSolVec[3] = update_sol(tmpSolVec[3], L_AB[i][j][k - 1].time[0], max(c[k], L_AB[i][j][k - 1].time[1] + W_diff), "AB", "Y", &L_AB[i][j][k - 1]);
                 L_AC[i][j][k] = choose_best_sol(L_AC[i][j][k], tmpSolVec);
                 tmpSolVec.clear();
-                if ((i == alpha || max(L_AC[i][j][k].time[0], L_AC[i][j][k].time[1]) < a[i + 1]) &&
-                    (j == beta || max(L_AC[i][j][k].time[0], L_AC[i][j][k].time[1]) < b[j + 1]) &&
-                    (k == gamma || max(L_AC[i][j][k].time[0], L_AC[i][j][k].time[1]) < c[k + 1]))
-                {
-                    // cout << "Break at AC: " << L_AC[i][j][k].time[0] << ", " << L_AC[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                if ((i == alpha || L_AC[i][j][k].time[0] <= a[i + 1]) &&
+                    (j == beta || L_AC[i][j][k].time[0] <= b[j + 1]) &&
+                    (j == beta || L_AC[i][j][k].time[1] <= b[j + 1]) &&
+                    (k == gamma || L_AC[i][j][k].time[1] <= c[k + 1]))
                     isCut = true;
-                }
 
                 // L_BC
                 tmpSolVec.resize(4);
@@ -2228,13 +2198,11 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                 tmpSolVec[3] = update_sol(tmpSolVec[3], L_BB[i][j][k - 1].time[0], max(c[k], L_BB[i][j][k - 1].time[1] + W_diff), "BB", "Y", &L_BB[i][j][k - 1]);
                 L_BC[i][j][k] = choose_best_sol(L_BC[i][j][k], tmpSolVec);
                 tmpSolVec.clear();
-                if ((i == alpha || max(L_BC[i][j][k].time[0], L_BC[i][j][k].time[1]) < a[i + 1]) &&
-                    (j == beta || max(L_BC[i][j][k].time[0], L_BC[i][j][k].time[1]) < b[j + 1]) &&
-                    (k == gamma || max(L_BC[i][j][k].time[0], L_BC[i][j][k].time[1]) < c[k + 1]))
-                {
-                    // cout << "Break at BC: " << L_BC[i][j][k].time[0] << ", " << L_BC[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                if ((i == alpha || L_BC[i][j][k].time[0] <= a[i + 1]) &&
+                    (j == beta || L_BC[i][j][k].time[0] <= b[j + 1]) &&
+                    (j == beta || L_BC[i][j][k].time[1] <= b[j + 1]) &&
+                    (k == gamma || L_BC[i][j][k].time[1] <= c[k + 1]))
                     isCut = true;
-                }
 
                 // L_BB
                 tmpSolVec.resize(4);
@@ -2244,13 +2212,11 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                 tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], max(b[j], L_BC[i][j - 1][k].time[1] + W_diff), "BC", "Y", &L_BC[i][j - 1][k]);
                 L_BB[i][j][k] = choose_best_sol(L_BB[i][j][k], tmpSolVec);
                 tmpSolVec.clear();
-                if ((i == alpha || max(L_BB[i][j][k].time[0], L_BB[i][j][k].time[1]) < a[i + 1]) &&
-                    (j == beta || max(L_BB[i][j][k].time[0], L_BB[i][j][k].time[1]) < b[j + 1]) &&
-                    (k == gamma || max(L_BB[i][j][k].time[0], L_BB[i][j][k].time[1]) < c[k + 1]))
-                {
-                    // cout << "Break at BB: " << L_BB[i][j][k].time[0] << ", " << L_BB[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                if ((i == alpha || L_BB[i][j][k].time[0] <= a[i + 1]) &&
+                    (j == beta || L_BB[i][j][k].time[0] <= b[j + 1]) &&
+                    (j == beta || L_BB[i][j][k].time[1] <= b[j + 1]) &&
+                    (k == gamma || L_BB[i][j][k].time[1] <= c[k + 1]))
                     isCut = true;
-                }
 
                 if (isCut)
                 {
@@ -2282,13 +2248,11 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                     tmpSolVec[3] = update_sol(tmpSolVec[3], L_AC[i][j - 1][k].time[0], max(b[j], L_AC[i][j - 1][k].time[1] + W_diff), "AC", "Y", &L_AC[i][j - 1][k]);
                     L_AB[i][j][k] = choose_best_sol(L_AB[i][j][k], tmpSolVec);
                     tmpSolVec.clear();
-                    if ((i == alpha || max(L_AB[i][j][k].time[0], L_AB[i][j][k].time[1]) < a[i + 1]) &&
-                        (j == beta || max(L_AB[i][j][k].time[0], L_AB[i][j][k].time[1]) < b[j + 1]) &&
-                        (k == gamma || max(L_AB[i][j][k].time[0], L_AB[i][j][k].time[1]) < c[k + 1]))
-                    {
-                        // cout << "Break at AB: " << L_AB[i][j][k].time[0] << ", " << L_AB[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                    if ((i == alpha || L_AB[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_AB[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_AB[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_AB[i][j][k].time[1] <= c[k + 1]))
                         isCut = true;
-                    }
 
                     // L_AC
                     tmpSolVec.resize(4);
@@ -2298,13 +2262,11 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                     tmpSolVec[3] = update_sol(tmpSolVec[3], L_AB[i][j][k - 1].time[0], max(c[k], L_AB[i][j][k - 1].time[1] + W_diff), "AB", "Y", &L_AB[i][j][k - 1]);
                     L_AC[i][j][k] = choose_best_sol(L_AC[i][j][k], tmpSolVec);
                     tmpSolVec.clear();
-                    if ((i == alpha || max(L_AC[i][j][k].time[0], L_AC[i][j][k].time[1]) < a[i + 1]) &&
-                        (j == beta || max(L_AC[i][j][k].time[0], L_AC[i][j][k].time[1]) < b[j + 1]) &&
-                        (k == gamma || max(L_AC[i][j][k].time[0], L_AC[i][j][k].time[1]) < c[k + 1]))
-                    {
-                        // cout << "Break at AC: " << L_AC[i][j][k].time[0] << ", " << L_AC[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                    if ((i == alpha || L_AC[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_AC[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_AC[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_AC[i][j][k].time[1] <= c[k + 1]))
                         isCut = true;
-                    }
 
                     // L_BC
                     tmpSolVec.resize(4);
@@ -2314,13 +2276,11 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                     tmpSolVec[3] = update_sol(tmpSolVec[3], L_BB[i][j][k - 1].time[0], max(c[k], L_BB[i][j][k - 1].time[1] + W_diff), "BB", "Y", &L_BB[i][j][k - 1]);
                     L_BC[i][j][k] = choose_best_sol(L_BC[i][j][k], tmpSolVec);
                     tmpSolVec.clear();
-                    if ((i == alpha || max(L_BC[i][j][k].time[0], L_BC[i][j][k].time[1]) < a[i + 1]) &&
-                        (j == beta || max(L_BC[i][j][k].time[0], L_BC[i][j][k].time[1]) < b[j + 1]) &&
-                        (k == gamma || max(L_BC[i][j][k].time[0], L_BC[i][j][k].time[1]) < c[k + 1]))
-                    {
-                        // cout << "Break at BC: " << L_BC[i][j][k].time[0] << ", " << L_BC[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                    if ((i == alpha || L_BC[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_BC[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_BC[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_BC[i][j][k].time[1] <= c[k + 1]))
                         isCut = true;
-                    }
 
                     // L_BB
                     tmpSolVec.resize(4);
@@ -2330,13 +2290,11 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
                     tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], max(b[j], L_BC[i][j - 1][k].time[1] + W_diff), "BC", "Y", &L_BC[i][j - 1][k]);
                     L_BB[i][j][k] = choose_best_sol(L_BB[i][j][k], tmpSolVec);
                     tmpSolVec.clear();
-                    if ((i == alpha || max(L_BB[i][j][k].time[0], L_BB[i][j][k].time[1]) < a[i + 1]) &&
-                        (j == beta || max(L_BB[i][j][k].time[0], L_BB[i][j][k].time[1]) < b[j + 1]) &&
-                        (k == gamma || max(L_BB[i][j][k].time[0], L_BB[i][j][k].time[1]) < c[k + 1]))
-                    {
-                        // cout << "Break at BB: " << L_BB[i][j][k].time[0] << ", " << L_BB[i][j][k].time[1] << " " << a[i + 1] << " " << b[j + 1] << " " << c[k + 1] << " " << (i == alpha) << " " << (j == beta) << " " << (k == gamma) << endl;
+                    if ((i == alpha || L_BB[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_BB[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_BB[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_BB[i][j][k].time[1] <= c[k + 1]))
                         isCut = true;
-                    }
 
                     if (isCut)
                     {
@@ -2354,61 +2312,356 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
         }
     }
 
+    // If the cut is found
+    while (cut_i < alpha || cut_j < beta || cut_k < gamma)
+    {
+        cout << "----- Cut at " << cut_i << ", " << cut_j << ", " << cut_k << endl;
+        cout << L_AB[cut_i][cut_j][cut_k].time[0] << " " << L_AB[cut_i][cut_j][cut_k].time[1] << endl;
+        cout << L_AC[cut_i][cut_j][cut_k].time[0] << " " << L_AB[cut_i][cut_j][cut_k].time[1] << endl;
+        cout << L_BB[cut_i][cut_j][cut_k].time[0] << " " << L_AB[cut_i][cut_j][cut_k].time[1] << endl;
+        cout << L_BC[cut_i][cut_j][cut_k].time[0] << " " << L_AB[cut_i][cut_j][cut_k].time[1] << endl;
+        // Fill the overlapping area
+        tmpSolVec.push_back(L_AB[cut_i][cut_j][cut_k]);
+        tmpSolVec.push_back(L_AC[cut_i][cut_j][cut_k]);
+        tmpSolVec.push_back(L_BB[cut_i][cut_j][cut_k]);
+        tmpSolVec.push_back(L_BC[cut_i][cut_j][cut_k]);
+        string tmpRes = get_opt_table(tmpSolVec);
+        cout << tmpSolVec.size() << " ";
+        cout << "tmpRes = " << tmpRes << endl;
+        tmpSolVec.clear();
+        if (tmpRes == "AB")
+        {
+            for (int i = cut_i + 1; i <= alpha; ++i)
+                L_AB[i][cut_j][cut_k] = update_sol(L_AB[i][cut_j][cut_k], max(a[i], L_AB[i - 1][cut_j][cut_k].time[0] + W_same), L_AB[i - 1][cut_j][cut_k].time[1], "AB", "X", &L_AB[i - 1][cut_j][cut_k]);
+            for (int j = cut_j + 1; j <= beta; ++j)
+                L_AB[cut_i][j][cut_k] = update_sol(L_AB[cut_i][j][cut_k], L_AB[cut_i][j - 1][cut_k].time[0], max(b[j], L_AB[cut_i][j - 1][cut_k].time[1] + W_same), "AB", "Y", &L_AB[cut_i][j - 1][cut_k]);
+            for (int k = cut_k + 1; k <= gamma; ++k)
+                L_AC[cut_i][cut_j][k] = update_sol(L_AC[cut_i][cut_j][k], L_AC[cut_i][cut_j][k - 1].time[0], max(c[k], L_AC[cut_i][cut_j][k - 1].time[1] + W_same), "AC", "Y", &L_AC[cut_i][cut_j][k - 1]);
+        }
+        else if (tmpRes == "AC")
+        {
+            for (int i = cut_i + 1; i <= alpha; ++i)
+                L_AC[i][cut_j][cut_k] = update_sol(L_AC[i][cut_j][cut_k], max(a[i], L_AC[i - 1][cut_j][cut_k].time[0] + W_same), L_AC[i - 1][cut_j][cut_k].time[1], "AC", "X", &L_AC[i - 1][cut_j][cut_k]);
+            for (int k = cut_k + 1; k <= gamma; ++k)
+                L_AC[cut_i][cut_j][k] = update_sol(L_AC[cut_i][cut_j][k], L_AC[cut_i][cut_j][k - 1].time[0], max(c[k], L_AC[cut_i][cut_j][k - 1].time[1] + W_same), "AC", "Y", &L_AC[cut_i][cut_j][k - 1]);
+        }
+        else if (tmpRes == "BC")
+        {
+            for (int j = cut_j + 1; j <= beta; ++j)
+                L_BC[cut_i][j][cut_k] = update_sol(L_BC[cut_i][j][cut_k], max(b[j], L_BC[cut_i][j - 1][cut_k].time[0] + W_same), L_BC[cut_i][j - 1][cut_k].time[1], "BC", "X", &L_BC[cut_i][j - 1][cut_k]);
+            for (int k = cut_k + 1; k <= gamma; ++k)
+                L_BC[cut_i][cut_j][k] = update_sol(L_BC[cut_i][cut_j][k], L_BC[cut_i][cut_j][k - 1].time[0], max(c[k], L_BC[cut_i][cut_j][k - 1].time[1] + W_same), "BC", "Y", &L_BC[cut_i][cut_j][k - 1]);
+            for (int i = cut_i + 1; i <= alpha; ++i)
+                L_AC[i][cut_j][cut_k] = update_sol(L_AC[i][cut_j][cut_k], max(a[i], L_AC[i - 1][cut_j][cut_k].time[0] + W_same), L_AC[i - 1][cut_j][cut_k].time[1], "AC", "X", &L_AC[i - 1][cut_j][cut_k]);
+        }
+        else if (tmpRes == "BB")
+        {
+            for (int j = cut_j + 1; j <= beta; ++j)
+            {
+                tmpSolVec.resize(2);
+                tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BB[cut_i][j - 1][cut_k].time[0] + W_same), L_BB[cut_i][j - 1][cut_k].time[1], "BB", "X", &L_BB[cut_i][j - 1][cut_k]);
+                tmpSolVec[1] = update_sol(tmpSolVec[1], L_BB[cut_i][j - 1][cut_k].time[0], max(b[j], L_BB[cut_i][j - 1][cut_k].time[1] + W_same), "BB", "Y", &L_BB[cut_i][j - 1][cut_k]);
+                L_BB[cut_i][j][cut_k] = choose_best_sol(L_BB[cut_i][j][cut_k], tmpSolVec);
+                tmpSolVec.clear();
+            }
+            for (int i = cut_i + 1; i <= alpha; ++i)
+                L_AB[i][cut_j][cut_k] = update_sol(L_AB[i][cut_j][cut_k], max(a[i], L_AB[i - 1][cut_j][cut_k].time[0] + W_same), L_AB[i - 1][cut_j][cut_k].time[1], "AB", "X", &L_AB[i - 1][cut_j][cut_k]);
+            for (int k = cut_k + 1; k <= gamma; ++k)
+                L_BC[cut_i][cut_j][k] = update_sol(L_BC[cut_i][cut_j][k], L_BC[cut_i][cut_j][k - 1].time[0], max(c[k], L_BC[cut_i][cut_j][k - 1].time[1] + W_same), "BC", "Y", &L_BC[cut_i][cut_j][k - 1]);
+        }
+
+        // Start from the cut, and continue finding the next cut
+        isCut = false;
+        int cut_min = min(min(cut_i, cut_j), min(cut_j, cut_k));
+        for (int square = 1; square <= (N - cut_min); ++square)
+        {
+            // cout << "square = " << square << endl;
+            for (int k = cut_k + 1; k <= (cut_k + square) && k <= gamma; ++k)
+            {
+                for (int i = cut_i + square, j = cut_j + 1; j <= (cut_j + square) && i <= alpha && j <= beta; ++j)
+                {
+                    // L_AB
+                    tmpSolVec.resize(4);
+                    tmpSolVec[0] = update_sol(tmpSolVec[0], max(a[i], L_AB[i - 1][j][k].time[0] + W_same), L_AB[i - 1][j][k].time[1], "AB", "X", &L_AB[i - 1][j][k]);
+                    tmpSolVec[1] = update_sol(tmpSolVec[1], max(a[i], L_BB[i - 1][j][k].time[0] + W_diff), L_BB[i - 1][j][k].time[1], "BB", "X", &L_BB[i - 1][j][k]);
+                    tmpSolVec[2] = update_sol(tmpSolVec[2], L_AB[i][j - 1][k].time[0], max(b[j], L_AB[i][j - 1][k].time[1] + W_same), "AB", "Y", &L_AB[i][j - 1][k]);
+                    tmpSolVec[3] = update_sol(tmpSolVec[3], L_AC[i][j - 1][k].time[0], max(b[j], L_AC[i][j - 1][k].time[1] + W_diff), "AC", "Y", &L_AC[i][j - 1][k]);
+                    L_AB[i][j][k] = choose_best_sol(L_AB[i][j][k], tmpSolVec);
+                    tmpSolVec.clear();
+                    if ((i == alpha || L_AB[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_AB[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_AB[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_AB[i][j][k].time[1] <= c[k + 1]))
+                        isCut = true;
+
+                    // L_AC
+                    tmpSolVec.resize(4);
+                    tmpSolVec[0] = update_sol(tmpSolVec[0], max(a[i], L_AC[i - 1][j][k].time[0] + W_same), L_AC[i - 1][j][k].time[1], "AC", "X", &L_AC[i - 1][j][k]);
+                    tmpSolVec[1] = update_sol(tmpSolVec[1], max(a[i], L_BC[i - 1][j][k].time[0] + W_diff), L_BC[i - 1][j][k].time[1], "BC", "X", &L_BC[i - 1][j][k]);
+                    tmpSolVec[2] = update_sol(tmpSolVec[2], L_AC[i][j][k - 1].time[0], max(c[k], L_AC[i][j][k - 1].time[1] + W_same), "AC", "Y", &L_AC[i][j][k - 1]);
+                    tmpSolVec[3] = update_sol(tmpSolVec[3], L_AB[i][j][k - 1].time[0], max(c[k], L_AB[i][j][k - 1].time[1] + W_diff), "AB", "Y", &L_AB[i][j][k - 1]);
+                    L_AC[i][j][k] = choose_best_sol(L_AC[i][j][k], tmpSolVec);
+                    tmpSolVec.clear();
+                    if ((i == alpha || L_AC[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_AC[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_AC[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_AC[i][j][k].time[1] <= c[k + 1]))
+                        isCut = true;
+
+                    // L_BC
+                    tmpSolVec.resize(4);
+                    tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BC[i][j - 1][k].time[0] + W_same), L_BC[i][j - 1][k].time[1], "BC", "X", &L_BC[i][j - 1][k]);
+                    tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AC[i][j - 1][k].time[0] + W_diff), L_AC[i][j - 1][k].time[1], "AC", "X", &L_AC[i][j - 1][k]);
+                    tmpSolVec[2] = update_sol(tmpSolVec[2], L_BC[i][j][k - 1].time[0], max(c[k], L_BC[i][j][k - 1].time[1] + W_same), "BC", "Y", &L_BC[i][j][k - 1]);
+                    tmpSolVec[3] = update_sol(tmpSolVec[3], L_BB[i][j][k - 1].time[0], max(c[k], L_BB[i][j][k - 1].time[1] + W_diff), "BB", "Y", &L_BB[i][j][k - 1]);
+                    L_BC[i][j][k] = choose_best_sol(L_BC[i][j][k], tmpSolVec);
+                    tmpSolVec.clear();
+                    if ((i == alpha || L_BC[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_BC[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_BC[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_BC[i][j][k].time[1] <= c[k + 1]))
+                        isCut = true;
+
+                    // L_BB
+                    tmpSolVec.resize(4);
+                    tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BB[i][j - 1][k].time[0] + W_same), L_BB[i][j - 1][k].time[1], "BB", "X", &L_BB[i][j - 1][k]);
+                    tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AB[i][j - 1][k].time[0] + W_diff), L_AB[i][j - 1][k].time[1], "AB", "X", &L_AB[i][j - 1][k]);
+                    tmpSolVec[2] = update_sol(tmpSolVec[2], L_BB[i][j - 1][k].time[0], max(b[j], L_BB[i][j - 1][k].time[1] + W_same), "BB", "Y", &L_BB[i][j - 1][k]);
+                    tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], max(b[j], L_BC[i][j - 1][k].time[1] + W_diff), "BC", "Y", &L_BC[i][j - 1][k]);
+                    L_BB[i][j][k] = choose_best_sol(L_BB[i][j][k], tmpSolVec);
+                    tmpSolVec.clear();
+                    if ((i == alpha || L_BB[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_BB[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_BB[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_BB[i][j][k].time[1] <= c[k + 1]))
+                        isCut = true;
+
+                    // cout << "1: " << square << ", " << cut_i << ", " << cut_j << ", " << cut_k << ", " << i << ", " << j << ", " << k << endl;
+                    if (isCut)
+                    {
+                        cut_i = i;
+                        cut_j = j;
+                        cut_k = k;
+                        break;
+                    }
+                }
+                if (isCut)
+                    break;
+                for (int j = cut_j + square, i = cut_i + 1; i <= (cut_i + square) && i <= alpha && j <= beta; ++i)
+                {
+
+                    // L_AB
+                    tmpSolVec.resize(4);
+                    tmpSolVec[0] = update_sol(tmpSolVec[0], max(a[i], L_AB[i - 1][j][k].time[0] + W_same), L_AB[i - 1][j][k].time[1], "AB", "X", &L_AB[i - 1][j][k]);
+                    tmpSolVec[1] = update_sol(tmpSolVec[1], max(a[i], L_BB[i - 1][j][k].time[0] + W_diff), L_BB[i - 1][j][k].time[1], "BB", "X", &L_BB[i - 1][j][k]);
+                    tmpSolVec[2] = update_sol(tmpSolVec[2], L_AB[i][j - 1][k].time[0], max(b[j], L_AB[i][j - 1][k].time[1] + W_same), "AB", "Y", &L_AB[i][j - 1][k]);
+                    tmpSolVec[3] = update_sol(tmpSolVec[3], L_AC[i][j - 1][k].time[0], max(b[j], L_AC[i][j - 1][k].time[1] + W_diff), "AC", "Y", &L_AC[i][j - 1][k]);
+                    L_AB[i][j][k] = choose_best_sol(L_AB[i][j][k], tmpSolVec);
+                    tmpSolVec.clear();
+                    if ((i == alpha || L_AB[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_AB[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_AB[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_AB[i][j][k].time[1] <= c[k + 1]))
+                        isCut = true;
+
+                    // L_AC
+                    tmpSolVec.resize(4);
+                    tmpSolVec[0] = update_sol(tmpSolVec[0], max(a[i], L_AC[i - 1][j][k].time[0] + W_same), L_AC[i - 1][j][k].time[1], "AC", "X", &L_AC[i - 1][j][k]);
+                    tmpSolVec[1] = update_sol(tmpSolVec[1], max(a[i], L_BC[i - 1][j][k].time[0] + W_diff), L_BC[i - 1][j][k].time[1], "BC", "X", &L_BC[i - 1][j][k]);
+                    tmpSolVec[2] = update_sol(tmpSolVec[2], L_AC[i][j][k - 1].time[0], max(c[k], L_AC[i][j][k - 1].time[1] + W_same), "AC", "Y", &L_AC[i][j][k - 1]);
+                    tmpSolVec[3] = update_sol(tmpSolVec[3], L_AB[i][j][k - 1].time[0], max(c[k], L_AB[i][j][k - 1].time[1] + W_diff), "AB", "Y", &L_AB[i][j][k - 1]);
+                    L_AC[i][j][k] = choose_best_sol(L_AC[i][j][k], tmpSolVec);
+                    tmpSolVec.clear();
+                    if ((i == alpha || L_AC[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_AC[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_AC[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_AC[i][j][k].time[1] <= c[k + 1]))
+                        isCut = true;
+
+                    // L_BC
+                    tmpSolVec.resize(4);
+                    tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BC[i][j - 1][k].time[0] + W_same), L_BC[i][j - 1][k].time[1], "BC", "X", &L_BC[i][j - 1][k]);
+                    tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AC[i][j - 1][k].time[0] + W_diff), L_AC[i][j - 1][k].time[1], "AC", "X", &L_AC[i][j - 1][k]);
+                    tmpSolVec[2] = update_sol(tmpSolVec[2], L_BC[i][j][k - 1].time[0], max(c[k], L_BC[i][j][k - 1].time[1] + W_same), "BC", "Y", &L_BC[i][j][k - 1]);
+                    tmpSolVec[3] = update_sol(tmpSolVec[3], L_BB[i][j][k - 1].time[0], max(c[k], L_BB[i][j][k - 1].time[1] + W_diff), "BB", "Y", &L_BB[i][j][k - 1]);
+                    L_BC[i][j][k] = choose_best_sol(L_BC[i][j][k], tmpSolVec);
+                    tmpSolVec.clear();
+                    if ((i == alpha || L_BC[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_BC[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_BC[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_BC[i][j][k].time[1] <= c[k + 1]))
+                        isCut = true;
+
+                    // L_BB
+                    tmpSolVec.resize(4);
+                    tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BB[i][j - 1][k].time[0] + W_same), L_BB[i][j - 1][k].time[1], "BB", "X", &L_BB[i][j - 1][k]);
+                    tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AB[i][j - 1][k].time[0] + W_diff), L_AB[i][j - 1][k].time[1], "AB", "X", &L_AB[i][j - 1][k]);
+                    tmpSolVec[2] = update_sol(tmpSolVec[2], L_BB[i][j - 1][k].time[0], max(b[j], L_BB[i][j - 1][k].time[1] + W_same), "BB", "Y", &L_BB[i][j - 1][k]);
+                    tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], max(b[j], L_BC[i][j - 1][k].time[1] + W_diff), "BC", "Y", &L_BC[i][j - 1][k]);
+                    L_BB[i][j][k] = choose_best_sol(L_BB[i][j][k], tmpSolVec);
+                    tmpSolVec.clear();
+                    if ((i == alpha || L_BB[i][j][k].time[0] <= a[i + 1]) &&
+                        (j == beta || L_BB[i][j][k].time[0] <= b[j + 1]) &&
+                        (j == beta || L_BB[i][j][k].time[1] <= b[j + 1]) &&
+                        (k == gamma || L_BB[i][j][k].time[1] <= c[k + 1]))
+                        isCut = true;
+
+                    // cout << "2: " << square << ", " << cut_i << ", " << cut_j << ", " << cut_k << ", " << i << ", " << j << ", " << k << endl;
+                    if (isCut)
+                    {
+                        cut_i = i;
+                        cut_j = j;
+                        cut_k = k;
+                        break;
+                    }
+                }
+                if (isCut)
+                    break;
+            }
+            if (isCut)
+                break;
+
+            if (square <= gamma)
+            {
+                int k = square;
+                for (int i = cut_i + 1; i <= (cut_i + square) && i <= alpha; ++i)
+                {
+                    for (int j = cut_j + 1; j <= (cut_j + square) && j <= beta; ++j)
+                    {
+
+                        // L_AB
+                        tmpSolVec.resize(4);
+                        tmpSolVec[0] = update_sol(tmpSolVec[0], max(a[i], L_AB[i - 1][j][k].time[0] + W_same), L_AB[i - 1][j][k].time[1], "AB", "X", &L_AB[i - 1][j][k]);
+                        tmpSolVec[1] = update_sol(tmpSolVec[1], max(a[i], L_BB[i - 1][j][k].time[0] + W_diff), L_BB[i - 1][j][k].time[1], "BB", "X", &L_BB[i - 1][j][k]);
+                        tmpSolVec[2] = update_sol(tmpSolVec[2], L_AB[i][j - 1][k].time[0], max(b[j], L_AB[i][j - 1][k].time[1] + W_same), "AB", "Y", &L_AB[i][j - 1][k]);
+                        tmpSolVec[3] = update_sol(tmpSolVec[3], L_AC[i][j - 1][k].time[0], max(b[j], L_AC[i][j - 1][k].time[1] + W_diff), "AC", "Y", &L_AC[i][j - 1][k]);
+                        L_AB[i][j][k] = choose_best_sol(L_AB[i][j][k], tmpSolVec);
+                        tmpSolVec.clear();
+                        if ((i == alpha || L_AB[i][j][k].time[0] <= a[i + 1]) &&
+                            (j == beta || L_AB[i][j][k].time[0] <= b[j + 1]) &&
+                            (j == beta || L_AB[i][j][k].time[1] <= b[j + 1]) &&
+                            (k == gamma || L_AB[i][j][k].time[1] <= c[k + 1]))
+                            isCut = true;
+
+                        // L_AC
+                        tmpSolVec.resize(4);
+                        tmpSolVec[0] = update_sol(tmpSolVec[0], max(a[i], L_AC[i - 1][j][k].time[0] + W_same), L_AC[i - 1][j][k].time[1], "AC", "X", &L_AC[i - 1][j][k]);
+                        tmpSolVec[1] = update_sol(tmpSolVec[1], max(a[i], L_BC[i - 1][j][k].time[0] + W_diff), L_BC[i - 1][j][k].time[1], "BC", "X", &L_BC[i - 1][j][k]);
+                        tmpSolVec[2] = update_sol(tmpSolVec[2], L_AC[i][j][k - 1].time[0], max(c[k], L_AC[i][j][k - 1].time[1] + W_same), "AC", "Y", &L_AC[i][j][k - 1]);
+                        tmpSolVec[3] = update_sol(tmpSolVec[3], L_AB[i][j][k - 1].time[0], max(c[k], L_AB[i][j][k - 1].time[1] + W_diff), "AB", "Y", &L_AB[i][j][k - 1]);
+                        L_AC[i][j][k] = choose_best_sol(L_AC[i][j][k], tmpSolVec);
+                        tmpSolVec.clear();
+                        if ((i == alpha || L_AC[i][j][k].time[0] <= a[i + 1]) &&
+                            (j == beta || L_AC[i][j][k].time[0] <= b[j + 1]) &&
+                            (j == beta || L_AC[i][j][k].time[1] <= b[j + 1]) &&
+                            (k == gamma || L_AC[i][j][k].time[1] <= c[k + 1]))
+                            isCut = true;
+
+                        // L_BC
+                        tmpSolVec.resize(4);
+                        tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BC[i][j - 1][k].time[0] + W_same), L_BC[i][j - 1][k].time[1], "BC", "X", &L_BC[i][j - 1][k]);
+                        tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AC[i][j - 1][k].time[0] + W_diff), L_AC[i][j - 1][k].time[1], "AC", "X", &L_AC[i][j - 1][k]);
+                        tmpSolVec[2] = update_sol(tmpSolVec[2], L_BC[i][j][k - 1].time[0], max(c[k], L_BC[i][j][k - 1].time[1] + W_same), "BC", "Y", &L_BC[i][j][k - 1]);
+                        tmpSolVec[3] = update_sol(tmpSolVec[3], L_BB[i][j][k - 1].time[0], max(c[k], L_BB[i][j][k - 1].time[1] + W_diff), "BB", "Y", &L_BB[i][j][k - 1]);
+                        L_BC[i][j][k] = choose_best_sol(L_BC[i][j][k], tmpSolVec);
+                        tmpSolVec.clear();
+                        if ((i == alpha || L_BC[i][j][k].time[0] <= a[i + 1]) &&
+                            (j == beta || L_BC[i][j][k].time[0] <= b[j + 1]) &&
+                            (j == beta || L_BC[i][j][k].time[1] <= b[j + 1]) &&
+                            (k == gamma || L_BC[i][j][k].time[1] <= c[k + 1]))
+                            isCut = true;
+
+                        // L_BB
+                        tmpSolVec.resize(4);
+                        tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BB[i][j - 1][k].time[0] + W_same), L_BB[i][j - 1][k].time[1], "BB", "X", &L_BB[i][j - 1][k]);
+                        tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AB[i][j - 1][k].time[0] + W_diff), L_AB[i][j - 1][k].time[1], "AB", "X", &L_AB[i][j - 1][k]);
+                        tmpSolVec[2] = update_sol(tmpSolVec[2], L_BB[i][j - 1][k].time[0], max(b[j], L_BB[i][j - 1][k].time[1] + W_same), "BB", "Y", &L_BB[i][j - 1][k]);
+                        tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], max(b[j], L_BC[i][j - 1][k].time[1] + W_diff), "BC", "Y", &L_BC[i][j - 1][k]);
+                        L_BB[i][j][k] = choose_best_sol(L_BB[i][j][k], tmpSolVec);
+                        tmpSolVec.clear();
+                        if ((i == alpha || L_BB[i][j][k].time[0] <= a[i + 1]) &&
+                            (j == beta || L_BB[i][j][k].time[0] <= b[j + 1]) &&
+                            (j == beta || L_BB[i][j][k].time[1] <= b[j + 1]) &&
+                            (k == gamma || L_BB[i][j][k].time[1] <= c[k + 1]))
+                            isCut = true;
+
+                        // cout << "3: " << i << ", " << j << ", " << k << endl;
+                        if (isCut)
+                        {
+                            cut_i = i;
+                            cut_j = j;
+                            cut_k = k;
+                            break;
+                        }
+                    }
+                    if (isCut)
+                        break;
+                }
+                if (isCut)
+                    break;
+            }
+        }
+    }
+    cout << "Finish" << endl;
+    cout << L_AB[alpha][beta][gamma].time[0] << " " << L_AB[alpha][beta][gamma].time[1] << endl;
+    cout << L_AC[alpha][beta][gamma].time[0] << " " << L_AB[alpha][beta][gamma].time[1] << endl;
+    cout << L_BB[alpha][beta][gamma].time[0] << " " << L_AB[alpha][beta][gamma].time[1] << endl;
+    cout << L_BC[alpha][beta][gamma].time[0] << " " << L_AB[alpha][beta][gamma].time[1] << endl;
     // Print table
-    // cout << "L_AB-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_AB[i][j][k].time[0] << " " << L_AB[i][j][k].time[1] << " " << L_AB[i][j][k].table << " " << L_AB[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
-    // cout << "L_AC-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_AC[i][j][k].time[0] << " " << L_AC[i][j][k].time[1] << " " << L_AC[i][j][k].table << " " << L_AC[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
-    // cout << "L_BB-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_BB[i][j][k].time[0] << " " << L_BB[i][j][k].time[1] << " " << L_BB[i][j][k].table << " " << L_BB[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
-    // cout << "L_BC-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_BC[i][j][k].time[0] << " " << L_BC[i][j][k].time[1] << " " << L_BC[i][j][k].table << " " << L_BC[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
+    cout << "L_AB-------------------------------" << endl;
+    for (int k = 0; k <= gamma; ++k)
+    {
+        cout << "k = " << k << endl;
+        for (int i = 0; i <= alpha; ++i)
+        {
+            for (int j = 0; j <= beta; ++j)
+                cout << L_AB[i][j][k].time[0] << " " << L_AB[i][j][k].time[1] << " " << L_AB[i][j][k].table << " " << L_AB[i][j][k].lane << " || ";
+            cout << endl;
+        }
+        cout << endl;
+    }
+    cout << "L_AC-------------------------------" << endl;
+    for (int k = 0; k <= gamma; ++k)
+    {
+        cout << "k = " << k << endl;
+        for (int i = 0; i <= alpha; ++i)
+        {
+            for (int j = 0; j <= beta; ++j)
+                cout << L_AC[i][j][k].time[0] << " " << L_AC[i][j][k].time[1] << " " << L_AC[i][j][k].table << " " << L_AC[i][j][k].lane << " || ";
+            cout << endl;
+        }
+        cout << endl;
+    }
+    cout << "L_BB-------------------------------" << endl;
+    for (int k = 0; k <= gamma; ++k)
+    {
+        cout << "k = " << k << endl;
+        for (int i = 0; i <= alpha; ++i)
+        {
+            for (int j = 0; j <= beta; ++j)
+                cout << L_BB[i][j][k].time[0] << " " << L_BB[i][j][k].time[1] << " " << L_BB[i][j][k].table << " " << L_BB[i][j][k].lane << " || ";
+            cout << endl;
+        }
+        cout << endl;
+    }
+    cout << "L_BC-------------------------------" << endl;
+    for (int k = 0; k <= gamma; ++k)
+    {
+        cout << "k = " << k << endl;
+        for (int i = 0; i <= alpha; ++i)
+        {
+            for (int j = 0; j <= beta; ++j)
+                cout << L_BC[i][j][k].time[0] << " " << L_BC[i][j][k].time[1] << " " << L_BC[i][j][k].table << " " << L_BC[i][j][k].lane << " || ";
+            cout << endl;
+        }
+        cout << endl;
+    }
 
     // Push order to stack
     stack<tuple<char, int, float>> stack_X, stack_Y;
-    int i = cut_i;
-    int j = cut_j;
-    int k = cut_k;
+    int i = alpha;
+    int j = beta;
+    int k = gamma;
     string optTable;
     string table = "";
     string lanes = "";
@@ -2813,7 +3066,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
     double computeTime = chrono::duration_cast<chrono::nanoseconds>(t_end - t_start).count();
     computeTime *= 1e-9;
 
-    return make_tuple(last_X, last_Y, cut_i, cut_j, cut_k);
+    return make_tuple(last_X, last_Y, computeTime);
 }
 
 vector<float> get_window_by_num(vector<float> &traffic, int carNum)
@@ -3031,60 +3284,43 @@ tuple<float, double> schedule_by_num_window_v2(vector<float> a_all, vector<float
     return make_tuple(T_last, totalComputeTime);
 }
 
-tuple<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vector<float> c, float W_same, float W_diff)
+tuple<float, double> schedule_by_reduced_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff, int carNum)
 {
     tuple<char, int, float> last_X = make_tuple('0', 0, 0.0);
     tuple<char, int, float> last_Y = make_tuple('0', 0, 0.0);
     double tmp;
     float T_last;
     auto t0 = chrono::high_resolution_clock::now();
-    int cut_i = 0, cut_j = 0, cut_k = 0;
     // while ((a_all.size() > 1 && b_all.size() > 1) ||
     //        (b_all.size() > 1 && c_all.size() > 1) ||
     //        (b_all.size() > 2))
-    tie(last_X, last_Y, cut_i, cut_j, cut_k) = reduced_dp(a, b, c, W_same, W_diff, last_X, last_Y);
-    // cout << "Cut at " << cut_i << ", " << cut_j << ", " << cut_k << endl;
-    while (a.size() > 1 || b.size() > 1 || c.size() > 1)
+    while (a_all.size() > 1 || b_all.size() > 1 || c_all.size() > 1)
     {
-        a.erase(a.begin() + 1, a.begin() + cut_i + 1);
-        b.erase(b.begin() + 1, b.begin() + cut_j + 1);
-        c.erase(c.begin() + 1, c.begin() + cut_k + 1);
+        int cut_i = a_all.size(), cut_j = b_all.size(), cut_k = c_all.size();
+        vector<float> a = get_window_by_num(a_all, cut_i);
+        vector<float> b = get_window_by_num(b_all, cut_j);
+        vector<float> c = get_window_by_num(c_all, cut_k);
         if (a.size() > 1 && b.size() > 1 && c.size() > 1)
-        {
-            tie(last_X, last_Y, cut_i, cut_j, cut_k) = reduced_dp(a, b, c, W_same, W_diff, last_X, last_Y);
-            // cout << "Cut at " << cut_i << ", " << cut_j << ", " << cut_k << endl;
-        }
+            tie(last_X, last_Y, tmp) = reduced_dp(a, b, c, W_same, W_diff, last_X, last_Y);
         else if (a.size() > 1 && b.size() > 1)
         {
             last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
             last_Y = schedule_single_lane('B', b, W_same, W_diff, last_Y);
-            a.clear();
-            b.clear();
         }
         else if (a.size() > 1 and c.size() > 1)
         {
             last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
             last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
-            a.clear();
-            c.clear();
         }
         else if (b.size() > 1 and c.size() > 1)
         {
             last_X = schedule_single_lane('B', b, W_same, W_diff, last_X);
             last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
-            b.clear();
-            c.clear();
         }
         else if (a.size() > 1)
-        {
             last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
-            a.clear();
-        }
         else if (c.size() > 1)
-        {
             last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
-            c.clear();
-        }
         else if (b.size() > 1)
         {
             if (get<2>(last_X) < get<2>(last_Y))
@@ -3137,7 +3373,6 @@ tuple<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, ve
                     }
                 }
             }
-            b.clear();
         }
         // cout << "last_X: " << get<0>(last_X) << " " << get<1>(last_X) << " " << get<2>(last_X) << endl;
         // cout << "last_Y: " << get<0>(last_Y) << " " << get<1>(last_Y) << " " << get<2>(last_Y) << endl;
@@ -3192,31 +3427,34 @@ int main(int argc, char *argv[])
     // b_all = {0, 3, 4, 13, 15, 19};
     // c_all = {0, 4, 6, 7, 11, 12};
 
-    // first_come_first_serve_v1(timeStep, a_all, b_all, c_all, W_same, W_diff);
-    // first_come_first_serve_v2(a_all, b_all, c_all, W_same, W_diff);
-    // schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 5);
-    // schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 10);
-    // schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 20);
-    // schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 100);
+    first_come_first_serve_v1(timeStep, a_all, b_all, c_all, W_same, W_diff);
+    first_come_first_serve_v2(a_all, b_all, c_all, W_same, W_diff);
+    schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 5);
+    schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 10);
+    schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 20);
+    schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 100);
     schedule_by_num_window_v2(a_all, b_all, c_all, W_same, W_diff, 5);
     schedule_by_num_window_v2(a_all, b_all, c_all, W_same, W_diff, 10);
     schedule_by_num_window_v2(a_all, b_all, c_all, W_same, W_diff, 20);
     schedule_by_num_window_v2(a_all, b_all, c_all, W_same, W_diff, 100);
-    schedule_by_reduced_dp(a_all, b_all, c_all, W_same, W_diff);
-    // greedy_dp(a_all, b_all, c_all, W_same, W_diff);
+    // schedule_by_num_window_reduced(a_all, b_all, c_all, W_same, W_diff, 5);
+    // schedule_by_num_window_reduced(a_all, b_all, c_all, W_same, W_diff, 10);
+    // schedule_by_num_window_reduced(a_all, b_all, c_all, W_same, W_diff, 20);
+    schedule_by_num_window_reduced(a_all, b_all, c_all, W_same, W_diff, 100);
+    greedy_dp(a_all, b_all, c_all, W_same, W_diff);
 
-    // cout << "a_all = {" << a_all[0];
-    // for (int i = 1; i < a_all.size(); ++i)
-    //     cout << ", " << a_all[i];
-    // cout << "};" << endl;
-    // cout << "b_all = {" << b_all[0];
-    // for (int i = 1; i < b_all.size(); ++i)
-    //     cout << ", " << b_all[i];
-    // cout << "};" << endl;
-    // cout << "c_all = {" << c_all[0];
-    // for (int i = 1; i < c_all.size(); ++i)
-    //     cout << ", " << c_all[i];
-    // cout << "};" << endl;
+    cout << "a_all = {" << a_all[0];
+    for (int i = 1; i < a_all.size(); ++i)
+        cout << ", " << a_all[i];
+    cout << "};" << endl;
+    cout << "b_all = {" << b_all[0];
+    for (int i = 1; i < b_all.size(); ++i)
+        cout << ", " << b_all[i];
+    cout << "};" << endl;
+    cout << "c_all = {" << c_all[0];
+    for (int i = 1; i < c_all.size(); ++i)
+        cout << ", " << c_all[i];
+    cout << "};" << endl;
 
     return 0;
 }
