@@ -1,12 +1,18 @@
 #include <string>
+#include <vector>
+#include <cmath>
+#include <tuple>
 using namespace std;
 
-class Solution { 
-public: 
-    Solution(float time[2], string table, string lane);
-    float getObj();
-    void setValue(float newTime[2], string newTable, string newLane);
-    float time[2];
-    string table;
-    string lane;
+struct Solution
+{
+    float time[2] = {INFINITY, INFINITY};
+    string table = "";
+    string lane = "";
+    Solution *src = NULL;
 };
+
+Solution update_sol(Solution s, float newTimeX, float newTimeY, string newTable, string newLane);
+Solution update_sol(Solution s, float newTimeX, float newTimeY, string newTable, string newLane, Solution *newSrc);
+Solution choose_best_sol(Solution s, vector<Solution> solVec);
+string get_opt_table(vector<Solution> solVec);

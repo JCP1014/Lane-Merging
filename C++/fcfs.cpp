@@ -661,7 +661,7 @@ tuple<float, double> first_come_first_serve_v1(float timeStep, vector<float> a_a
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
     float T_last = max(X_lastT, Y_lastT);
-    cout << "result: " << T_last << " " << totalComputeTime << endl;
+    cout << "fcfs result: " << T_last << " " << totalComputeTime << endl;
     return make_tuple(T_last, totalComputeTime);
 }
 
@@ -829,6 +829,6 @@ tuple<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
     float T_last = max(X_lastT, Y_lastT);
-    cout << "result: " << T_last << " " << totalComputeTime << endl;
+    cout << "fcfs result: " << T_last << " " << totalComputeTime << endl;
     return make_tuple(T_last, totalComputeTime);
 }

@@ -1,26 +1,149 @@
-#include <random>
-#include <algorithm>
 #include "solution.h"
-using namespace std;
 
-Solution::Solution(float time[2], string table, string lane)
+Solution update_sol(Solution s, float newTimeX, float newTimeY, string newTable, string newLane)
 {
-    this->time[0] = INFINITY;
-    this->time[1] = INFINITY;
-    this->table = "0";
-    this->lane = "0";
+    s.time[0] = newTimeX;
+    s.time[1] = newTimeY;
+    s.table = newTable;
+    s.lane = newLane;
+    return s;
 }
 
-float Solution::getObj()
+Solution update_sol(Solution s, float newTimeX, float newTimeY, string newTable, string newLane, Solution *newSrc)
 {
-    int arr_len = sizeof(this->time) / sizeof(*this->time);
-    return *max_element(this->time, this->time + arr_len);
+    s.time[0] = newTimeX;
+    s.time[1] = newTimeY;
+    s.table = newTable;
+    s.lane = newLane;
+    s.src = newSrc;
+    return s;
 }
 
-void Solution::setValue(float newTime[2], string newTable, string newLane)
+Solution choose_best_sol(Solution s, vector<Solution> solVec)
 {
-    this->time[0] = newTime[0];
-    this->time[1] = newTime[1];
-    this->table = newTable;
-    this->lane = newLane;
+    float minMax = max(solVec[0].time[0], solVec[0].time[1]);
+    float minSum;
+    float minSrcSum, minSrcMax;
+    int index = 0;
+    float tmpMax, tmpMin, tmpSum, tmpSrcMax, tmpSrcMin, tmpSrcSum;
+
+    for (int i = 1; i < solVec.size(); ++i)
+    {
+        tmpMax = max(solVec[i].time[0], solVec[i].time[1]);
+        if (tmpMax < minMax)
+        {
+            minMax = tmpMax;
+            index = i;
+        }
+        else if (tmpMax == minMax)
+        {
+            tmpSum = solVec[i].time[0] + solVec[i].time[1];
+            minSum = solVec[index].time[0] + solVec[index].time[1];
+            if (tmpSum < minSum)
+            {
+                minMax = tmpMax;
+                index = i;
+            }
+            else if (tmpSum == minSum && solVec[i].src)
+            {
+                tmpSrcMax = max(solVec[i].src->time[0], solVec[i].src->time[1]);
+                minSrcMax = max(solVec[index].src->time[0], solVec[index].src->time[1]);
+                if (tmpSrcMax < minSrcMax)
+                {
+                    minMax = tmpMax;
+                    index = i;
+                }
+                else if (tmpSrcMax == minSrcMax)
+                {
+                    tmpSrcSum = solVec[i].src->time[0] + solVec[i].src->time[1];
+                    minSrcSum = solVec[index].src->time[0] + solVec[index].src->time[1];
+                    if (tmpSrcSum < minSrcSum)
+                    {
+                        minMax = tmpMax;
+                        index = i;
+                    }
+                }
+            }
+        }
+    }
+    s = update_sol(s, solVec[index].time[0], solVec[index].time[1], solVec[index].table, solVec[index].lane);
+    return s;
+}
+
+string get_opt_table(vector<Solution> solVec)
+{
+    float minMax = max(solVec[0].time[0], solVec[0].time[1]);
+    float minSum;
+    float minSrcSum, minSrcMax;
+    int index = 0;
+    float tmpMax, tmpMin, tmpSum, tmpSrcMax, tmpSrcMin, tmpSrcSum;
+    string optTable = "AB";
+    for (int i = 1; i < solVec.size(); ++i)
+    {
+        tmpMax = max(solVec[i].time[0], solVec[i].time[1]);
+        if (tmpMax < minMax)
+        {
+            minMax = tmpMax;
+            index = i;
+        }
+        else if (tmpMax == minMax)
+        {
+            tmpSum = solVec[i].time[0] + solVec[i].time[1];
+            minSum = solVec[index].time[0] + solVec[index].time[1];
+            if (tmpSum < minSum)
+            {
+                minMax = tmpMax;
+                index = i;
+            }
+            else if (tmpSum == minSum && solVec[i].src)
+            {
+                tmpSrcMax = max(solVec[i].src->time[0], solVec[i].src->time[1]);
+                minSrcMax = max(solVec[index].src->time[0], solVec[index].src->time[1]);
+                if (tmpSrcMax < minSrcMax)
+                {
+                    minMax = tmpMax;
+                    index = i;
+                }
+                else if (tmpSrcMax == minSrcMax)
+                {
+                    tmpSrcSum = solVec[i].src->time[0] + solVec[i].src->time[1];
+                    minSrcSum = solVec[index].src->time[0] + solVec[index].src->time[1];
+                    if (tmpSrcSum < minSrcSum)
+                    {
+                        minMax = tmpMax;
+                        index = i;
+                    }
+                }
+            }
+        }
+    }
+    switch (index)
+    {
+    case 0:
+    {
+        optTable = "AB";
+        break;
+    }
+    case 1:
+    {
+        optTable = "AC";
+        break;
+    }
+    case 2:
+    {
+        optTable = "BB";
+        break;
+    }
+    case 3:
+    {
+        optTable = "BC";
+        break;
+    }
+    default:
+    {
+        optTable = "";
+        break;
+    }
+    }
+    return optTable;
 }
