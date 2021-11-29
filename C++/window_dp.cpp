@@ -1,18 +1,6 @@
-#include <iostream>
-#include <algorithm>
-#include <tuple>
-#include <time.h>
-#include <stack>
-#include <chrono>
-#include "generate_input.h"
-#include "fcfs.h"
-#include "dp_2d.h"
-#include "solution.h"
-#include "get_window.h"
-#define endl '\n'
-using namespace std;
+#include "window_dp.h"
 
-tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp_v2(vector<float> a, vector<float> b, vector<float> c, float W_same, float W_diff, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
+tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp_v2(vector<float> a, vector<float> b, vector<float> c, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
 {
     auto t_start = chrono::high_resolution_clock::now();
     int alpha = a.size() - 1;
@@ -385,53 +373,13 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
 
     // Print table
     // cout << "L_AB-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_AB[i][j][k].time[0] << " " << L_AB[i][j][k].time[1] << " " << L_AB[i][j][k].table << " " << L_AB[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
+    // print_3d_table(L_AB);
     // cout << "L_AC-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_AC[i][j][k].time[0] << " " << L_AC[i][j][k].time[1] << " " << L_AC[i][j][k].table << " " << L_AC[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
+    // print_3d_table(L_AC);
     // cout << "L_BB-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_BB[i][j][k].time[0] << " " << L_BB[i][j][k].time[1] << " " << L_BB[i][j][k].table << " " << L_BB[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
+    // print_3d_table(L_BB);
     // cout << "L_BC-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_BC[i][j][k].time[0] << " " << L_BC[i][j][k].time[1] << " " << L_BC[i][j][k].table << " " << L_BC[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
+    // print_3d_table(L_BC);
 
     // Push order to stack
     stack<tuple<char, int, float>> stack_X, stack_Y;
@@ -845,7 +793,8 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
     return make_tuple(last_X, last_Y, computeTime);
 }
 
-tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_dp(vector<float> a, vector<float> b, vector<float> c, float W_same, float W_diff, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
+// Do not traverse all space
+tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_dp(vector<float> a, vector<float> b, vector<float> c, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
 {
     auto t_start = chrono::high_resolution_clock::now();
     int alpha = a.size() - 1;
@@ -1427,53 +1376,13 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
 
     // Print table
     // cout << "L_AB-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_AB[i][j][k].time[0] << " " << L_AB[i][j][k].time[1] << " " << L_AB[i][j][k].table << " " << L_AB[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
+    // print_3d_table(L_AB);
     // cout << "L_AC-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_AC[i][j][k].time[0] << " " << L_AC[i][j][k].time[1] << " " << L_AC[i][j][k].table << " " << L_AC[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
+    // print_3d_table(L_AC);
     // cout << "L_BB-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_BB[i][j][k].time[0] << " " << L_BB[i][j][k].time[1] << " " << L_BB[i][j][k].table << " " << L_BB[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
+    // print_3d_table(L_BB);
     // cout << "L_BC-------------------------------" << endl;
-    // for (int k = 0; k <= gamma; ++k)
-    // {
-    //     cout << "k = " << k << endl;
-    //     for (int i = 0; i <= alpha; ++i)
-    //     {
-    //         for (int j = 0; j <= beta; ++j)
-    //             cout << L_BC[i][j][k].time[0] << " " << L_BC[i][j][k].time[1] << " " << L_BC[i][j][k].table << " " << L_BC[i][j][k].lane << " || ";
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
+    // print_3d_table(L_BC);
 
     // Push order to stack
     stack<tuple<char, int, float>> stack_X, stack_Y;
@@ -1887,7 +1796,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
     return make_tuple(last_X, last_Y, cut_i, cut_j, cut_k);
 }
 
-tuple<float, double> schedule_by_num_window_v2(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff, int carNum)
+pair<float, double> schedule_by_num_window_v2(vector<float> a_all, vector<float> b_all, vector<float> c_all, int carNum)
 {
     tuple<char, int, float> last_X = make_tuple('0', 0, 0.0);
     tuple<char, int, float> last_Y = make_tuple('0', 0, 0.0);
@@ -1901,26 +1810,26 @@ tuple<float, double> schedule_by_num_window_v2(vector<float> a_all, vector<float
         vector<float> b = get_window_by_num(b_all, carNum);
         vector<float> c = get_window_by_num(c_all, carNum);
         if (a.size() > 1 && b.size() > 1 && c.size() > 1)
-            tie(last_X, last_Y, tmp) = window_oneSol_dp_v2(a, b, c, W_same, W_diff, last_X, last_Y);
+            tie(last_X, last_Y, tmp) = window_oneSol_dp_v2(a, b, c, last_X, last_Y);
         else if (a.size() > 1 && b.size() > 1)
         {
-            last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
-            last_Y = schedule_single_lane('B', b, W_same, W_diff, last_Y);
+            last_X = schedule_single_lane('A', a, last_X);
+            last_Y = schedule_single_lane('B', b, last_Y);
         }
         else if (a.size() > 1 and c.size() > 1)
         {
-            last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
-            last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
+            last_X = schedule_single_lane('A', a, last_X);
+            last_Y = schedule_single_lane('C', c, last_Y);
         }
         else if (b.size() > 1 and c.size() > 1)
         {
-            last_X = schedule_single_lane('B', b, W_same, W_diff, last_X);
-            last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
+            last_X = schedule_single_lane('B', b, last_X);
+            last_Y = schedule_single_lane('C', c, last_Y);
         }
         else if (a.size() > 1)
-            last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
+            last_X = schedule_single_lane('A', a, last_X);
         else if (c.size() > 1)
-            last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
+            last_Y = schedule_single_lane('C', c, last_Y);
         else if (b.size() > 1)
         {
             if (get<2>(last_X) < get<2>(last_Y))
@@ -1983,12 +1892,12 @@ tuple<float, double> schedule_by_num_window_v2(vector<float> a_all, vector<float
     // cout << "Time taken by program is : " << fixed
     //      << totalComputeTime << setprecision(9);
     // cout << " sec" << endl;
-    T_last = (get<2>(last_X) >= get<2>(last_Y)) ? get<2>(last_X) : get<2>(last_Y);
-    cout << "v2 result: " << T_last << " " << totalComputeTime << endl;
-    return make_tuple(T_last, totalComputeTime);
+    T_last = max(get<2>(last_X), get<2>(last_Y));
+    cout << "dp_" << carNum << " result: " << T_last << " " << totalComputeTime << endl;
+    return {T_last, totalComputeTime};
 }
 
-tuple<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vector<float> c, float W_same, float W_diff)
+pair<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vector<float> c)
 {
     tuple<char, int, float> last_X = make_tuple('0', 0, 0.0);
     tuple<char, int, float> last_Y = make_tuple('0', 0, 0.0);
@@ -1997,7 +1906,7 @@ tuple<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, ve
     auto t0 = chrono::high_resolution_clock::now();
     int cut_i = 0, cut_j = 0, cut_k = 0;
 
-    tie(last_X, last_Y, cut_i, cut_j, cut_k) = reduced_dp(a, b, c, W_same, W_diff, last_X, last_Y);
+    tie(last_X, last_Y, cut_i, cut_j, cut_k) = reduced_dp(a, b, c, last_X, last_Y);
     // cout << "Cut at " << cut_i << ", " << cut_j << ", " << cut_k << endl;
     while (a.size() > 1 || b.size() > 1 || c.size() > 1)
     {
@@ -2006,38 +1915,38 @@ tuple<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, ve
         c.erase(c.begin() + 1, c.begin() + cut_k + 1);
         if (a.size() > 1 && b.size() > 1 && c.size() > 1)
         {
-            tie(last_X, last_Y, cut_i, cut_j, cut_k) = reduced_dp(a, b, c, W_same, W_diff, last_X, last_Y);
+            tie(last_X, last_Y, cut_i, cut_j, cut_k) = reduced_dp(a, b, c, last_X, last_Y);
             // cout << "Cut at " << cut_i << ", " << cut_j << ", " << cut_k << endl;
         }
         else if (a.size() > 1 && b.size() > 1)
         {
-            last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
-            last_Y = schedule_single_lane('B', b, W_same, W_diff, last_Y);
+            last_X = schedule_single_lane('A', a, last_X);
+            last_Y = schedule_single_lane('B', b, last_Y);
             a.clear();
             b.clear();
         }
         else if (a.size() > 1 and c.size() > 1)
         {
-            last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
-            last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
+            last_X = schedule_single_lane('A', a, last_X);
+            last_Y = schedule_single_lane('C', c, last_Y);
             a.clear();
             c.clear();
         }
         else if (b.size() > 1 and c.size() > 1)
         {
-            last_X = schedule_single_lane('B', b, W_same, W_diff, last_X);
-            last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
+            last_X = schedule_single_lane('B', b, last_X);
+            last_Y = schedule_single_lane('C', c, last_Y);
             b.clear();
             c.clear();
         }
         else if (a.size() > 1)
         {
-            last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
+            last_X = schedule_single_lane('A', a, last_X);
             a.clear();
         }
         else if (c.size() > 1)
         {
-            last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
+            last_Y = schedule_single_lane('C', c, last_Y);
             c.clear();
         }
         else if (b.size() > 1)
@@ -2103,75 +2012,7 @@ tuple<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, ve
     // cout << "Time taken by program is : " << fixed
     //      << totalComputeTime << setprecision(9);
     // cout << " sec" << endl;
-    T_last = (get<2>(last_X) >= get<2>(last_Y)) ? get<2>(last_X) : get<2>(last_Y);
-    cout << "reduced result: " << T_last << " " << totalComputeTime << endl;
-    return make_tuple(T_last, totalComputeTime);
-}
-
-int main(int argc, char *argv[])
-{
-    ios::sync_with_stdio(false);
-    cin.tie(0);
-
-    float timeStep = 1;
-    float W_same, W_diff;
-    int alpha, beta, gamma;
-    float p, pA, pB, pC;
-    vector<float> a_all, b_all, c_all;
-
-    if (argc == 5)
-    {
-        W_same = atof(argv[3]);
-        W_diff = atof(argv[4]);
-        alpha = atoi(argv[2]);
-        beta = atoi(argv[2]);
-        gamma = atoi(argv[2]);
-        p = atof(argv[1]);
-        pA = p / 3;
-        pB = p / 3;
-        pC = p / 3;
-    }
-    else
-    {
-        cout << "Arguments: lambda, N, W=, W+" << endl;
-        return 0;
-    }
-
-    a_all = generate_traffic(timeStep, alpha, p, 0);
-    b_all = generate_traffic(timeStep, beta, p, 1);
-    c_all = generate_traffic(timeStep, gamma, p, 2);
-    // a_all = {0, 409, 410};
-    // b_all = {0, 462, 463};
-    // c_all = {0, 433, 526};
-    // a_all = {0, 2, 4, 5, 7, 8};
-    // b_all = {0, 3, 4, 13, 15, 19};
-    // c_all = {0, 4, 6, 7, 11, 12};
-
-    // first_come_first_serve_v1(timeStep, a_all, b_all, c_all, W_same, W_diff);
-    first_come_first_serve_v2(a_all, b_all, c_all, W_same, W_diff);
-    // schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 5);
-    // schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 10);
-    // schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 20);
-    // schedule_by_num_window_v1(a_all, b_all, c_all, W_same, W_diff, 100);
-    schedule_by_num_window_v2(a_all, b_all, c_all, W_same, W_diff, 5);
-    schedule_by_num_window_v2(a_all, b_all, c_all, W_same, W_diff, 10);
-    schedule_by_num_window_v2(a_all, b_all, c_all, W_same, W_diff, 20);
-    schedule_by_num_window_v2(a_all, b_all, c_all, W_same, W_diff, 100);
-    schedule_by_reduced_dp(a_all, b_all, c_all, W_same, W_diff);
-    // greedy_dp(a_all, b_all, c_all, W_same, W_diff);
-
-    cout << "a_all = {" << a_all[0];
-    for (int i = 1; i < a_all.size(); ++i)
-        cout << ", " << a_all[i];
-    cout << "};" << endl;
-    cout << "b_all = {" << b_all[0];
-    for (int i = 1; i < b_all.size(); ++i)
-        cout << ", " << b_all[i];
-    cout << "};" << endl;
-    cout << "c_all = {" << c_all[0];
-    for (int i = 1; i < c_all.size(); ++i)
-        cout << ", " << c_all[i];
-    cout << "};" << endl;
-
-    return 0;
+    T_last = max(get<2>(last_X), get<2>(last_Y));
+    cout << "dp_reduced result: " << T_last << " " << totalComputeTime << endl;
+    return {T_last, totalComputeTime};
 }

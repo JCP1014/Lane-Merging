@@ -1,0 +1,39 @@
+1.
+fcfs result: 194 8.8664e-05
+dp_5 result: 192 0.0290429
+dp_10 result: 192 0.0691154
+dp_20 result: 192 0.233002
+dp_100 result: 192 2.86251
+dp_group result: 192 0.157086
+
+2.
+fcfs result: 187 9.0624e-05
+dp_5 result: 186 0.0290373
+dp_10 result: 183 0.0688696
+dp_20 result: 183 0.236676
+dp_100 result: 183 2.87076
+dp_group result: 183 0.174998
+
+3.
+fcfs result: 194 8.9296e-05
+dp_5 result: 183 0.0269907
+dp_10 result: 183 0.0672789
+dp_20 result: 183 0.235198
+dp_100 result: 183 2.77424
+dp_group result: 183 0.173104
+
+4.
+fcfs result: 194 8.8244e-05
+dp_5 result: 195 0.0277645
+dp_10 result: 193 0.0679614
+dp_20 result: 193 0.232741
+dp_100 result: 193 2.85352
+dp_group result: 193 0.1232
+
+5.
+fcfs result: 199 8.8678e-05
+dp_5 result: 183 0.0286002
+dp_10 result: 183 0.069039
+dp_20 result: 183 0.242228
+dp_100 result: 183 2.86595
+dp_group result: 183 0.117427

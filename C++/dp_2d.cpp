@@ -7,7 +7,7 @@ GreedySol update_greedySol(GreedySol s, float newTime, char newTable)
     return s;
 }
 
-tuple<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff)
+pair<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff)
 {
     auto t0 = chrono::high_resolution_clock::now();
     int alpha = a_all.size() - 1;
@@ -206,6 +206,6 @@ tuple<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
-    cout << "result: " << T_last << " " << totalComputeTime << endl;
-    return make_tuple(T_last, totalComputeTime);
+    cout << "dp_2d result: " << T_last << " " << totalComputeTime << endl;
+    return {T_last, totalComputeTime};
 }

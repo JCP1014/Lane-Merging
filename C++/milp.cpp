@@ -1,3 +1,7 @@
+// Compilation: g++ -std=c++11 milp.cpp
+//                  -I /Library/gurobi912/mac64/include
+//                  -L /Library/gurobi912/mac64/lib
+//                  -lgurobi_c++ -lgurobi91
 #include <bits/stdc++.h>
 #include "gurobi_c++.h"
 #define endl '\n'

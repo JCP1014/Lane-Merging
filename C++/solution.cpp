@@ -147,3 +147,18 @@ string get_opt_table(vector<Solution> solVec)
     }
     return optTable;
 }
+
+void print_3d_table(vector<vector<vector<Solution>>> &table)
+{
+    for (int k = 0; k < table[0][0].size(); ++k)
+    {
+        cout << "k = " << k << endl;
+        for (int i = 0; i < table.size(); ++i)
+        {
+            for (int j = 0; j < table[0].size(); ++j)
+                cout << table[i][j][k].time[0] << " " << table[i][j][k].time[1] << " " << table[i][j][k].table << " " << table[i][j][k].lane << " || ";
+            cout << endl;
+        }
+        cout << endl;
+    }
+}

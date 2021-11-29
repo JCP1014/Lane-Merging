@@ -18,6 +18,6 @@ struct GreedySol
 };
 
 GreedySol update_greedySol(GreedySol s, float newTime, char newTable);
-tuple<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff);
+pair<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff);
 
 #endif

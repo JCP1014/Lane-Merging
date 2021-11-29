@@ -26,3 +26,16 @@ vector<float> generate_traffic(float timeStep, int num, float p, int seed)
     }
     return earliestArrivalTimes;
 }
+
+vector<float> read_data(string fileName)
+{
+    fstream file;
+    string line;
+    float tmp;
+    vector<float> allData;
+    file.open(fileName);
+    while (getline(file, line))
+        allData.push_back(stof(line));
+    file.close();
+    return allData;
+}

@@ -1,6 +1,8 @@
 #include "fcfs.h"
 
-tuple<char, int, float> schedule_single_lane(char lane, vector<float> traffic, float W_same, float W_diff, tuple<char, int, float> prev)
+float W_same, W_diff;
+
+tuple<char, int, float> schedule_single_lane(char lane, vector<float> traffic, tuple<char, int, float> prev)
 {
     char prevLane = get<0>(prev);
     float prevTime = get<2>(prev);
@@ -25,7 +27,7 @@ tuple<char, int, float> schedule_single_lane(char lane, vector<float> traffic, f
     return last;
 }
 
-tuple<float, double> first_come_first_serve_v1(float timeStep, vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff)
+pair<float, double> first_come_first_serve_v1(float timeStep, vector<float> a_all, vector<float> b_all, vector<float> c_all)
 {
     auto t0 = chrono::high_resolution_clock::now();
     vector<float> a(a_all.begin() + 1, a_all.end());
@@ -662,10 +664,10 @@ tuple<float, double> first_come_first_serve_v1(float timeStep, vector<float> a_a
     totalComputeTime *= 1e-9;
     float T_last = max(X_lastT, Y_lastT);
     cout << "fcfs result: " << T_last << " " << totalComputeTime << endl;
-    return make_tuple(T_last, totalComputeTime);
+    return {T_last, totalComputeTime};
 }
 
-tuple<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff)
+pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float> b_all, vector<float> c_all)
 {
     auto t0 = chrono::high_resolution_clock::now();
     vector<float> a(a_all.begin() + 1, a_all.end());
@@ -769,33 +771,33 @@ tuple<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float
         }
         else if (a.size() > 1 && b.size() > 1)
         {
-            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('A', a, W_same, W_diff, make_tuple(X_lastFrom, 0, X_lastT));
-            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('B', b, W_same, W_diff, make_tuple(Y_lastFrom, 0, Y_lastT));
+            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('A', a, make_tuple(X_lastFrom, 0, X_lastT));
+            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('B', b, make_tuple(Y_lastFrom, 0, Y_lastT));
             a.clear();
             b.clear();
         }
         else if (a.size() > 0 and c.size() > 0)
         {
-            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('A', a, W_same, W_diff, make_tuple(X_lastFrom, 0, X_lastT));
-            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('C', c, W_same, W_diff, make_tuple(Y_lastFrom, 0, Y_lastT));
+            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('A', a, make_tuple(X_lastFrom, 0, X_lastT));
+            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('C', c, make_tuple(Y_lastFrom, 0, Y_lastT));
             a.clear();
             c.clear();
         }
         else if (b.size() > 0 and c.size() > 0)
         {
-            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('B', b, W_same, W_diff, make_tuple(X_lastFrom, 0, X_lastT));
-            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('C', c, W_same, W_diff, make_tuple(Y_lastFrom, 0, Y_lastT));
+            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('B', b, make_tuple(X_lastFrom, 0, X_lastT));
+            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('C', c, make_tuple(Y_lastFrom, 0, Y_lastT));
             b.clear();
             c.clear();
         }
         else if (a.size() > 0)
         {
-            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('A', a, W_same, W_diff, make_tuple(X_lastFrom, 0, X_lastT));
+            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('A', a, make_tuple(X_lastFrom, 0, X_lastT));
             a.clear();
         }
         else if (c.size() > 0)
         {
-            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('C', c, W_same, W_diff, make_tuple(Y_lastFrom, 0, Y_lastT));
+            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('C', c, make_tuple(Y_lastFrom, 0, Y_lastT));
             c.clear();
         }
         else if (b.size() > 0)
@@ -830,5 +832,5 @@ tuple<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float
     totalComputeTime *= 1e-9;
     float T_last = max(X_lastT, Y_lastT);
     cout << "fcfs result: " << T_last << " " << totalComputeTime << endl;
-    return make_tuple(T_last, totalComputeTime);
+    return {T_last, totalComputeTime};
 }
