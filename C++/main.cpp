@@ -1,6 +1,12 @@
 
+#include "generate_input.h"
+#include "fcfs.h"
 #include "window_dp.h"
 #include "group_dp.h"
+#include "dp_2d.h"
+#include "reduced_dp.h"
+#include "milp.h"
+#include "group_milp.h"
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -68,26 +74,28 @@ int main(int argc, char *argv[])
 
     // first_come_first_serve_v1(timeStep, a_all, b_all, c_all, W_same, W_diff);
     first_come_first_serve_v2(a_all, b_all, c_all);
-    schedule_by_num_window_v2(a_all, b_all, c_all, 5);
-    schedule_by_num_window_v2(a_all, b_all, c_all, 10);
-    schedule_by_num_window_v2(a_all, b_all, c_all, 20);
-    schedule_by_num_window_v2(a_all, b_all, c_all, 100);
-    // schedule_by_reduced_dp(a_all, b_all, c_all, W_same, W_diff);
-    // greedy_dp(a_all, b_all, c_all, W_same, W_diff);
-    schedule_by_group(a_all, b_all, c_all, timeStep);
+    schedule_by_window_dp_v2(a_all, b_all, c_all, 5);
+    schedule_by_window_dp_v2(a_all, b_all, c_all, 10);
+    schedule_by_window_dp_v2(a_all, b_all, c_all, 20);
+    schedule_by_window_dp_v2(a_all, b_all, c_all, 100);
+    schedule_by_reduced_dp(a_all, b_all, c_all);
+    greedy_dp(a_all, b_all, c_all);
+    schedule_by_group_dp(a_all, b_all, c_all, timeStep);
+    solve_milp(a_all, b_all, c_all);
+    solve_group_milp(a_all, b_all, c_all, timeStep);
 
-    // cout << "a_all = {" << a_all[0];
-    // for (int i = 1; i < a_all.size(); ++i)
-    //     cout << ", " << a_all[i];
-    // cout << "};" << endl;
-    // cout << "b_all = {" << b_all[0];
-    // for (int i = 1; i < b_all.size(); ++i)
-    //     cout << ", " << b_all[i];
-    // cout << "};" << endl;
-    // cout << "c_all = {" << c_all[0];
-    // for (int i = 1; i < c_all.size(); ++i)
-    //     cout << ", " << c_all[i];
-    // cout << "};" << endl;
+    cout << "a_all = {" << a_all[0];
+    for (int i = 1; i < a_all.size(); ++i)
+        cout << ", " << a_all[i];
+    cout << "};" << endl;
+    cout << "b_all = {" << b_all[0];
+    for (int i = 1; i < b_all.size(); ++i)
+        cout << ", " << b_all[i];
+    cout << "};" << endl;
+    cout << "c_all = {" << c_all[0];
+    for (int i = 1; i < c_all.size(); ++i)
+        cout << ", " << c_all[i];
+    cout << "};" << endl;
 
     // for (auto &g : grouped_a)
     //         cout << "(" << g.first << ", " << g.second << "), ";

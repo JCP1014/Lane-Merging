@@ -7,7 +7,6 @@
 #include <tuple>
 #include <time.h>
 #include <chrono>
-#define endl '\n'
 using namespace std;
 
 extern float W_same, W_diff;

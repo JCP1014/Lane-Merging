@@ -1,46 +1,5 @@
 #include "group_dp.h"
 
-vector<pair<int, int>> grouping(vector<float> &traffic, float timeStep)
-{
-    int groups = 1;
-    int max_groups = 35;
-    float grouping_threshold = 1;
-    vector<pair<int, int>> grouped_index;
-
-    while (1)
-    {
-        grouped_index.push_back({0, 0});
-        float head = 1, tail = 0;
-        for (int i = 2; i < traffic.size(); ++i)
-        {
-            if (traffic[i] - traffic[i - 1] > grouping_threshold)
-            {
-                if (++groups > max_groups)
-                    break;
-                tail = i - 1;
-                grouped_index.push_back({head, tail});
-                head = i;
-            }
-        }
-        if (head == traffic.size() - 1)
-            grouped_index.push_back({head, head});
-        else
-            grouped_index.push_back({head, traffic.size() - 1});
-        if (groups > max_groups)
-        {
-            grouping_threshold += timeStep;
-            groups = 0;
-            grouped_index.clear();
-        }
-        else
-        {
-            cout << "threshold: " << grouping_threshold << ",  number of groups: " << groups << endl;
-            break;
-        }
-    }
-    return grouped_index;
-}
-
 float get_tail_time(vector<float> &traffic, pair<int, int> index, float head_time)
 {
     float tail_time = max(traffic[index.first], head_time);
@@ -477,22 +436,18 @@ pair<float, double> grouped_dp(vector<float> a, vector<float> b, vector<float> c
     return {T_last, computeTime};
 }
 
-pair<float, double> schedule_by_group(vector<float> a_all, vector<float> b_all, vector<float> c_all, float timeStep)
+pair<float, double> schedule_by_group_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float timeStep)
 {
-    vector<pair<int, int>> grouped_a, grouped_b, grouped_c;
-    float T_last;
     auto t0 = chrono::high_resolution_clock::now();
-    grouped_a = grouping(a_all, timeStep);
-    grouped_b = grouping(b_all, timeStep);
-    grouped_c = grouping(c_all, timeStep);
+    float T_last;
+    vector<pair<int, int>> grouped_a = grouping(a_all, timeStep);
+    vector<pair<int, int>> grouped_b = grouping(b_all, timeStep);
+    vector<pair<int, int>> grouped_c = grouping(c_all, timeStep);
     pair<float, double> res = grouped_dp(a_all, b_all, c_all, grouped_a, grouped_b, grouped_c);
+    T_last = res.first;
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
-    // cout << "Time taken by program is : " << fixed
-    //      << totalComputeTime << setprecision(9);
-    // cout << " sec" << endl;
-    T_last = res.first;
     cout << "dp_group result: " << T_last << " " << totalComputeTime << endl;
     return {T_last, totalComputeTime};
 }

@@ -2,54 +2,27 @@
 //                  -I /Library/gurobi912/mac64/include
 //                  -L /Library/gurobi912/mac64/lib
 //                  -lgurobi_c++ -lgurobi91
-#include <bits/stdc++.h>
-#include "gurobi_c++.h"
-#define endl '\n'
-using namespace std;
+#include "milp.h"
 
-float digit_round(float value, int digit)
+pair<float, double> solve_milp(vector<float> A, vector<float> B, vector<float> C)
 {
-    return roundf(value * pow(10, digit)) / pow(10, digit);
-}
-
-vector<float> generate_traffic(float timeStep, int num, float p, int seed)
-{
-    vector<float> earliestArrivalTimes;
-    float t;
-    default_random_engine generator(time(NULL) + seed);
-    uniform_real_distribution<float> unif(0.0, 1.0);
-
-    earliestArrivalTimes.push_back(0.0);
-
-    t = 1.0;
-    while (num > 0)
-    {
-        if (unif(generator) < p)
-        {
-            earliestArrivalTimes.push_back(digit_round(t, 1));
-            num -= 1;
-        }
-        t += timeStep;
-    }
-    return earliestArrivalTimes;
-}
-
-void solve(vector<float> A, vector<float> B, vector<float> C, float W_same, float W_diff)
-{
+    auto t0 = chrono::high_resolution_clock::now();
     int alpha = A.size() - 1;
     int beta = B.size() - 1;
     int gamma = C.size() - 1;
-    float D = 30;
+    // float D = 30;
 
     try
     {
         // Create an environment
         GRBEnv env = GRBEnv(true);
         env.set("LogFile", "milp.log");
+        env.set("OutputFlag", "0");
         env.start();
 
         // Create an empty model
         GRBModel model = GRBModel(env);
+        model.set("TimeLimit", "600.0");
 
         // Create variables: s_i, t_j, u_k (scheduled entering time)
         GRBVar s[alpha + 1], t[beta + 1], u[gamma + 1];
@@ -190,53 +163,60 @@ void solve(vector<float> A, vector<float> B, vector<float> C, float W_same, floa
         // Optimize model
         model.optimize();
 
+        float T_last = model.get(GRB_DoubleAttr_ObjVal);
+        auto t1 = chrono::high_resolution_clock::now();
+        double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
+        totalComputeTime *= 1e-9;
+
         // Output results
-        cout << "s = {";
-        for (int i = 0; i <= alpha; ++i)
-        {
-            // cout << s[i].get(GRB_StringAttr_VarName) << " "
-            //      << s[i].get(GRB_DoubleAttr_X) << endl;
-            cout << s[i].get(GRB_DoubleAttr_X) << ", ";
-        }
-        cout << "};" << endl;
-        cout << "t = {";
-        for (int j = 0; j <= beta; ++j)
-        {
-            // cout << t[j].get(GRB_StringAttr_VarName) << " "
-            //      << t[j].get(GRB_DoubleAttr_X) << endl;
-            cout << t[j].get(GRB_DoubleAttr_X) << ", ";
-        }
-        cout << "};" << endl;
-        cout << "k = {";
-        for (int k = 0; k <= gamma; ++k)
-        {
-            // cout << u[k].get(GRB_StringAttr_VarName) << " "
-            //      << u[k].get(GRB_DoubleAttr_X) << endl;
-            cout << u[k].get(GRB_DoubleAttr_X) << ", ";
-        }
-        cout << "};" << endl;
-        for (int j = 0; j <= beta; ++j)
-        {
-            for (int i = 0; i <= alpha; ++i)
-            {
-                if (x[i][j].get(GRB_DoubleAttr_X) == 1)
-                    // cout << x[i][j].get(GRB_StringAttr_VarName) << " "
-                    //      << x[i][j].get(GRB_DoubleAttr_X) << endl;
-                    cout << "X"
-                         << " ";
-            }
-            for (int k = 0; k <= gamma; ++k)
-            {
-                if (y[k][j].get(GRB_DoubleAttr_X) == 1)
-                    // cout << y[k][j].get(GRB_StringAttr_VarName) << " "
-                    //      << y[k][j].get(GRB_DoubleAttr_X) << endl;
-                    cout << "Y"
-                         << " ";
-            }
-        }
-        cout << endl;
-        cout << "Obj: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
-        cout << "T_last: " << max(max(s[alpha].get(GRB_DoubleAttr_X), t[beta].get(GRB_DoubleAttr_X)), max(t[beta].get(GRB_DoubleAttr_X), u[gamma].get(GRB_DoubleAttr_X))) << endl;
+        // cout << "s = {";
+        // for (int i = 0; i <= alpha; ++i)
+        // {
+        //     // cout << s[i].get(GRB_StringAttr_VarName) << " "
+        //     //      << s[i].get(GRB_DoubleAttr_X) << endl;
+        //     cout << s[i].get(GRB_DoubleAttr_X) << ", ";
+        // }
+        // cout << "};" << endl;
+        // cout << "t = {";
+        // for (int j = 0; j <= beta; ++j)
+        // {
+        //     // cout << t[j].get(GRB_StringAttr_VarName) << " "
+        //     //      << t[j].get(GRB_DoubleAttr_X) << endl;
+        //     cout << t[j].get(GRB_DoubleAttr_X) << ", ";
+        // }
+        // cout << "};" << endl;
+        // cout << "k = {";
+        // for (int k = 0; k <= gamma; ++k)
+        // {
+        //     // cout << u[k].get(GRB_StringAttr_VarName) << " "
+        //     //      << u[k].get(GRB_DoubleAttr_X) << endl;
+        //     cout << u[k].get(GRB_DoubleAttr_X) << ", ";
+        // }
+        // cout << "};" << endl;
+        // for (int j = 0; j <= beta; ++j)
+        // {
+        //     for (int i = 0; i <= alpha; ++i)
+        //     {
+        //         if (x[i][j].get(GRB_DoubleAttr_X) == 1)
+        //             // cout << x[i][j].get(GRB_StringAttr_VarName) << " "
+        //             //      << x[i][j].get(GRB_DoubleAttr_X) << endl;
+        //             cout << "X"
+        //                  << " ";
+        //     }
+        //     for (int k = 0; k <= gamma; ++k)
+        //     {
+        //         if (y[k][j].get(GRB_DoubleAttr_X) == 1)
+        //             // cout << y[k][j].get(GRB_StringAttr_VarName) << " "
+        //             //      << y[k][j].get(GRB_DoubleAttr_X) << endl;
+        //             cout << "Y"
+        //                  << " ";
+        //     }
+        // }
+        // cout << endl;
+        // cout << "Obj: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
+        // cout << "T_last: " << max(max(s[alpha].get(GRB_DoubleAttr_X), t[beta].get(GRB_DoubleAttr_X)), max(t[beta].get(GRB_DoubleAttr_X), u[gamma].get(GRB_DoubleAttr_X))) << endl;
+        cout << "milp result: " << T_last << " " << totalComputeTime << endl;
+        return {T_last, totalComputeTime};
     }
     catch (GRBException e)
     {
@@ -247,54 +227,5 @@ void solve(vector<float> A, vector<float> B, vector<float> C, float W_same, floa
     {
         cout << "Exception during optimization" << endl;
     }
-}
-
-int main(int argc, char *argv[])
-{
-    ios::sync_with_stdio(false);
-    cin.tie(0);
-
-    float timeStep = 1;
-    float W_same, W_diff;
-    int alpha, beta, gamma;
-    float p, pA, pB, pC;
-    vector<float> A, B, C;
-
-    if (argc == 5)
-    {
-        W_same = atof(argv[3]);
-        W_diff = atof(argv[4]);
-        alpha = atoi(argv[2]);
-        beta = atoi(argv[2]);
-        gamma = atoi(argv[2]);
-        p = atof(argv[1]);
-        pA = p / 3;
-        pB = p / 3;
-        pC = p / 3;
-    }
-    else
-    {
-        cout << "Arguments: lambda, N, W=, W+" << endl;
-        return 0;
-    }
-
-    A = generate_traffic(timeStep, alpha, p, 0);
-    B = generate_traffic(timeStep, beta, p, 1);
-    C = generate_traffic(timeStep, gamma, p, 2);
-    solve(A, B, C, W_same, W_diff);
-
-    cout << "A = {" << A[0];
-    for (int i = 1; i < A.size(); ++i)
-        cout << ", " << A[i];
-    cout << "};" << endl;
-    cout << "B = {" << B[0];
-    for (int i = 1; i < B.size(); ++i)
-        cout << ", " << B[i];
-    cout << "};" << endl;
-    cout << "C = {" << C[0];
-    for (int i = 1; i < C.size(); ++i)
-        cout << ", " << C[i];
-    cout << "};" << endl;
-
-    return 0;
+    return {-1, -1};
 }

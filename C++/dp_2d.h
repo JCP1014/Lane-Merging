@@ -8,9 +8,9 @@
 #include <time.h>
 #include <stack>
 #include <chrono>
-#define endl '\n'
 using namespace std;
 
+extern float W_same, W_diff;
 struct GreedySol
 {
     float time = INFINITY;
@@ -18,6 +18,6 @@ struct GreedySol
 };
 
 GreedySol update_greedySol(GreedySol s, float newTime, char newTable);
-pair<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff);
+pair<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all);
 
 #endif

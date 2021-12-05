@@ -686,7 +686,7 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
     {
         if (a.size() > 0 && b.size() > 0 && c.size() > 0)
         {
-            first = min({a[0], b[0], c[0]});
+            first = min(min(a[0], b[0]), c[0]);
             if (first == a[0])
             {
                 if (X_lastFrom == 'A')
@@ -827,10 +827,10 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
         // cout << "last_X: " << get<0>(last_X) << " " << get<1>(last_X) << " " << get<2>(last_X) << endl;
         // cout << "last_Y: " << get<0>(last_Y) << " " << get<1>(last_Y) << " " << get<2>(last_Y) << endl;
     }
+    float T_last = max(X_lastT, Y_lastT);
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
-    float T_last = max(X_lastT, Y_lastT);
     cout << "fcfs result: " << T_last << " " << totalComputeTime << endl;
     return {T_last, totalComputeTime};
 }

@@ -5,7 +5,6 @@
 #include <random>
 #include <time.h>
 #include <fstream>
-#define endl '\n'
 using namespace std;
 
 float digit_round(float value, int digit);

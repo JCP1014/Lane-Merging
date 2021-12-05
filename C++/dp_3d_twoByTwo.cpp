@@ -768,7 +768,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
     return make_tuple(last_X, last_Y, computeTime);
 }
 
-tuple<float, double> schedule_by_num_window_v1(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff, int carNum)
+tuple<float, double> schedule_by_window_dp_v1(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff, int carNum)
 {
     tuple<char, int, float> last_X = make_tuple('0', 0, 0.0);
     tuple<char, int, float> last_Y = make_tuple('0', 0, 0.0);

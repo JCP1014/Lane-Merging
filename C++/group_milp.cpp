@@ -2,53 +2,9 @@
 //                  -I /Library/gurobi912/mac64/include
 //                  -L /Library/gurobi912/mac64/lib
 //                  -lgurobi_c++ -lgurobi91
-#include <bits/stdc++.h>
-#include "gurobi_c++.h"
-#define endl '\n'
-using namespace std;
+#include "group_milp.h"
 
-vector<pair<int, int>> grouping_v1(vector<float> &traffic, float timeStep)
-{
-    int groups = 0;
-    int max_groups = 12;
-    float grouping_threshold = 1;
-    vector<pair<int, int>> grouped_index;
-
-    while (1)
-    {
-        grouped_index.push_back({0, 0});
-        float head = 1, tail = 0;
-        for (int i = 2; i < traffic.size(); ++i)
-        {
-            if (traffic[i] - traffic[i - 1] > grouping_threshold)
-            {
-                if (++groups > max_groups)
-                    break;
-                tail = i - 1;
-                grouped_index.push_back({head, tail});
-                head = i;
-            }
-        }
-        if (head == traffic.size() - 1)
-            grouped_index.push_back({head, head});
-        else
-            grouped_index.push_back({head, traffic.size() - 1});
-        if (groups > max_groups)
-        {
-            grouping_threshold += timeStep;
-            groups = 0;
-            grouped_index.clear();
-        }
-        else
-        {
-            cout << "threshold: " << grouping_threshold << endl;
-            break;
-        }
-    }
-    return grouped_index;
-}
-
-vector<pair<int, int>> grouping_v2(vector<float> &traffic, float timeStep)
+vector<pair<int, int>> fixed_threshold_grouping(vector<float> &traffic, float timeStep)
 {
     float grouping_threshold = 1;
     vector<pair<int, int>> grouped_index;
@@ -71,39 +27,16 @@ vector<pair<int, int>> grouping_v2(vector<float> &traffic, float timeStep)
     return grouped_index;
 }
 
-float digit_round(float value, int digit)
+pair<float, double> solve_group_milp(vector<float> A, vector<float> B, vector<float> C, float timeStep)
 {
-    return roundf(value * pow(10, digit)) / pow(10, digit);
-}
-
-vector<float> generate_traffic(float timeStep, int num, float p, int seed)
-{
-    vector<float> earliestArrivalTimes;
-    float t;
-    default_random_engine generator(time(NULL) + seed);
-    uniform_real_distribution<float> unif(0.0, 1.0);
-
-    earliestArrivalTimes.push_back(0.0);
-
-    t = 1.0;
-    while (num > 0)
-    {
-        if (unif(generator) < p)
-        {
-            earliestArrivalTimes.push_back(digit_round(t, 1));
-            num -= 1;
-        }
-        t += timeStep;
-    }
-    return earliestArrivalTimes;
-}
-
-void solve(vector<float> &A, vector<float> &B, vector<float> &C, float W_same, float W_diff, vector<pair<int, int>> &grouped_A, vector<pair<int, int>> &grouped_B, vector<pair<int, int>> &grouped_C)
-{
+    auto t0 = chrono::high_resolution_clock::now();
+    vector<pair<int, int>> grouped_A = grouping(A, timeStep);
+    vector<pair<int, int>> grouped_B = grouping(B, timeStep);
+    vector<pair<int, int>> grouped_C = grouping(C, timeStep); 
     int alpha = A.size() - 1;
     int beta = B.size() - 1;
     int gamma = C.size() - 1;
-    float D = 30;
+    // float D = 30;
     int L = grouped_A.size() - 1;
     int M = grouped_B.size() - 1;
     int N = grouped_C.size() - 1;
@@ -113,10 +46,12 @@ void solve(vector<float> &A, vector<float> &B, vector<float> &C, float W_same, f
         // Create an environment
         GRBEnv env = GRBEnv(true);
         env.set("LogFile", "milp.log");
+        env.set("OutputFlag", "0");
         env.start();
 
         // Create an empty model
         GRBModel model = GRBModel(env);
+        model.set("TimeLimit", "600.0");
 
         // Create variables: s_i, t_j, u_k (scheduled entering time)
         GRBVar s[alpha + 1], t[beta + 1], u[gamma + 1];
@@ -172,17 +107,17 @@ void solve(vector<float> &A, vector<float> &B, vector<float> &C, float W_same, f
         GRBVar f = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "f");
 
         // Set objective: minimize f
-        // model.setObjective(f + 0, GRB_MINIMIZE);
+        model.setObjective(f + 0, GRB_MINIMIZE);
 
         // Set objective: minimize sigma(entering time - arrival time)
-        GRBLinExpr obj = 0;
-        for (int i = 1; i <= alpha; ++i)
-            obj += (s[i] - A[i]);
-        for (int j = 1; j <= beta; ++j)
-            obj += (t[j] - B[j]);
-        for (int k = 1; k <= gamma; ++k)
-            obj += (u[k] - C[k]);
-        model.setObjective(obj, GRB_MINIMIZE);
+        // GRBLinExpr obj = 0;
+        // for (int i = 1; i <= alpha; ++i)
+        //     obj += (s[i] - A[i]);
+        // for (int j = 1; j <= beta; ++j)
+        //     obj += (t[j] - B[j]);
+        // for (int k = 1; k <= gamma; ++k)
+        //     obj += (u[k] - C[k]);
+        // model.setObjective(obj, GRB_MINIMIZE);
 
         // Add constraint: scheduled entering time >= earliest arrival time
         for (int i = 0; i <= alpha; ++i)
@@ -213,17 +148,17 @@ void solve(vector<float> &A, vector<float> &B, vector<float> &C, float W_same, f
         }
 
         // Add constraint: the head and the tail of each group
-        for (int l = 1; l <= L; ++l)
+        for (int l = 0; l <= L; ++l)
         {
             model.addConstr(ph[l] == s[grouped_A[l].first], "c6_" + to_string(l));
             model.addConstr(pt[l] == s[grouped_A[l].second], "c7_" + to_string(l));
         }
-        for (int m = 1; m <= M; ++m)
+        for (int m = 0; m <= M; ++m)
         {
             model.addConstr(qh[m] == t[grouped_B[m].first], "c8_" + to_string(m));
             model.addConstr(qt[m] == t[grouped_B[m].second], "c9_" + to_string(m));
         }
-        for (int n = 1; n <= N; ++n)
+        for (int n = 0; n <= N; ++n)
         {
             model.addConstr(rh[n] == u[grouped_C[n].first], "c10_" + to_string(n));
             model.addConstr(rt[n] == u[grouped_C[n].second], "c11_" + to_string(n));
@@ -285,38 +220,43 @@ void solve(vector<float> &A, vector<float> &B, vector<float> &C, float W_same, f
         // }
 
         // Add constraint: f = max(a[alpha], b[beta], c[gamma])
-        // model.addConstr(f >= s[alpha], "c20");
-        // model.addConstr(f >= t[beta], "c21");
-        // model.addConstr(f >= u[gamma], "c22");
-        cout << "Optimizing ..." << endl;
+        model.addConstr(f >= s[alpha], "c20");
+        model.addConstr(f >= t[beta], "c21");
+        model.addConstr(f >= u[gamma], "c22");
+
         // Optimize model
         model.optimize();
 
+        float T_last = model.get(GRB_DoubleAttr_ObjVal);
+        auto t1 = chrono::high_resolution_clock::now();
+        double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
+        totalComputeTime *= 1e-9;
+
         // Output results
-        cout << "s = {";
-        for (int i = 0; i <= alpha; ++i)
-        {
-            // cout << s[i].get(GRB_StringAttr_VarName) << " "
-            //      << s[i].get(GRB_DoubleAttr_X) << endl;
-            cout << s[i].get(GRB_DoubleAttr_X) << ", ";
-        }
-        cout << "};" << endl;
-        cout << "t = {";
-        for (int j = 0; j <= beta; ++j)
-        {
-            // cout << t[j].get(GRB_StringAttr_VarName) << " "
-            //      << t[j].get(GRB_DoubleAttr_X) << endl;
-            cout << t[j].get(GRB_DoubleAttr_X) << ", ";
-        }
-        cout << "};" << endl;
-        cout << "u = {";
-        for (int k = 0; k <= gamma; ++k)
-        {
-            // cout << u[k].get(GRB_StringAttr_VarName) << " "
-            //      << u[k].get(GRB_DoubleAttr_X) << endl;
-            cout << u[k].get(GRB_DoubleAttr_X) << ", ";
-        }
-        cout << "};" << endl;
+        // cout << "s = {";
+        // for (int i = 0; i <= alpha; ++i)
+        // {
+        //     // cout << s[i].get(GRB_StringAttr_VarName) << " "
+        //     //      << s[i].get(GRB_DoubleAttr_X) << endl;
+        //     cout << s[i].get(GRB_DoubleAttr_X) << ", ";
+        // }
+        // cout << "};" << endl;
+        // cout << "t = {";
+        // for (int j = 0; j <= beta; ++j)
+        // {
+        //     // cout << t[j].get(GRB_StringAttr_VarName) << " "
+        //     //      << t[j].get(GRB_DoubleAttr_X) << endl;
+        //     cout << t[j].get(GRB_DoubleAttr_X) << ", ";
+        // }
+        // cout << "};" << endl;
+        // cout << "u = {";
+        // for (int k = 0; k <= gamma; ++k)
+        // {
+        //     // cout << u[k].get(GRB_StringAttr_VarName) << " "
+        //     //      << u[k].get(GRB_DoubleAttr_X) << endl;
+        //     cout << u[k].get(GRB_DoubleAttr_X) << ", ";
+        // }
+        // cout << "};" << endl;
         // for (int m = 0; m <= M; ++m)
         // {
         //     for (int l = 0; l <= L; ++l)
@@ -336,9 +276,11 @@ void solve(vector<float> &A, vector<float> &B, vector<float> &C, float W_same, f
         //                  << " ";
         //     }
         // }
-        cout << endl;
-        cout << "Obj: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
-        cout << "T_last: " << max(max(s[alpha].get(GRB_DoubleAttr_X), t[beta].get(GRB_DoubleAttr_X)), max(t[beta].get(GRB_DoubleAttr_X), u[gamma].get(GRB_DoubleAttr_X))) << endl;
+        // cout << endl;
+        // cout << "Obj: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
+        // cout << "T_last: " << max(max(s[alpha].get(GRB_DoubleAttr_X), t[beta].get(GRB_DoubleAttr_X)), max(t[beta].get(GRB_DoubleAttr_X), u[gamma].get(GRB_DoubleAttr_X))) << endl;
+        cout << "milp_group result: " << T_last << " " << totalComputeTime << endl;
+        return {T_last, totalComputeTime};
     }
     catch (GRBException e)
     {
@@ -349,71 +291,5 @@ void solve(vector<float> &A, vector<float> &B, vector<float> &C, float W_same, f
     {
         cout << "Exception during optimization" << endl;
     }
-}
-
-int main(int argc, char *argv[])
-{
-    ios::sync_with_stdio(false);
-    cin.tie(0);
-
-    float timeStep = 1;
-    float W_same, W_diff;
-    int alpha, beta, gamma;
-    float p, pA, pB, pC;
-    vector<float> A, B, C;
-    vector<pair<int, int>> grouped_A, grouped_B, grouped_C;
-
-    if (argc == 5)
-    {
-        W_same = atof(argv[3]);
-        W_diff = atof(argv[4]);
-        alpha = atoi(argv[2]);
-        beta = atoi(argv[2]);
-        gamma = atoi(argv[2]);
-        p = atof(argv[1]);
-        pA = p / 3;
-        pB = p / 3;
-        pC = p / 3;
-    }
-    else
-    {
-        cout << "Arguments: lambda, N, W=, W+" << endl;
-        return 0;
-    }
-
-    A = generate_traffic(timeStep, alpha, p, 0);
-    B = generate_traffic(timeStep, beta, p, 1);
-    C = generate_traffic(timeStep, gamma, p, 2);
-    grouped_A = grouping_v1(A, timeStep);
-    grouped_B = grouping_v1(B, timeStep);
-    grouped_C = grouping_v1(C, timeStep);
-    solve(A, B, C, W_same, W_diff, grouped_A, grouped_B, grouped_C);
-
-    cout << "A = {" << A[0];
-    for (int i = 1; i < A.size(); ++i)
-        cout << ", " << A[i];
-    cout << "};" << endl;
-    cout << "B = {" << B[0];
-    for (int i = 1; i < B.size(); ++i)
-        cout << ", " << B[i];
-    cout << "};" << endl;
-    cout << "C = {" << C[0];
-    for (int i = 1; i < C.size(); ++i)
-        cout << ", " << C[i];
-    cout << "};" << endl;
-
-    for (auto &g : grouped_A)
-        cout << "(" << g.first << ", " << g.second << ")"
-             << " ";
-    cout << endl;
-    for (auto &g : grouped_B)
-        cout << "(" << g.first << ", " << g.second << ")"
-             << " ";
-    cout << endl;
-    for (auto &g : grouped_C)
-        cout << "(" << g.first << ", " << g.second << ")"
-             << " ";
-    cout << endl;
-
-    return 0;
+    return {-1, -1};
 }

@@ -7,7 +7,7 @@ GreedySol update_greedySol(GreedySol s, float newTime, char newTable)
     return s;
 }
 
-pair<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff)
+pair<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all)
 {
     auto t0 = chrono::high_resolution_clock::now();
     int alpha = a_all.size() - 1;
@@ -200,9 +200,7 @@ pair<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<f
         stack_Y.pop();
     }
     // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
-    if (get<2>(stack_Y.top()) > T_last)
-        T_last = get<2>(stack_Y.top());
-
+    T_last = max(T_last, get<2>(stack_Y.top()));
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
