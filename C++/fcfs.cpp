@@ -2,29 +2,32 @@
 
 float W_same, W_diff;
 
-tuple<char, int, float> schedule_single_lane(char lane, vector<float> traffic, tuple<char, int, float> prev)
+tuple<tuple<char, int, float>, float> schedule_single_lane(char lane, vector<float> traffic, tuple<char, int, float> prev)
 {
     char prevLane = get<0>(prev);
     float prevTime = get<2>(prev);
     tuple<char, int, float> last = make_tuple('0', 0, 0.0);
+    float wait_time = 0;
     if (prevLane == '0')
     {
-        last = make_tuple(lane, 1, traffic[1]);
+        last = make_tuple(lane, 1, traffic[0]);
     }
     else if (lane == prevLane)
     {
-        last = make_tuple(lane, 1, max(traffic[1], prevTime + W_same));
+        last = make_tuple(lane, 1, max(traffic[0], prevTime + W_same));
     }
     else
     {
-        last = make_tuple(lane, 1, max(traffic[1], prevTime + W_diff));
+        last = make_tuple(lane, 1, max(traffic[0], prevTime + W_diff));
     }
-    for (int i = 2; i < traffic.size(); ++i)
+    wait_time += (get<2>(last) - traffic[0]);
+    for (int i = 1; i < traffic.size(); ++i)
     {
         prevTime = get<2>(last);
         last = make_tuple(lane, i, max(traffic[i], prevTime + W_same));
+        wait_time += (get<2>(last) - traffic[i]);
     }
-    return last;
+    return make_tuple(last, wait_time);
 }
 
 pair<float, double> first_come_first_serve_v1(float timeStep, vector<float> a_all, vector<float> b_all, vector<float> c_all)
@@ -667,7 +670,7 @@ pair<float, double> first_come_first_serve_v1(float timeStep, vector<float> a_al
     return {T_last, totalComputeTime};
 }
 
-pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float> b_all, vector<float> c_all)
+tuple<float, float, double> first_come_first_serve_v2(vector<float> a_all, vector<float> b_all, vector<float> c_all)
 {
     auto t0 = chrono::high_resolution_clock::now();
     vector<float> a(a_all.begin() + 1, a_all.end());
@@ -677,10 +680,13 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
     float Y_lastT = -W_diff;
     char X_lastFrom = '0';
     char Y_lastFrom = '0';
+    tuple<char, int, float> last_X, last_Y;
     float first = 0;
     default_random_engine generator(time(NULL));
     uniform_int_distribution<int> distribution(0, 1);
-    int tmp;
+    float total_wait = 0;
+    float wait_time = 0;
+    int vehicle_num = a_all.size() + b_all.size() + c_all.size() - 3;
 
     while (a.size() > 0 || b.size() > 0 || c.size() > 0)
     {
@@ -694,6 +700,7 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
                 else
                     X_lastT = max(a[0], X_lastT + W_diff);
                 X_lastFrom = 'A';
+                total_wait += (X_lastT - a[0]);
                 a.erase(a.begin());
             }
             if (first == c[0])
@@ -703,6 +710,7 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
                 else
                     Y_lastT = max(c[0], Y_lastT + W_diff);
                 Y_lastFrom = 'C';
+                total_wait += (Y_lastT - c[0]);
                 c.erase(c.begin());
             }
             if (first == b[0])
@@ -714,6 +722,7 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
                     else
                         X_lastT = max(b[0], X_lastT + W_diff);
                     X_lastFrom = 'B';
+                    total_wait += (X_lastT - b[0]);
                     b.erase(b.begin());
                 }
                 else if (Y_lastT < X_lastT)
@@ -723,6 +732,7 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
                     else
                         Y_lastT = max(b[0], Y_lastT + W_diff);
                     Y_lastFrom = 'B';
+                    total_wait += (Y_lastT - b[0]);
                     b.erase(b.begin());
                 }
                 else
@@ -734,6 +744,7 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
                         else
                             X_lastT = max(b[0], X_lastT + W_diff);
                         X_lastFrom = 'B';
+                        total_wait += (X_lastT - b[0]);
                         b.erase(b.begin());
                     }
                     else if (c[0] > a[0])
@@ -743,6 +754,7 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
                         else
                             Y_lastT = max(b[0], Y_lastT + W_diff);
                         Y_lastFrom = 'B';
+                        total_wait += (Y_lastT - b[0]);
                         b.erase(b.begin());
                     }
                     else
@@ -754,6 +766,7 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
                             else
                                 X_lastT = max(b[0], X_lastT + W_diff);
                             X_lastFrom = 'B';
+                            total_wait += (X_lastT - b[0]);
                             b.erase(b.begin());
                         }
                         else
@@ -763,41 +776,58 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
                             else
                                 Y_lastT = max(b[0], Y_lastT + W_diff);
                             Y_lastFrom = 'B';
+                            total_wait += (Y_lastT - b[0]);
                             b.erase(b.begin());
                         }
                     }
                 }
             }
         }
-        else if (a.size() > 1 && b.size() > 1)
+        else if (a.size() > 0 && b.size() > 0)
         {
-            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('A', a, make_tuple(X_lastFrom, 0, X_lastT));
-            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('B', b, make_tuple(Y_lastFrom, 0, Y_lastT));
+            last_X = make_tuple(X_lastFrom, 0, X_lastT);
+            tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
+            total_wait += wait_time;
+            last_Y = make_tuple(Y_lastFrom, 0, Y_lastT);
+            tie(last_Y, wait_time) = schedule_single_lane('B', b, last_Y);
+            total_wait += wait_time;
             a.clear();
             b.clear();
         }
         else if (a.size() > 0 and c.size() > 0)
         {
-            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('A', a, make_tuple(X_lastFrom, 0, X_lastT));
-            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('C', c, make_tuple(Y_lastFrom, 0, Y_lastT));
+            last_X = make_tuple(X_lastFrom, 0, X_lastT);
+            tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
+            total_wait += wait_time;
+            last_Y = make_tuple(Y_lastFrom, 0, Y_lastT);
+            tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
+            total_wait += wait_time;
             a.clear();
             c.clear();
         }
         else if (b.size() > 0 and c.size() > 0)
         {
-            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('B', b, make_tuple(X_lastFrom, 0, X_lastT));
-            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('C', c, make_tuple(Y_lastFrom, 0, Y_lastT));
+            last_X = make_tuple(X_lastFrom, 0, X_lastT);
+            tie(last_X, wait_time) = schedule_single_lane('B', b, last_X);
+            total_wait += wait_time;
+            last_Y = make_tuple(Y_lastFrom, 0, Y_lastT);
+            tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
+            total_wait += wait_time;
             b.clear();
             c.clear();
         }
         else if (a.size() > 0)
         {
-            tie(X_lastFrom, tmp, X_lastT) = schedule_single_lane('A', a, make_tuple(X_lastFrom, 0, X_lastT));
+            last_X = make_tuple(X_lastFrom, 0, X_lastT);
+            tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
+            total_wait += wait_time;
             a.clear();
         }
         else if (c.size() > 0)
         {
-            tie(Y_lastFrom, tmp, Y_lastT) = schedule_single_lane('C', c, make_tuple(Y_lastFrom, 0, Y_lastT));
+            last_Y = make_tuple(Y_lastFrom, 0, Y_lastT);
+            tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
+            total_wait += wait_time;
             c.clear();
         }
         else if (b.size() > 0)
@@ -811,6 +841,7 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
                     else
                         X_lastT = max(b[0], X_lastT + W_diff);
                     X_lastFrom = 'B';
+                    total_wait += (X_lastT - b[0]);
                     b.erase(b.begin());
                 }
                 else
@@ -820,6 +851,7 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
                     else
                         Y_lastT = max(b[0], Y_lastT + W_diff);
                     Y_lastFrom = 'B';
+                    total_wait += (Y_lastT - b[0]);
                     b.erase(b.begin());
                 }
             }
@@ -827,10 +859,11 @@ pair<float, double> first_come_first_serve_v2(vector<float> a_all, vector<float>
         // cout << "last_X: " << get<0>(last_X) << " " << get<1>(last_X) << " " << get<2>(last_X) << endl;
         // cout << "last_Y: " << get<0>(last_Y) << " " << get<1>(last_Y) << " " << get<2>(last_Y) << endl;
     }
-    float T_last = max(X_lastT, Y_lastT);
+    float T_last = max(max(get<2>(last_X), get<2>(last_Y)), max(X_lastT, Y_lastT));
+    float T_delay = total_wait / vehicle_num;
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
-    cout << "fcfs result: " << T_last << " " << totalComputeTime << endl;
-    return {T_last, totalComputeTime};
+    // cout << "fcfs result: " << T_last << " " << T_delay << " " << totalComputeTime << endl;
+    return {T_last, T_delay, totalComputeTime};
 }

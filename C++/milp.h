@@ -7,6 +7,6 @@
 using namespace std;
 
 extern float W_same, W_diff;
-pair<float, double> solve_milp(vector<float> A, vector<float> B, vector<float> C);
+tuple<float, float, double> solve_milp(vector<float> A, vector<float> B, vector<float> C);
 
 #endif

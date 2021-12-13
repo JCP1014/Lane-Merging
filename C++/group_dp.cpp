@@ -10,9 +10,20 @@ float get_tail_time(vector<float> &traffic, pair<int, int> index, float head_tim
     return tail_time;
 }
 
-pair<float, double> grouped_dp(vector<float> a, vector<float> b, vector<float> c, vector<pair<int, int>> grouped_a, vector<pair<int, int>> grouped_b, vector<pair<int, int>> grouped_c)
+float get_wait_time(vector<float> &traffic, pair<int, int> index, float head_time)
 {
-    auto t_start = chrono::high_resolution_clock::now();
+    float tail_time = max(traffic[index.first], head_time);
+    float wait_time = tail_time - traffic[index.first];
+    for (int i = index.first + 1; i <= index.second; ++i)
+    {
+        tail_time = max(traffic[i], tail_time + W_same);
+        wait_time += (tail_time - traffic[i]);
+    }
+    return wait_time;
+}
+
+pair<float, float> grouped_dp(vector<float> a, vector<float> b, vector<float> c, vector<pair<int, int>> grouped_a, vector<pair<int, int>> grouped_b, vector<pair<int, int>> grouped_c)
+{
     int alpha = grouped_a.size() - 1;
     int beta = grouped_b.size() - 1;
     int gamma = grouped_c.size() - 1;
@@ -22,6 +33,8 @@ pair<float, double> grouped_dp(vector<float> a, vector<float> b, vector<float> c
     vector<vector<vector<Solution>>> L_BC;
     vector<Solution> tmpSolVec;
     float T_last;
+    float total_wait = 0;
+    int vehicle_num = a.size() + b.size() + c.size() - 3;
 
     L_AB.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
     L_AC.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
@@ -412,42 +425,114 @@ pair<float, double> grouped_dp(vector<float> a, vector<float> b, vector<float> c
 
     // Output order
     // cout << "Lane X: " << endl;
+    float prev_tail = -W_diff;
+    char prev_lane = '0';
+    char curr_lane;
     while (stack_X.size() > 1)
     {
         // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+        curr_lane = get<0>(stack_X.top());
+        if (curr_lane == 'A')
+        {
+            if (prev_lane == curr_lane)
+                total_wait += get_wait_time(a, grouped_a[get<1>(stack_X.top())], prev_tail + W_same);
+            else
+                total_wait += get_wait_time(a, grouped_a[get<1>(stack_X.top())], prev_tail + W_diff);
+        }
+        else
+        {
+            if (prev_lane == curr_lane)
+                total_wait += get_wait_time(b, grouped_b[get<1>(stack_X.top())], prev_tail + W_same);
+            else
+                total_wait += get_wait_time(b, grouped_b[get<1>(stack_X.top())], prev_tail + W_diff);
+        }
+        prev_lane = curr_lane;
+        prev_tail = get<2>(stack_X.top());
         stack_X.pop();
     }
     // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+    curr_lane = get<0>(stack_X.top());
+    if (curr_lane == 'A')
+    {
+        if (prev_lane == curr_lane)
+            total_wait += get_wait_time(a, grouped_a[get<1>(stack_X.top())], prev_tail + W_same);
+        else
+            total_wait += get_wait_time(a, grouped_a[get<1>(stack_X.top())], prev_tail + W_diff);
+    }
+    else
+    {
+        if (prev_lane == curr_lane)
+            total_wait += get_wait_time(b, grouped_b[get<1>(stack_X.top())], prev_tail + W_same);
+        else
+            total_wait += get_wait_time(b, grouped_b[get<1>(stack_X.top())], prev_tail + W_diff);
+    }
     T_last = get<2>(stack_X.top());
+
     // cout << "Lane Y: " << endl;
+    prev_tail = -W_diff;
+    prev_lane = '0';
     while (stack_Y.size() > 1)
     {
         // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+        curr_lane = get<0>(stack_Y.top());
+        if (curr_lane == 'C')
+        {
+            if (prev_lane == curr_lane)
+                total_wait += get_wait_time(c, grouped_c[get<1>(stack_Y.top())], prev_tail + W_same);
+            else
+                total_wait += get_wait_time(c, grouped_c[get<1>(stack_Y.top())], prev_tail + W_diff);
+        }
+        else
+        {
+            if (prev_lane == curr_lane)
+                total_wait += get_wait_time(b, grouped_b[get<1>(stack_Y.top())], prev_tail + W_same);
+            else
+                total_wait += get_wait_time(b, grouped_b[get<1>(stack_Y.top())], prev_tail + W_diff);
+        }
+        prev_lane = curr_lane;
+        prev_tail = get<2>(stack_Y.top());
         stack_Y.pop();
     }
     // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+    curr_lane = get<0>(stack_Y.top());
+    if (curr_lane == 'C')
+    {
+        if (prev_lane == curr_lane)
+            total_wait += get_wait_time(c, grouped_c[get<1>(stack_Y.top())], prev_tail + W_same);
+        else
+            total_wait += get_wait_time(c, grouped_c[get<1>(stack_Y.top())], prev_tail + W_diff);
+    }
+    else
+    {
+        if (prev_lane == curr_lane)
+            total_wait += get_wait_time(b, grouped_b[get<1>(stack_Y.top())], prev_tail + W_same);
+        else
+            total_wait += get_wait_time(b, grouped_b[get<1>(stack_Y.top())], prev_tail + W_diff);
+    }
     T_last = max(T_last, get<2>(stack_Y.top()));
+    float T_delay = total_wait / vehicle_num;
 
-    // Cauculate computation time
-    auto t_end = chrono::high_resolution_clock::now();
-    double computeTime = chrono::duration_cast<chrono::nanoseconds>(t_end - t_start).count();
-    computeTime *= 1e-9;
-
-    return {T_last, computeTime};
+    return {T_last, T_delay};
 }
 
-pair<float, double> schedule_by_group_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float timeStep)
+tuple<float, float, double> schedule_by_group_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float timeStep)
 {
     auto t0 = chrono::high_resolution_clock::now();
-    float T_last;
     vector<pair<int, int>> grouped_a = grouping(a_all, timeStep);
     vector<pair<int, int>> grouped_b = grouping(b_all, timeStep);
     vector<pair<int, int>> grouped_c = grouping(c_all, timeStep);
-    pair<float, double> res = grouped_dp(a_all, b_all, c_all, grouped_a, grouped_b, grouped_c);
-    T_last = res.first;
+    pair<float, float> res = grouped_dp(a_all, b_all, c_all, grouped_a, grouped_b, grouped_c);
+    float T_last = res.first;
+    float T_delay = res.second;
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
-    cout << "dp_group result: " << T_last << " " << totalComputeTime << endl;
-    return {T_last, totalComputeTime};
+    // cout << "dp_group result: " << T_last << " " << T_delay << " " << totalComputeTime << endl;
+    // for (auto &g : grouped_a)
+    //     cout << "[" << g.first << ", " << g.second << "]" << endl;
+    // for (auto &g : grouped_b)
+    //     cout << "[" << g.first << ", " << g.second << "]" << endl;
+    // for (auto &g : grouped_c)
+    //     cout << "[" << g.first << ", " << g.second << "]" << endl;
+    return {T_last, T_delay, totalComputeTime};
 }

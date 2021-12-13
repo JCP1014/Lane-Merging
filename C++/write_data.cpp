@@ -9,15 +9,12 @@ int main(int argc, char *argv[])
     string fileName;
     ofstream file;
     float timeStep = 1;
-    float W_same, W_diff;
     int alpha, beta, gamma;
     float p, pA, pB, pC;
     vector<float> A, B, C;
 
-    if (argc == 6)
+    if (argc == 4)
     {
-        W_same = atof(argv[3]);
-        W_diff = atof(argv[4]);
         alpha = atoi(argv[2]);
         beta = atoi(argv[2]);
         gamma = atoi(argv[2]);
@@ -25,11 +22,11 @@ int main(int argc, char *argv[])
         pA = p / 3;
         pB = p / 3;
         pC = p / 3;
-        fileName = argv[5];
+        fileName = argv[3];
     }
     else
     {
-        cout << "Arguments: lambda, N, W=, W+, fileName" << endl;
+        cout << "Arguments: lambda, N, fileName" << endl;
         return 0;
     }
 

@@ -1,8 +1,7 @@
 #include "window_dp.h"
 
-tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp_v2(vector<float> a, vector<float> b, vector<float> c, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
+tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_v2(vector<float> a, vector<float> b, vector<float> c, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
 {
-    auto t_start = chrono::high_resolution_clock::now();
     int alpha = a.size() - 1;
     int beta = b.size() - 1;
     int gamma = c.size() - 1;
@@ -13,6 +12,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
     string last_XY;
     float T_X, T_Y;
     vector<Solution> tmpSolVec;
+    float wait_time = 0;
 
     L_AB.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
     L_AC.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
@@ -772,34 +772,47 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
     while (stack_X.size() > 1)
     {
         // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+        if (get<0>(stack_X.top()) == 'A')
+            wait_time += (get<2>(stack_X.top()) - a[get<1>(stack_X.top())]);
+        else
+            wait_time += (get<2>(stack_X.top()) - b[get<1>(stack_X.top())]);
         stack_X.pop();
     }
     // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+    if (get<0>(stack_X.top()) == 'A')
+        wait_time += (get<2>(stack_X.top()) - a[get<1>(stack_X.top())]);
+    else
+        wait_time += (get<2>(stack_X.top()) - b[get<1>(stack_X.top())]);
     last_X = stack_X.top();
+
     // cout << "Lane Y: " << endl;
     while (stack_Y.size() > 1)
     {
         // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+        if (get<0>(stack_Y.top()) == 'C')
+            wait_time += (get<2>(stack_Y.top()) - c[get<1>(stack_Y.top())]);
+        else
+            wait_time += (get<2>(stack_Y.top()) - b[get<1>(stack_Y.top())]);
         stack_Y.pop();
     }
     // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+    if (get<0>(stack_Y.top()) == 'C')
+        wait_time += (get<2>(stack_Y.top()) - c[get<1>(stack_Y.top())]);
+    else
+        wait_time += (get<2>(stack_Y.top()) - b[get<1>(stack_Y.top())]);
     last_Y = stack_Y.top();
 
-    // Cauculate computation time
-    auto t_end = chrono::high_resolution_clock::now();
-    double computeTime = chrono::duration_cast<chrono::nanoseconds>(t_end - t_start).count();
-    computeTime *= 1e-9;
-
-    return make_tuple(last_X, last_Y, computeTime);
+    return make_tuple(last_X, last_Y, wait_time);
 }
 
-pair<float, double> schedule_by_window_dp_v2(vector<float> a_all, vector<float> b_all, vector<float> c_all, int carNum)
+tuple<float, float, double> schedule_by_window_dp_v2(vector<float> a_all, vector<float> b_all, vector<float> c_all, int carNum)
 {
     auto t0 = chrono::high_resolution_clock::now();
     tuple<char, int, float> last_X = make_tuple('0', 0, 0.0);
     tuple<char, int, float> last_Y = make_tuple('0', 0, 0.0);
-    double tmp;
-    float T_last;
+    float wait_time = 0;
+    float total_wait = 0;
+    int vehicle_num = a_all.size() + b_all.size() + c_all.size() - 3;
 
     while (a_all.size() > 1 || b_all.size() > 1 || c_all.size() > 1)
     {
@@ -807,26 +820,41 @@ pair<float, double> schedule_by_window_dp_v2(vector<float> a_all, vector<float> 
         vector<float> b = get_window_by_num(b_all, carNum);
         vector<float> c = get_window_by_num(c_all, carNum);
         if (a.size() > 1 && b.size() > 1 && c.size() > 1)
-            tie(last_X, last_Y, tmp) = window_oneSol_dp_v2(a, b, c, last_X, last_Y);
+        {
+            tie(last_X, last_Y, wait_time) = window_oneSol_dp_v2(a, b, c, last_X, last_Y);
+            total_wait += wait_time;
+        }
         else if (a.size() > 1 && b.size() > 1)
         {
-            last_X = schedule_single_lane('A', a, last_X);
-            last_Y = schedule_single_lane('B', b, last_Y);
+            tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
+            total_wait += wait_time;
+            tie(last_Y, wait_time) = schedule_single_lane('B', b, last_Y);
+            total_wait += wait_time;
         }
         else if (a.size() > 1 and c.size() > 1)
         {
-            last_X = schedule_single_lane('A', a, last_X);
-            last_Y = schedule_single_lane('C', c, last_Y);
+            tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
+            total_wait += wait_time;
+            tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
+            total_wait += wait_time;
         }
         else if (b.size() > 1 and c.size() > 1)
         {
-            last_X = schedule_single_lane('B', b, last_X);
-            last_Y = schedule_single_lane('C', c, last_Y);
+            tie(last_X, wait_time) = schedule_single_lane('B', b, last_X);
+            total_wait += wait_time;
+            tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
+            total_wait += wait_time;
         }
         else if (a.size() > 1)
-            last_X = schedule_single_lane('A', a, last_X);
+        {
+            tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
+            total_wait += wait_time;
+        }
         else if (c.size() > 1)
-            last_Y = schedule_single_lane('C', c, last_Y);
+        {
+            tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
+            total_wait += wait_time;
+        }
         else if (b.size() > 1)
         {
             if (get<2>(last_X) < get<2>(last_Y))
@@ -837,6 +865,7 @@ pair<float, double> schedule_by_window_dp_v2(vector<float> a_all, vector<float> 
                     last_X = make_tuple('B', 1, max(b[1], get<2>(last_X) + W_diff));
                 else
                     last_X = make_tuple('B', 1, max(b[1], get<2>(last_X) + W_same));
+                total_wait += (get<2>(last_X) - b[1]);
                 if (b.size() > 2)
                 {
                     if (get<0>(last_Y) == '0')
@@ -845,12 +874,19 @@ pair<float, double> schedule_by_window_dp_v2(vector<float> a_all, vector<float> 
                         last_Y = make_tuple('B', 2, max(b[2], get<2>(last_Y) + W_diff));
                     else
                         last_Y = make_tuple('B', 2, max(b[2], get<2>(last_Y) + W_same));
+                    total_wait += (get<2>(last_Y) - b[2]);
                     for (int i = 3; i < b.size(); ++i)
                     {
                         if (i % 2 == 1)
+                        {
                             last_X = make_tuple('B', i, max(b[i], get<2>(last_X) + W_same));
+                            total_wait += (get<2>(last_X) - b[i]);
+                        }
                         else
+                        {
                             last_Y = make_tuple('B', i, max(b[i], get<2>(last_Y) + W_same));
+                            total_wait += (get<2>(last_Y) - b[i]);
+                        }
                     }
                 }
             }
@@ -862,6 +898,7 @@ pair<float, double> schedule_by_window_dp_v2(vector<float> a_all, vector<float> 
                     last_Y = make_tuple('B', 1, max(b[1], get<2>(last_Y) + W_diff));
                 else
                     last_Y = make_tuple('B', 1, max(b[1], get<2>(last_Y) + W_same));
+                total_wait += (get<2>(last_Y) - b[1]);
                 if (b.size() > 2)
                 {
                     if (get<0>(last_X) == '0')
@@ -870,12 +907,19 @@ pair<float, double> schedule_by_window_dp_v2(vector<float> a_all, vector<float> 
                         last_X = make_tuple('B', 2, max(b[2], get<2>(last_X) + W_diff));
                     else
                         last_X = make_tuple('B', 2, max(b[2], get<2>(last_X) + W_same));
+                    total_wait += (get<2>(last_X) - b[2]);
                     for (int i = 3; i < b.size(); ++i)
                     {
                         if (i % 2 == 1)
+                        {
                             last_Y = make_tuple('B', i, max(b[i], get<2>(last_Y) + W_same));
+                            total_wait += (get<2>(last_Y) - b[i]);
+                        }
                         else
+                        {
                             last_X = make_tuple('B', i, max(b[i], get<2>(last_X) + W_same));
+                            total_wait += (get<2>(last_X) - b[i]);
+                        }
                     }
                 }
             }
@@ -883,10 +927,11 @@ pair<float, double> schedule_by_window_dp_v2(vector<float> a_all, vector<float> 
         // cout << "last_X: " << get<0>(last_X) << " " << get<1>(last_X) << " " << get<2>(last_X) << endl;
         // cout << "last_Y: " << get<0>(last_Y) << " " << get<1>(last_Y) << " " << get<2>(last_Y) << endl;
     }
-    T_last = max(get<2>(last_X), get<2>(last_Y));
+    float T_last = max(get<2>(last_X), get<2>(last_Y));
+    float T_delay = total_wait / vehicle_num;
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
-    cout << "dp_" << carNum << " result: " << T_last << " " << totalComputeTime << endl;
-    return {T_last, totalComputeTime};
+    // cout << "dp_" << carNum << " result: " << T_last << " " << T_delay << " " << totalComputeTime << endl;
+    return {T_last, T_delay, totalComputeTime};
 }

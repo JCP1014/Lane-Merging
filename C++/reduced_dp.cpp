@@ -1,7 +1,7 @@
 #include "reduced_dp.h"
 
 // Do not traverse all space
-tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_dp(vector<float> a, vector<float> b, vector<float> c, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
+tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int, float> reduced_dp(vector<float> a, vector<float> b, vector<float> c, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
 {
     auto t_start = chrono::high_resolution_clock::now();
     int alpha = a.size() - 1;
@@ -14,6 +14,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
     string last_XY;
     float T_X, T_Y;
     vector<Solution> tmpSolVec;
+    float wait_time = 0;
 
     L_AB.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
     L_AC.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
@@ -982,17 +983,34 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
     while (stack_X.size() > 1)
     {
         // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+        if (get<0>(stack_X.top()) == 'A')
+            wait_time += (get<2>(stack_X.top()) - a[get<1>(stack_X.top())]);
+        else
+            wait_time += (get<2>(stack_X.top()) - b[get<1>(stack_X.top())]);
         stack_X.pop();
     }
     // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+    if (get<0>(stack_X.top()) == 'A')
+        wait_time += (get<2>(stack_X.top()) - a[get<1>(stack_X.top())]);
+    else
+        wait_time += (get<2>(stack_X.top()) - b[get<1>(stack_X.top())]);
     last_X = stack_X.top();
+
     // cout << "Lane Y: " << endl;
     while (stack_Y.size() > 1)
     {
         // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+        if (get<0>(stack_Y.top()) == 'C')
+            wait_time += (get<2>(stack_Y.top()) - c[get<1>(stack_Y.top())]);
+        else
+            wait_time += (get<2>(stack_Y.top()) - b[get<1>(stack_Y.top())]);
         stack_Y.pop();
     }
     // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+    if (get<0>(stack_Y.top()) == 'C')
+        wait_time += (get<2>(stack_Y.top()) - c[get<1>(stack_Y.top())]);
+    else
+        wait_time += (get<2>(stack_Y.top()) - b[get<1>(stack_Y.top())]);
     last_Y = stack_Y.top();
 
     // Cauculate computation time
@@ -1000,19 +1018,22 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int> reduced_d
     double computeTime = chrono::duration_cast<chrono::nanoseconds>(t_end - t_start).count();
     computeTime *= 1e-9;
 
-    return make_tuple(last_X, last_Y, cut_i, cut_j, cut_k);
+    return make_tuple(last_X, last_Y, cut_i, cut_j, cut_k, wait_time);
 }
 
-pair<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vector<float> c)
+tuple<float, float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vector<float> c)
 {
     auto t0 = chrono::high_resolution_clock::now();
     tuple<char, int, float> last_X = make_tuple('0', 0, 0.0);
     tuple<char, int, float> last_Y = make_tuple('0', 0, 0.0);
     double tmp;
-    float T_last;
     int cut_i = 0, cut_j = 0, cut_k = 0;
+    float total_wait = 0;
+    float wait_time = 0;
+    int vehicle_num = a.size() + b.size() + c.size() - 3;
 
-    tie(last_X, last_Y, cut_i, cut_j, cut_k) = reduced_dp(a, b, c, last_X, last_Y);
+    tie(last_X, last_Y, cut_i, cut_j, cut_k, wait_time) = reduced_dp(a, b, c, last_X, last_Y);
+    total_wait += wait_time;
     // cout << "Cut at " << cut_i << ", " << cut_j << ", " << cut_k << endl;
     while (a.size() > 1 || b.size() > 1 || c.size() > 1)
     {
@@ -1021,38 +1042,47 @@ pair<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vec
         c.erase(c.begin() + 1, c.begin() + cut_k + 1);
         if (a.size() > 1 && b.size() > 1 && c.size() > 1)
         {
-            tie(last_X, last_Y, cut_i, cut_j, cut_k) = reduced_dp(a, b, c, last_X, last_Y);
+            tie(last_X, last_Y, cut_i, cut_j, cut_k, wait_time) = reduced_dp(a, b, c, last_X, last_Y);
+            total_wait += wait_time;
             // cout << "Cut at " << cut_i << ", " << cut_j << ", " << cut_k << endl;
         }
         else if (a.size() > 1 && b.size() > 1)
         {
-            last_X = schedule_single_lane('A', a, last_X);
-            last_Y = schedule_single_lane('B', b, last_Y);
+            tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
+            total_wait += wait_time;
+            tie(last_Y, wait_time) = schedule_single_lane('B', b, last_Y);
+            total_wait += wait_time;
             a.clear();
             b.clear();
         }
         else if (a.size() > 1 and c.size() > 1)
         {
-            last_X = schedule_single_lane('A', a, last_X);
-            last_Y = schedule_single_lane('C', c, last_Y);
+            tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
+            total_wait += wait_time;
+            tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
+            total_wait += wait_time;
             a.clear();
             c.clear();
         }
         else if (b.size() > 1 and c.size() > 1)
         {
-            last_X = schedule_single_lane('B', b, last_X);
-            last_Y = schedule_single_lane('C', c, last_Y);
+            tie(last_X, wait_time) = schedule_single_lane('B', b, last_X);
+            total_wait += wait_time;
+            tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
+            total_wait += wait_time;
             b.clear();
             c.clear();
         }
         else if (a.size() > 1)
         {
-            last_X = schedule_single_lane('A', a, last_X);
+            tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
+            total_wait += wait_time;
             a.clear();
         }
         else if (c.size() > 1)
         {
-            last_Y = schedule_single_lane('C', c, last_Y);
+            tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
+            total_wait += wait_time;
             c.clear();
         }
         else if (b.size() > 1)
@@ -1065,6 +1095,7 @@ pair<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vec
                     last_X = make_tuple('B', 1, max(b[1], get<2>(last_X) + W_diff));
                 else
                     last_X = make_tuple('B', 1, max(b[1], get<2>(last_X) + W_same));
+                total_wait += (get<2>(last_X) - b[1]);
                 if (b.size() > 2)
                 {
                     if (get<0>(last_Y) == '0')
@@ -1073,12 +1104,19 @@ pair<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vec
                         last_Y = make_tuple('B', 2, max(b[2], get<2>(last_Y) + W_diff));
                     else
                         last_Y = make_tuple('B', 2, max(b[2], get<2>(last_Y) + W_same));
+                    total_wait += (get<2>(last_Y) - b[2]);
                     for (int i = 3; i < b.size(); ++i)
                     {
                         if (i % 2 == 1)
+                        {
                             last_X = make_tuple('B', i, max(b[i], get<2>(last_X) + W_same));
+                            total_wait += (get<2>(last_X) - b[i]);
+                        }
                         else
+                        {
                             last_Y = make_tuple('B', i, max(b[i], get<2>(last_Y) + W_same));
+                            total_wait += (get<2>(last_Y) - b[i]);
+                        }
                     }
                 }
             }
@@ -1090,6 +1128,7 @@ pair<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vec
                     last_Y = make_tuple('B', 1, max(b[1], get<2>(last_Y) + W_diff));
                 else
                     last_Y = make_tuple('B', 1, max(b[1], get<2>(last_Y) + W_same));
+                total_wait += (get<2>(last_Y) - b[1]);
                 if (b.size() > 2)
                 {
                     if (get<0>(last_X) == '0')
@@ -1098,12 +1137,19 @@ pair<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vec
                         last_X = make_tuple('B', 2, max(b[2], get<2>(last_X) + W_diff));
                     else
                         last_X = make_tuple('B', 2, max(b[2], get<2>(last_X) + W_same));
+                    total_wait += (get<2>(last_X) - b[2]);
                     for (int i = 3; i < b.size(); ++i)
                     {
                         if (i % 2 == 1)
+                        {
                             last_Y = make_tuple('B', i, max(b[i], get<2>(last_Y) + W_same));
+                            total_wait += (get<2>(last_Y) - b[i]);
+                        }
                         else
+                        {
                             last_X = make_tuple('B', i, max(b[i], get<2>(last_X) + W_same));
+                            total_wait += (get<2>(last_X) - b[i]);
+                        }
                     }
                 }
             }
@@ -1112,10 +1158,11 @@ pair<float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vec
         // cout << "last_X: " << get<0>(last_X) << " " << get<1>(last_X) << " " << get<2>(last_X) << endl;
         // cout << "last_Y: " << get<0>(last_Y) << " " << get<1>(last_Y) << " " << get<2>(last_Y) << endl;
     }
-    T_last = max(get<2>(last_X), get<2>(last_Y));
+    float T_last = max(get<2>(last_X), get<2>(last_Y));
+    float T_delay = total_wait / vehicle_num;
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
-    cout << "dp_reduced result: " << T_last << " " << totalComputeTime << endl;
-    return {T_last, totalComputeTime};
+    // cout << "dp_reduced result: " << T_last << " " << T_delay << " " << totalComputeTime << endl;
+    return {T_last, T_delay, totalComputeTime};
 }

@@ -7,7 +7,7 @@ GreedySol update_greedySol(GreedySol s, float newTime, char newTable)
     return s;
 }
 
-pair<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all)
+tuple<float, float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all)
 {
     auto t0 = chrono::high_resolution_clock::now();
     int alpha = a_all.size() - 1;
@@ -20,6 +20,7 @@ pair<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<f
     float T_last;
     default_random_engine generator(time(NULL));
     uniform_int_distribution<int> distribution(0, 1);
+    float total_wait = 0;
 
     LX_A.resize(alpha + 1, vector<GreedySol>(beta + 1));
     LX_B.resize(alpha + 1, vector<GreedySol>(beta + 1));
@@ -152,9 +153,17 @@ pair<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<f
     while (stack_X.size() > 1)
     {
         // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+        if (get<0>(stack_X.top()) == 'A')
+            total_wait += (get<2>(stack_X.top()) - a_all[get<1>(stack_X.top())]);
+        else
+            total_wait += (get<2>(stack_X.top()) - b_all[get<1>(stack_X.top())]);
         stack_X.pop();
     }
     // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+    if (get<0>(stack_X.top()) == 'A')
+        total_wait += (get<2>(stack_X.top()) - a_all[get<1>(stack_X.top())]);
+    else
+        total_wait += (get<2>(stack_X.top()) - b_all[get<1>(stack_X.top())]);
     T_last = get<2>(stack_X.top());
 
     // Choose optimal solution for Lane Y
@@ -197,13 +206,23 @@ pair<float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<f
     while (stack_Y.size() > 1)
     {
         // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+        if (get<0>(stack_Y.top()) == 'C')
+            total_wait += (get<2>(stack_Y.top()) - c_all[get<1>(stack_Y.top())]);
+        else
+            total_wait += (get<2>(stack_Y.top()) - b_all[get<1>(stack_Y.top())]);
         stack_Y.pop();
     }
     // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+    if (get<0>(stack_Y.top()) == 'C')
+        total_wait += (get<2>(stack_Y.top()) - c_all[get<1>(stack_Y.top())]);
+    else
+        total_wait += (get<2>(stack_Y.top()) - b_all[get<1>(stack_Y.top())]);
     T_last = max(T_last, get<2>(stack_Y.top()));
+    
+    float T_delay = total_wait / (alpha + beta + gamma);
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
-    cout << "dp_2d result: " << T_last << " " << totalComputeTime << endl;
-    return {T_last, totalComputeTime};
+    // cout << "dp_2d result: " << T_last << " " << T_delay << " " << totalComputeTime << endl;
+    return {T_last, T_delay, totalComputeTime};
 }
