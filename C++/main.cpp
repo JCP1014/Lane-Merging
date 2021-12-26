@@ -73,7 +73,6 @@ int main(int argc, char *argv[])
     }
 
     vector<tuple<float, float, double>> res;
-    // first_come_first_serve_v1(timeStep, a_all, b_all, c_all, W_same, W_diff);
     res.push_back(first_come_first_serve_v2(a_all, b_all, c_all));
     res.push_back(solve_milp(a_all, b_all, c_all));
     res.push_back(schedule_by_window_dp_v2(a_all, b_all, c_all, 100));
