@@ -32,10 +32,10 @@ def generate_routefile(timeStep, N, pA, pB, pC):
         <vType id="typeB" type="passenger" length="2" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="blue"/>
         <vType id="typeC" type="passenger" length="2" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="magenta"/>
 
-        <route edges="E6 E9" color="yellow" id="route_0"/>
-        <route edges="E7 E9" color="yellow" id="route_1"/>
-        <route edges="E7 E10" color="yellow" id="route_2"/>
-        <route edges="E8 E10" color="yellow" id="route_3"/>""", file=routes)
+        <route edges="A X" color="yellow" id="route_0"/>
+        <route edges="B X" color="yellow" id="route_1"/>
+        <route edges="B Y" color="yellow" id="route_2"/>
+        <route edges="C Y" color="yellow" id="route_3"/>""", file=routes)
         num_A = 1
         num_B = 1
         num_C = 1

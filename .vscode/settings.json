@@ -84,6 +84,27 @@
         "__locale": "cpp",
         "__functional_base": "cpp",
         "locale": "cpp",
-        "__tuple": "cpp"
-    }
+        "__tuple": "cpp",
+        "__hash_table": "cpp",
+        "__tree": "cpp",
+        "stack": "cpp",
+        "__string": "cpp",
+        "__bit_reference": "cpp",
+        "__config": "cpp",
+        "__debug": "cpp",
+        "__errc": "cpp",
+        "__mutex_base": "cpp",
+        "__node_handle": "cpp",
+        "__nullptr": "cpp",
+        "__split_buffer": "cpp",
+        "__threading_support": "cpp",
+        "barrier": "cpp",
+        "coroutine": "cpp",
+        "ios": "cpp",
+        "latch": "cpp",
+        "queue": "cpp",
+        "source_location": "cpp",
+        "syncstream": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

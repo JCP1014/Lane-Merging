@@ -1,14 +1,15 @@
 // Environment Variable:
 //     export SUMO_HOME="/Users/jcp/sumo"
 // Compilation:
-//     g++ -o milp -std=c++11 -I$SUMO_HOME/src runner_milp.cpp -L$SUMO_HOME/bin -ltracicpp -I /Library/gurobi912/mac64/include -L /Library/gurobi912/mac64/lib -lgurobi_c++ -lgurobi91
+//     g++ -o group_milp -std=c++11 -I$SUMO_HOME/src runner_group_milp.cpp -L$SUMO_HOME/bin -ltracicpp -I /Library/gurobi912/mac64/include -L /Library/gurobi912/mac64/lib -lgurobi_c++ -lgurobi91
 // Run:
-//     LD_LIBRARY_PATH=$SUMO_HOME/bin ./milp
+//     LD_LIBRARY_PATH=$SUMO_HOME/bin ./group_milp
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <random>
 #include <time.h>
+#include <utility>
 #include <libsumo/libtraci.h>
 #include "gurobi_c++.h"
 
@@ -168,11 +169,62 @@ vector<vehicle> compute_earliest_arrival(int laneLength, vector<vehicle> &schedu
     return arrival_times;
 }
 
-void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<vehicle> &C, double W_same, double W_diff, vector<vehicle> &schedule_A, vector<vehicle> &schedule_BX, vector<vehicle> &schedule_BY, vector<vehicle> &schedule_C)
+vector<pair<int, int>> grouping(vector<vehicle> &traffic, double timeStep)
 {
+    int groups = 1;
+    int max_groups = 35;
+    double grouping_threshold = 1;
+    vector<pair<int, int>> grouped_index;
+
+    while (1)
+    {
+        grouped_index.push_back({0, 0});
+        int head = 1, tail = 0;
+        for (int i = 2; i < traffic.size(); ++i)
+        {
+            if (traffic[i].time - traffic[i - 1].time > grouping_threshold)
+            {
+                if (++groups > max_groups)
+                    break;
+                tail = i - 1;
+                grouped_index.push_back({head, tail});
+                head = i;
+            }
+        }
+        if (head == traffic.size() - 1)
+            grouped_index.push_back({head, head});
+        else
+            grouped_index.push_back({head, traffic.size() - 1});
+        if (groups > max_groups)
+        {
+            grouping_threshold += timeStep;
+            groups = 0;
+            grouped_index.clear();
+        }
+        else
+        {
+            // cout << "threshold: " << grouping_threshold << ",  number of groups: " << groups << endl;
+            break;
+        }
+    }
+    for (auto g : grouped_index)
+        cout << g.first << " " << g.second << endl;
+    return grouped_index;
+}
+
+void group_milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<vehicle> &C, double W_same, double W_diff, double timeStep, vector<vehicle> &schedule_A, vector<vehicle> &schedule_BX, vector<vehicle> &schedule_BY, vector<vehicle> &schedule_C)
+{
+    vector<pair<int, int>> grouped_A = grouping(A, timeStep);
+    vector<pair<int, int>> grouped_B = grouping(B, timeStep);
+    vector<pair<int, int>> grouped_C = grouping(C, timeStep);
     int alpha = A.size() - 1;
     int beta = B.size() - 1;
     int gamma = C.size() - 1;
+    // double D = 30;
+    int L = grouped_A.size() - 1;
+    int M = grouped_B.size() - 1;
+    int N = grouped_C.size() - 1;
+
     try
     {
         // Create an environment
@@ -200,20 +252,38 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
             u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "u_" + to_string(k));
         }
 
-        // Create variables: x_ij, y_kj (allocation indicator)
-        GRBVar x[alpha + 1][beta + 1], y[gamma + 1][beta + 1];
-        for (int i = 0; i <= alpha; ++i)
+        // Create variables: ph_l, pt_l, qh_m, qt_m, rh_n, rt_n (scheduled entering time of groups)
+        GRBVar ph[L + 1], pt[L + 1], qh[M + 1], qt[M + 1], rh[N + 1], rt[N + 1];
+        for (int l = 0; l <= L; ++l)
         {
-            for (int j = 0; j <= beta; ++j)
+            ph[l] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "ph_" + to_string(l));
+            pt[l] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "pt_" + to_string(l));
+        }
+        for (int m = 0; m <= M; ++m)
+        {
+            qh[m] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "qh_" + to_string(m));
+            qt[m] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "qt_" + to_string(m));
+        }
+        for (int n = 0; n <= N; ++n)
+        {
+            rh[n] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "rh_" + to_string(n));
+            rt[n] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "rt_" + to_string(n));
+        }
+
+        // Create variables: x_lm, y_nm (allocation indicator)
+        GRBVar x[L + 1][M + 1], y[N + 1][M + 1];
+        for (int l = 0; l <= L; ++l)
+        {
+            for (int m = 0; m <= M; ++m)
             {
-                x[i][j] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "x_" + to_string(i) + "_" + to_string(j));
+                x[l][m] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "x_" + to_string(l) + "_" + to_string(m));
             }
         }
-        for (int k = 0; k <= gamma; ++k)
+        for (int n = 0; n <= N; ++n)
         {
-            for (int j = 0; j <= beta; ++j)
+            for (int m = 0; m <= M; ++m)
             {
-                y[k][j] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "y_" + to_string(k) + "_" + to_string(j));
+                y[n][m] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "y_" + to_string(n) + "_" + to_string(m));
             }
         }
 
@@ -251,51 +321,68 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
             model.addConstr(u[k + 1] - u[k] >= W_same, "c5_" + to_string(k));
         }
 
-        // Add constraint: B_j is put into only one gap
-        for (int j = 1; j <= beta; ++j)
+        // Add constraint: the head and the tail of each group
+        for (int l = 0; l <= L; ++l)
+        {
+            model.addConstr(ph[l] == s[grouped_A[l].first], "c6_" + to_string(l));
+            model.addConstr(pt[l] == s[grouped_A[l].second], "c7_" + to_string(l));
+        }
+        for (int m = 0; m <= M; ++m)
+        {
+            model.addConstr(qh[m] == t[grouped_B[m].first], "c8_" + to_string(m));
+            model.addConstr(qt[m] == t[grouped_B[m].second], "c9_" + to_string(m));
+        }
+        for (int n = 0; n <= N; ++n)
+        {
+            model.addConstr(rh[n] == u[grouped_C[n].first], "c10_" + to_string(n));
+            model.addConstr(rt[n] == u[grouped_C[n].second], "c11_" + to_string(n));
+        }
+
+        // Add constraint: q is put into only one gap
+        for (int m = 1; m <= M; ++m)
         {
             GRBLinExpr sigma = 0;
-            for (int i = 0; i <= alpha; ++i)
-                sigma += x[i][j];
-            for (int k = 0; k <= gamma; ++k)
-                sigma += y[k][j];
-            model.addConstr(sigma == 1, "c6_" + to_string(j));
+            for (int l = 0; l <= L; ++l)
+                sigma += x[l][m];
+            for (int n = 0; n <= N; ++n)
+                sigma += y[n][m];
+            model.addConstr(sigma == 1, "c12_" + to_string(m));
         }
 
-        // Add constraint: B_0 is not put into any gap
+        // Add constraint: q_0 is not put into any gap
         GRBLinExpr sigma = 0;
-        for (int i = 0; i <= alpha; ++i)
-            sigma += x[i][0];
-        for (int k = 0; k <= gamma; ++k)
-            sigma += y[k][0];
-        model.addConstr(sigma == 0, "c7");
+        for (int l = 0; l <= L; ++l)
+            sigma += x[l][0];
+        for (int n = 0; n <= N; ++n)
+            sigma += y[n][0];
+        model.addConstr(sigma == 0, "c13");
 
-        // Add constraint: if x[i][j] == 1, then a[i+1] - W_diff >= b[j] >= a[i] + W_diff
-        for (int j = 0; j <= beta; ++j)
+        // Add constraint: if x[l][m] == 1, then p[l+1] - W_diff >= q[m] >= p[l] + W_diff
+        for (int m = 0; m <= M; ++m)
         {
-            for (int i = 0; i < alpha; ++i)
+            for (int l = 0; l < L; ++l)
             {
-                model.addGenConstrIndicator(x[i][j], 1, t[j] <= s[i + 1] - W_diff, "c8_" + to_string(i) + "_" + to_string(j));
-                model.addGenConstrIndicator(x[i][j], 1, t[j] >= s[i] + W_diff, "c9_" + to_string(i) + "_" + to_string(j));
+                model.addGenConstrIndicator(x[l][m], 1, qt[m] <= ph[l + 1] - W_diff, "c14_" + to_string(l) + "_" + to_string(m));
+                model.addGenConstrIndicator(x[l][m], 1, qh[m] >= pt[l] + W_diff, "c15_" + to_string(l) + "_" + to_string(m));
             }
-            model.addGenConstrIndicator(x[alpha][j], 1, t[j] >= s[alpha] + W_diff, "c9_" + to_string(alpha) + "_" + to_string(j));
+            model.addGenConstrIndicator(x[L][m], 1, qh[m] >= pt[L] + W_diff, "c16_" + to_string(L) + "_" + to_string(m));
         }
 
-        // Add constraint: if y[k][j] == 1, then c[k+1] - W_diff >= b[j] >= c[k] + W_diff
-        for (int j = 0; j <= beta; ++j)
+        // Add constraint: if y[n][m] == 1, then r[n+1] - W_diff >= q[m] >= r[n] + W_diff
+        for (int m = 0; m <= M; ++m)
         {
-            for (int k = 0; k < gamma; ++k)
+            for (int n = 0; n < N; ++n)
             {
-                model.addGenConstrIndicator(y[k][j], 1, t[j] <= u[k + 1] - W_diff, "c10_" + to_string(k) + "_" + to_string(j));
-                model.addGenConstrIndicator(y[k][j], 1, t[j] >= u[k] + W_diff, "c11_" + to_string(k) + "_" + to_string(j));
+                model.addGenConstrIndicator(y[n][m], 1, qt[m] <= rh[n + 1] - W_diff, "c17_" + to_string(n) + "_" + to_string(m));
+                model.addGenConstrIndicator(y[n][m], 1, qh[m] >= rt[n] + W_diff, "c18_" + to_string(n) + "_" + to_string(m));
             }
-            model.addGenConstrIndicator(y[gamma][j], 1, t[j] >= u[gamma] + W_diff, "c11_" + to_string(gamma) + "_" + to_string(j));
+            model.addGenConstrIndicator(y[N][m], 1, qh[m] >= rt[N] + W_diff, "c19_" + to_string(N) + "_" + to_string(m));
         }
 
         // Add constraint: f = max(a[alpha], b[beta], c[gamma])
-        model.addConstr(f >= s[alpha], "c15");
-        model.addConstr(f >= t[beta], "c16");
-        model.addConstr(f >= u[gamma], "c17");
+        model.addConstr(f >= s[alpha], "c20");
+        model.addConstr(f >= t[beta], "c21");
+        model.addConstr(f >= u[gamma], "c22");
 
         // Optimize model
         model.optimize();
@@ -311,26 +398,33 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
             total_wait += (s[i].get(GRB_DoubleAttr_X) - A[i].time);
             schedule_A.push_back(vehicle(A[i].id, s[i].get(GRB_DoubleAttr_X)));
         }
-        for (int j = 1; j <= beta; ++j)
+        for (int m = 1; m <= M; ++m)
         {
-            total_wait += (t[j].get(GRB_DoubleAttr_X) - B[j].time);
             bool isFound = false;
-            for (int i = 0; i <= alpha; ++i)
+            for (int l = 0; l <= L; ++l)
             {
-                if (x[i][j].get(GRB_DoubleAttr_X))
+                if (x[l][m].get(GRB_DoubleAttr_X) == 1)
                 {
-                    schedule_BX.push_back(vehicle(B[j].id, t[j].get(GRB_DoubleAttr_X)));
+                    for (int j = grouped_B[m].first; j <= grouped_B[m].second; ++j)
+                    {
+                        total_wait += (t[j].get(GRB_DoubleAttr_X) - B[j].time);
+                        schedule_BX.push_back(vehicle(B[j].id, t[j].get(GRB_DoubleAttr_X)));
+                    }
                     isFound = true;
                     break;
                 }
             }
             if (!isFound)
             {
-                for (int k = 0; k <= gamma; ++k)
+                for (int n = 0; n <= N; ++n)
                 {
-                    if (y[k][j].get(GRB_DoubleAttr_X))
+                    if (y[n][m].get(GRB_DoubleAttr_X) == 1)
                     {
-                        schedule_BY.push_back(vehicle(B[j].id, t[j].get(GRB_DoubleAttr_X)));
+                        for (int j = grouped_B[m].first; j <= grouped_B[m].second; ++j)
+                        {
+                            total_wait += (t[j].get(GRB_DoubleAttr_X) - B[j].time);
+                            schedule_BY.push_back(vehicle(B[j].id, t[j].get(GRB_DoubleAttr_X)));
+                        }
                         break;
                     }
                 }
@@ -371,7 +465,7 @@ void simple_compute_entering_time(char lane, vector<vehicle> traffic, double W_s
     }
 }
 
-void run(int alpha, int beta, int gamma, double W_same, double W_diff)
+void run(int alpha, int beta, int gamma, double W_same, double W_diff, double timeStep)
 {
     int period = 400;
     vector<vehicle> schedule_A, schedule_BX, schedule_BY, schedule_C;
@@ -507,7 +601,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
                 vector<vehicle> arrival_A = compute_earliest_arrival(laneLength, schedule_A, 'A');
                 vector<vehicle> arrival_B = compute_earliest_arrival(laneLength, schedule_BX, schedule_BY, 'B');
                 vector<vehicle> arrival_C = compute_earliest_arrival(laneLength, schedule_C, 'C');
-                milp_compute_entering_time(arrival_A, arrival_B, arrival_C, W_same, W_diff, schedule_A, schedule_BX, schedule_BY, schedule_C);
+                group_milp_compute_entering_time(arrival_A, arrival_B, arrival_C, W_same, W_diff, timeStep, schedule_A, schedule_BX, schedule_BY, schedule_C);
 
                 for (auto it = schedule_BX.begin(); it != schedule_BX.end();)
                 {
@@ -717,5 +811,5 @@ int main(int argc, char *argv[])
                        "-S",
                        "--no-step-log", "true", "-W", "--duration-log.disable", "true"});
 
-    run(alpha, beta, gamma, W_same, W_diff);
+    run(alpha, beta, gamma, W_same, W_diff, timeStep);
 }

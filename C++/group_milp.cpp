@@ -4,29 +4,6 @@
 //                  -lgurobi_c++ -lgurobi91
 #include "group_milp.h"
 
-vector<pair<int, int>> fixed_threshold_grouping(vector<float> &traffic, float timeStep)
-{
-    float grouping_threshold = 1;
-    vector<pair<int, int>> grouped_index;
-
-    grouped_index.push_back({0, 0});
-    float head = 1, tail = 0;
-    for (int i = 2; i < traffic.size(); ++i)
-    {
-        if (traffic[i] - traffic[i - 1] > grouping_threshold)
-        {
-            tail = i - 1;
-            grouped_index.push_back({head, tail});
-            head = i;
-        }
-    }
-    if (head == traffic.size() - 1)
-        grouped_index.push_back({head, head});
-    else
-        grouped_index.push_back({head, traffic.size() - 1});
-    return grouped_index;
-}
-
 tuple<float, float, double> solve_group_milp(vector<float> A, vector<float> B, vector<float> C, float timeStep)
 {
     auto t0 = chrono::high_resolution_clock::now();
@@ -255,16 +232,16 @@ tuple<float, float, double> solve_group_milp(vector<float> A, vector<float> B, v
         //     for (int l = 0; l <= L; ++l)
         //     {
         //         if (x[l][m].get(GRB_DoubleAttr_X) == 1)
-        //             // cout << x[i][j].get(GRB_StringAttr_VarName) << " "
-        //             //      << x[i][j].get(GRB_DoubleAttr_X) << endl;
+        //             // cout << x[l][m].get(GRB_StringAttr_VarName) << " "
+        //             //      << x[l][m].get(GRB_DoubleAttr_X) << endl;
         //             cout << "X"
         //                  << " ";
         //     }
         //     for (int n = 0; n <= N; ++n)
         //     {
         //         if (y[n][m].get(GRB_DoubleAttr_X) == 1)
-        //             // cout << y[k][j].get(GRB_StringAttr_VarName) << " "
-        //             //      << y[k][j].get(GRB_DoubleAttr_X) << endl;
+        //             // cout << y[n][m].get(GRB_StringAttr_VarName) << " "
+        //             //      << y[n][m].get(GRB_DoubleAttr_X) << endl;
         //             cout << "Y"
         //                  << " ";
         //     }
