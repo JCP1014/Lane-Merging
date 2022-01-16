@@ -23,6 +23,38 @@ else:
 from sumolib import checkBinary  # noqa
 import traci  # noqa
 
+def generate_routefile(timeStep, N, pA, pB, pC):
+    # random.seed(42)  # make tests reproducible
+    with open("./sumo_data/laneMerging.rou.xml", "w") as routes:
+        print("""<routes>
+        <vType id="typeA" type="passenger" length="2" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="yellow"/>
+        <vType id="typeB" type="passenger" length="2" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="blue"/>
+        <vType id="typeC" type="passenger" length="2" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="magenta"/>
+
+        <route edges="A X" color="yellow" id="route_0"/>
+        <route edges="B X" color="yellow" id="route_1"/>
+        <route edges="B Y" color="yellow" id="route_2"/>
+        <route edges="C Y" color="yellow" id="route_3"/>""", file=routes)
+        num_A = 1
+        num_B = 1
+        num_C = 1
+        t = 1.0
+        while num_A <= N or num_B <= N or num_C <= N:
+            if num_A <= N and random.uniform(0, 1) < pA:
+                print('    <vehicle id="A_%i" type="typeA" route="route_0" depart="%i" departLane="0" departSpeed="random"/>' % (
+                    num_A, t), file=routes)
+                num_A += 1
+            if num_B <= N and random.uniform(0, 1) < pB:
+                print('    <vehicle id="B_%i" type="typeB" route="route_1" depart="%i" departLane="0" departSpeed="random"/>' % (
+                    num_B, t), file=routes)
+                num_B += 1
+            if num_C <= N and random.uniform(0, 1) < pC:
+                print('    <vehicle id="C_%i" type="typeC" route="route_3" depart="%i" departLane="0" departSpeed="random"/>' % (
+                    num_C, t), file=routes)
+                num_C += 1
+            t += timeStep
+        print("</routes>", file=routes)
+
 
 def compute_earliest_arrival(laneLength, schedule_A, schedule_BX, schedule_BY, schedule_C):
     a = [Vehicle('', 0)]
@@ -110,12 +142,12 @@ def compute_earliest_arrival(laneLength, schedule_A, schedule_BX, schedule_BY, s
 def simple_compute_entering_time(lane, traffic, W_same, W_diff, prevLane, prevTime):
     schedule = []
     if prevLane == '':
-        schedule.append(Vehicle(traffic[1].id, traffic[1].time))
+        schedule.append(Vehicle(traffic[0].id, traffic[0].time))
     elif lane == prevLane:
-        schedule.append(Vehicle(traffic[1].id, max(traffic[1].time, prevTime+W_same)))
+        schedule.append(Vehicle(traffic[0].id, max(traffic[0].time, prevTime+W_same)))
     else:
-        schedule.append(Vehicle(traffic[1].id, max(traffic[1].time, prevTime+W_diff)))
-    for i in range(2, len(traffic)):
+        schedule.append(Vehicle(traffic[0].id, max(traffic[0].time, prevTime+W_diff)))
+    for i in range(1, len(traffic)):
         prevTime = schedule[-1].time
         schedule.append(Vehicle(traffic[i].id, max(traffic[i].time, prevTime+W_same)))
     return schedule
@@ -208,121 +240,22 @@ def fcfs_compute_entering_time(a, b, c, W_same, W_diff, X_lastT, Y_lastT):
             schedule_BY += simple_compute_entering_time('B', b, W_same, W_diff, Y_lastFrom, Y_lastT)
             a.clear()
             b.clear()
-            # first = min(a[0].time, b[0].time)
-            # if first == a[0].time:
-            #     if X_lastFrom == 'A':
-            #         X_lastT = max(a[0].time, X_lastT+W_same)
-            #     else:
-            #         X_lastT = max(a[0].time, X_lastT+W_diff)
-            #     X_lastFrom = 'A'
-            #     schedule_A.append(Vehicle(a[0].id, X_lastT))
-            #     a.pop(0)
-            # if first == b[0].time:
-            #     if X_lastT < Y_lastT:
-            #         if X_lastFrom == 'B':
-            #             X_lastT = max(b[0].time, X_lastT+W_same)
-            #         else:
-            #             X_lastT = max(b[0].time, X_lastT+W_diff)
-            #         X_lastFrom = 'B'
-            #         schedule_BX.append(Vehicle(b[0].id, X_lastT))
-            #         b.pop(0)
-            #     else:
-            #         if Y_lastFrom == 'B':
-            #             Y_lastT = max(b[0].time, Y_lastT+W_same)
-            #         else:
-            #             Y_lastT = max(b[0].time, Y_lastT+W_diff)
-            #         Y_lastFrom = 'B'
-            #         schedule_BY.append(Vehicle(b[0].id, Y_lastT))
-            #         b.pop(0)
         elif len(b) > 0 and len(c) > 0:
             schedule_BX += simple_compute_entering_time('B', b, W_same, W_diff, X_lastFrom, X_lastT)
             schedule_C += simple_compute_entering_time('C', c, W_same, W_diff, Y_lastFrom, Y_lastT)
             b.clear()
             c.clear()
-            # first = min(b[0].time, c[0].time)
-            # if first == c[0].time:
-            #     if Y_lastFrom == 'C':
-            #         Y_lastT = max(c[0].time, Y_lastT+W_same)
-            #     else:
-            #         Y_lastT = max(c[0].time, Y_lastT+W_diff)
-            #     Y_lastFrom = 'C'
-            #     schedule_C.append(Vehicle(c[0].id, Y_lastT))
-            #     c.pop(0)
-            # if first == b[0].time:
-            #     if Y_lastT < X_lastT:
-            #         if Y_lastFrom == 'B':
-            #             Y_lastT = max(b[0].time, Y_lastT+W_same)
-            #         else:
-            #             Y_lastT = max(b[0].time, Y_lastT+W_diff)
-            #         Y_lastFrom = 'B'
-            #         schedule_BY.append(Vehicle(b[0].id, Y_lastT))
-            #         b.pop(0)
-            #     else:
-            #         if X_lastFrom == 'B':
-            #             X_lastT = max(b[0].time, X_lastT+W_same)
-            #         else:
-            #             X_lastT = max(b[0].time, X_lastT+W_diff)
-            #         X_lastFrom = 'B'
-            #         schedule_BX.append(Vehicle(b[0].id, X_lastT))
-            #         b.pop(0)
         elif len(a) > 0 and len(c) > 0:
             schedule_A += simple_compute_entering_time('A', a, W_same, W_diff, X_lastFrom, X_lastT)
             schedule_C += simple_compute_entering_time('C', c, W_same, W_diff, Y_lastFrom, Y_lastT)
             a.clear()
             c.clear()
-            # # a->X, c->Y
-            # if X_lastFrom == 'A':
-            #     X_lastT = max(a[0].time, X_lastT+W_same)
-            # else:
-            #     X_lastT = max(a[0].time, X_lastT+W_diff)
-            # X_lastFrom = 'A'
-            # schedule_A.append(Vehicle(a[0].id, X_lastT))
-            # a.pop(0)
-            # while len(a) > 0:
-            #     X_lastT = max(a[0].time, X_lastT+W_same)
-            #     schedule_A.append(Vehicle(a[0].id, X_lastT))
-            #     a.pop(0)
-            # if Y_lastFrom == 'C':
-            #     Y_lastT = max(c[0].time, Y_lastT+W_same)
-            # else:
-            #     Y_lastT = max(c[0].time, Y_lastT+W_diff)
-            # Y_lastFrom = 'C'
-            # schedule_C.append(Vehicle(c[0].id, Y_lastT))
-            # c.pop(0)
-            # while len(c) > 0:
-            #     Y_lastT = max(c[0].time, Y_lastT+W_same)
-            #     schedule_C.append(Vehicle(c[0].id, Y_lastT))
-            #     c.pop(0)
         elif len(a) > 0:
             schedule_A += simple_compute_entering_time('A', a, W_same, W_diff, X_lastFrom, X_lastT)
             a.clear()
-            # # a->X
-            # if X_lastFrom == 'A':
-            #     X_lastT = max(a[0].time, X_lastT+W_same)
-            # else:
-            #     X_lastT = max(a[0].time, X_lastT+W_diff)
-            # X_lastFrom = 'A'
-            # schedule_A.append(Vehicle(a[0].id, X_lastT))
-            # a.pop(0)
-            # while len(a) > 0:
-            #     X_lastT = max(a[0].time, X_lastT+W_same)
-            #     schedule_A.append(Vehicle(a[0].id, X_lastT))
-            #     a.pop(0)
         elif len(c) > 0:
             schedule_C += simple_compute_entering_time('C', c, W_same, W_diff, Y_lastFrom, Y_lastT)
             c.clear()
-            # # c->Y
-            # if Y_lastFrom == 'C':
-            #     Y_lastT = max(c[0].time, Y_lastT+W_same)
-            # else:
-            #     Y_lastT = max(c[0].time, Y_lastT+W_diff)
-            # Y_lastFrom = 'C'
-            # schedule_C.append(Vehicle(c[0].id, Y_lastT))
-            # c.pop(0)
-            # while len(c) > 0:
-            #     Y_lastT = max(c[0].time, Y_lastT+W_same)
-            #     schedule_C.append(Vehicle(c[0].id, Y_lastT))
-            #     c.pop(0)
         elif len(b) > 0:
             while len(b) > 0:
                 if X_lastT < Y_lastT:
@@ -342,28 +275,11 @@ def fcfs_compute_entering_time(a, b, c, W_same, W_diff, X_lastT, Y_lastT):
                     Y_lastFrom = 'B'
                     schedule_BY.append(Vehicle(b[0].id, Y_lastT))
                     b.pop(0)
-                # else: # X_lastT == Y_lastT
-                #     if random.randint(0,1) == 0:
-                #         if X_lastFrom == 'B':
-                #             X_lastT = max(b[0].time, X_lastT+W_same)
-                #         else:
-                #             X_lastT = max(b[0].time, X_lastT+W_diff)
-                #         X_lastFrom = 'B'
-                #         schedule_BX.append(Vehicle(b[0].id, X_lastT))
-                #         b.pop(0)
-                #     else:
-                #         if Y_lastFrom == 'B':
-                #             Y_lastT = max(b[0].time, Y_lastT+W_same)
-                #         else:
-                #             Y_lastT = max(b[0].time, Y_lastT+W_diff)
-                #         Y_lastFrom = 'B'
-                #         schedule_BY.append(Vehicle(b[0].id, Y_lastT))
-                #         b.pop(0)
     
     return schedule_A, schedule_BX, schedule_BY, schedule_C
 
 
-def run(W_same, W_diff):
+def run(alpha, beta, gamma, W_same, W_diff):
     # step = 0
     period = 400
     # junction_x = traci.junction.getPosition("gneJ20")[0]
@@ -388,6 +304,12 @@ def run(W_same, W_diff):
     passTime_dY = 0
     X_lastT = -W_diff   
     Y_lastT = -W_diff
+    A_IDs = []
+    B_IDs = []
+    C_IDs = []
+    A_head = "A_1"
+    B_head = "B_1"
+    C_head = "C_1"
 
 
     """execute the TraCI control loop"""
@@ -399,39 +321,94 @@ def run(W_same, W_diff):
         traci.trafficlight.setPhase("TL1",1)
         # print(f'timeSteps: {timeStep_cnt}')
             
-        for vehID in traci.inductionloop.getLastStepVehicleIDs("dX"):
+        # Detect the passing vehicles
+        leaveA = False
+        leaveBX = False
+        leaveBY = False
+        leaveC = False
+        A_IDs = traci.edge.getLastStepVehicleIDs("A")
+        B_IDs = traci.edge.getLastStepVehicleIDs("B")
+        C_IDs = traci.edge.getLastStepVehicleIDs("C")
+        A_IDs = sorted(A_IDs,key=lambda x: int(x.split('_')[1]))
+        B_IDs = sorted(B_IDs,key=lambda x: int(x.split('_')[1]))
+        C_IDs = sorted(C_IDs,key=lambda x: int(x.split('_')[1]))
+        if len(A_IDs) > 0 and A_IDs[0] != A_head:
+            print(A_head, "leaves")
             passTime_dX = traci.simulation.getTime()
-            if vehID[0] == 'A':
-                # print('leaveA', vehID)
+            leaveA = True
+            for s in schedule_A:
+                if s.id == A_head:
+                    schedule_A.remove(s)
+                    break
+            A_head = A_IDs[0]
+        elif len(A_IDs) == 0 and len(A_head) > 0:
+            if int(A_head.split('_')[1]) == alpha:
+                print(A_head, "leaves")
+                passTime_dX = traci.simulation.getTime()
                 leaveA = True
                 for s in schedule_A:
-                    if s.id == vehID:
+                    if s.id == A_head:
                         schedule_A.remove(s)
                         break
-            elif vehID[0] == 'B':
-                # print('leaveBX', vehID)
-                leaveBX = True
-                for s in schedule_BX:
-                    if s.id == vehID:
-                        schedule_BX.remove(s)
-                        break
-        for vehID in traci.inductionloop.getLastStepVehicleIDs("dY"):
-            passTime_dY = traci.simulation.getTime()
-            if vehID[0] == 'C':
-                # print('leaveC', vehID)
-                leaveC = True
-                for s in schedule_C:
-                    if s.id == vehID:
-                        schedule_C.remove(s)
-                        break
-            elif vehID[0] == 'B':
-                # print('leaveBY', vehID)
-                leaveBY = True
+                A_head = ""
+        if len(B_IDs) > 0 and B_IDs[0] != B_head:
+            print(B_head, "leaves")
+            isFound = False
+            for s in schedule_BX:
+                if s.id == B_head:
+                    passTime_dX = traci.simulation.getTime()
+                    leaveBX = True
+                    schedule_BX.remove(s)
+                    isFound = True
+                    break
+            if not isFound:
                 for s in schedule_BY:
-                    if s.id == vehID:
+                    if s.id == B_head:
+                        passTime_dY = traci.simulation.getTime()
+                        leaveBY = True
                         schedule_BY.remove(s)
                         break
+            B_head = B_IDs[0]
+        elif len(B_IDs) == 0 and len(B_head) > 0:
+            if int(B_head.split('_')[1]) == beta:
+                print(B_head, "leaves")
+                isFound = False
+                for s in schedule_BX:
+                    if s.id == B_head:
+                        passTime_dX = traci.simulation.getTime()
+                        leaveBX = True
+                        schedule_BX.remove(s)
+                        isFound = True
+                        break
+                if not isFound:
+                    for s in schedule_BY:
+                        if s.id == B_head:
+                            passTime_dY = traci.simulation.getTime()
+                            leaveBY = True
+                            schedule_BY.remove(s)
+                            break
+                B_head = ""
+        if len(C_IDs) > 0 and C_IDs[0] != C_head:
+            print(C_head, "leaves")
+            passTime_dY = traci.simulation.getTime()
+            leaveC = True
+            for s in schedule_C:
+                if s.id == C_head:
+                    schedule_C.remove(s)
+                    break
+            C_head = C_IDs[0]
+        elif len(C_IDs) == 0 and len(C_head) > 0:
+            if int(C_head.split('_')[1]) == gamma:
+                print(C_head, "leaves")
+                passTime_dY = traci.simulation.getTime()
+                leaveC = True
+                for s in schedule_C:
+                    if s.id == C_head:
+                        schedule_C.remove(s)
+                        break
+                C_head = ""
 
+        # Schedule
         if (timeStep_cnt - period) == 0:
             if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0 and traci.lanearea.getLastStepVehicleNumber("dC") > 0:
                 a_all, b_all, c_all = compute_earliest_arrival(laneLength, schedule_A, schedule_BX, schedule_BY, schedule_C)
@@ -466,16 +443,6 @@ def run(W_same, W_diff):
                         schedule_BY.remove(veh)
                         leaveBX = True
             # step = 0
-        # for vehID in traci.simulation.getLoadedIDList():
-        #     traci.vehicle.setLaneChangeMode(vehID, 0b000000000000)
-        # traci.simulationStep()
-        # timeStep_cnt += 1
-        # traci.trafficlight.setPhase("TL1",1)
-        # step += 1
-        # currentTime = traci.simulation.getTime()
-        # endTime = currentTime
-        # print(currentTime)
-        # print("Pass", traci.lane.getLastStepVehicleIDs("E2_0"))
                 
         if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0 and traci.lanearea.getLastStepVehicleNumber("dC") > 0:
             gA = False
@@ -491,12 +458,6 @@ def run(W_same, W_diff):
                         countdownX = W_diff
                     elif not countdownX:
                         gA = True
-                    # else:
-                    #     if countdownX:
-                    #         traci.trafficlight.setPhase("TL1", 16)
-                    #         countdownX -= 1
-                    #     else:
-                    #         gA = True
                 else:
                     if leaveBX:
                         countdownX = W_same
@@ -504,12 +465,6 @@ def run(W_same, W_diff):
                         countdownX = W_diff
                     elif not countdownX:
                         gBX = True
-                    # else:
-                    #     if countdownX:
-                    #         traci.trafficlight.setPhase("TL1", 16)
-                    #         countdownX -= 1
-                    #     else:
-                    #         gBX = True
             elif len(schedule_A) > 0:
                 if leaveA:
                     countdownX = W_same
@@ -517,12 +472,6 @@ def run(W_same, W_diff):
                     countdownX = W_diff
                 elif not countdownX:
                     gA = True
-                # else:
-                #     if countdownX:
-                #         traci.trafficlight.setPhase("TL1", 16)
-                #         countdownX -= 1
-                #     else:
-                #         gA = True
             elif len(schedule_BX) > 0:
                 if leaveBX:
                     countdownX = W_same
@@ -530,22 +479,9 @@ def run(W_same, W_diff):
                     countdownX = W_diff
                 elif not countdownX:
                     gBX = True
-                # else:
-                #     if countdownX:
-                #         traci.trafficlight.setPhase("TL1", 16)
-                #         countdownX -= 1
-                #     else:
-                #         gBX = True
             elif not countdownX:
                 gA = True
                 gBX = True
-            # else:
-            #     if countdownX:
-            #         traci.trafficlight.setPhase("TL1", 16)
-            #         countdownX -= 1
-            #     else:
-            #         gA = True
-            #         gBX = True
 
             # Control outgoing lane 2
             if len(schedule_C) > 0 and len(schedule_BY) > 0:
@@ -556,12 +492,6 @@ def run(W_same, W_diff):
                         countdownY = W_diff
                     elif not countdownY:
                         gC = True
-                    # else:
-                    #     if countdownY:
-                    #         traci.trafficlight.setPhase("TL1", 18)
-                    #         countdownY -= 1
-                    #     else:
-                    #         gC = True
                 else:
                     if leaveBY:
                         countdownY = W_same
@@ -569,12 +499,6 @@ def run(W_same, W_diff):
                         countdownY = W_diff
                     elif not countdownY:
                         gBY = True
-                    # else:
-                    #     if countdownY:
-                    #         traci.trafficlight.setPhase("TL1", 18)
-                    #         countdownY -= 1
-                    #     else:
-                    #         gBY = True
             elif len(schedule_C) > 0:
                 if leaveC:
                     countdownY = W_same
@@ -582,12 +506,6 @@ def run(W_same, W_diff):
                     countdownY = W_diff
                 elif not countdownY:
                     gC = True
-                # else:
-                #     if countdownY:
-                #         traci.trafficlight.setPhase("TL1", 18)
-                #         countdownY -= 1
-                #     else:
-                #         gC = True
             elif len(schedule_BY) > 0:
                 if leaveBY:
                     countdownY = W_same
@@ -595,22 +513,9 @@ def run(W_same, W_diff):
                     countdownY = W_diff
                 elif not countdownY:
                     gBY = True
-                # else:
-                #     if countdownY:
-                #         traci.trafficlight.setPhase("TL1", 18)
-                #         countdownY -= 1
-                #     else:
-                #         gBY = True
             elif not countdownY:
                 gC = True
                 gBY = True
-            # else:
-            #     if countdownY:
-            #         traci.trafficlight.setPhase("TL1", 18)
-            #         countdownY -= 1
-            #     else:
-            #         gC = True
-            #         gBY = True
             
             if gA and gBX and gBY and gC:
                 traci.trafficlight.setPhase("TL1", 0)
@@ -687,14 +592,6 @@ def run(W_same, W_diff):
                             except:
                                 pass
 
-            # elif countdownX:
-            #     traci.trafficlight.setPhase("TL1", 16)
-            #     countdownX -= 1
-            # elif countdownY:
-            #     traci.trafficlight.setPhase("TL1", 18)
-            #     countdownY -= 1
-
-
         if countdownX:
             # traci.trafficlight.setPhase("TL1", 16)
             countdownX -= 1
@@ -704,10 +601,6 @@ def run(W_same, W_diff):
 
         # print(f'traffic light state: {gA}, {gBX}, {gBY}, {gC}')
         # print(f'phase: {traci.trafficlight.getPhase("TL1")}')
-        leaveA = False
-        leaveBX = False
-        leaveBY = False
-        leaveC = False
 
         # step += 1
         currentTime = traci.simulation.getTime()
@@ -742,19 +635,35 @@ def main():
         sumoBinary = checkBinary('sumo-gui')
 
     try:
-        W_same = float(sys.argv[1]) # the waiting time if two consecutive vehicles are from the same lane
-        W_diff = float(sys.argv[2])  # the waiting time if two consecutive vehicles are from different lanes
+        p = float(sys.argv[1]) # lambda for Poisson distribution
+        N = int(sys.argv[2])  # Number of vehicles in each lane
+        alpha = N
+        beta = N
+        gamma = N
+        W_same = float(sys.argv[3]) # the waiting time if two consecutive vehicles are from the same lane
+        W_diff = float(sys.argv[4])  # the waiting time if two consecutive vehicles are from different lanes
+        isNewTest = sys.argv[5]
     except:
-        print('Arguments: W=, W+')
+        print('Arguments: lambda, N, W=, W+, windowSize, isNewTest')
         return
-    
+
+    timeStep = 1    # The precision of time (in second)
+    pA = p
+    pB = p
+    pC = p
+
+    # first, generate the route file for this simulation
+    if isNewTest == 'T':
+        print('generate a new file')
+        generate_routefile(timeStep, N, pA, pB, pC)
+
     # this is the normal way of using traci. sumo is started as a
     # subprocess and then the python script connects and runs
     traci.start([sumoBinary, "-c", "sumo_data/laneMerging.sumocfg",
-                            "--tripinfo-output", "tripinfo_dp.xml",
+                            "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
                             "-S",
                             "--no-step-log", "true", "-W", "--duration-log.disable", "true"])
-    run(W_same, W_diff)
+    run(alpha, beta, gamma, W_same, W_diff)
 
 
 if __name__ == "__main__":

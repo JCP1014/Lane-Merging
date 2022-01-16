@@ -2,15 +2,17 @@
 # old version of dp
 from __future__ import absolute_import
 from __future__ import print_function
+from http.client import NotConnected
 
 import os
 import sys
 import optparse
 import random
+from tkinter.messagebox import NO
 import numpy as np
 from collections import namedtuple
 
-Sol = namedtuple("Sol", "time table idx lane")
+Sol = namedtuple("Sol", "time table lane src")
 Lane = namedtuple("Lane", "traffic num num_tmp")  
 Vehicle = namedtuple("Vehicle", "id time")
 
@@ -140,8 +142,35 @@ def compute_earliest_arrival(laneLength, schedule_A, schedule_BX, schedule_BY, s
     return a, b, c
 
 
-# def get_obj(sol):
-#     return max(sol.time)
+def choose_best_sol(sol_list):
+    minMax = max(sol_list[0].time)
+    index = 0
+    for i in range(1, len(sol_list)):
+        tmpMax = max(sol_list[i].time)
+        if tmpMax < minMax:
+            minMax = tmpMax
+            index = i
+        elif tmpMax == minMax:
+            tmpSum = sum(sol_list[i].time)
+            minSum = sum(sol_list[index].time)
+            if tmpSum < minSum:
+                minMax = tmpMax
+                index = i
+            elif tmpSum == minSum and sol_list[i].src is not None:
+                tmpSrcMax = max(sol_list[i].src.time)
+                minSrcMax = max(sol_list[index].src.time)
+                if tmpSrcMax < minSrcMax:
+                    minMax = tmpMax
+                    index = i
+                elif tmpSrcMax == minSrcMax:
+                    tmpSrcSum = sum(sol_list[i].src.time)
+                    minSrcSum = sum(sol_list[index].src.time)
+                    if tmpSrcSum < minSrcMax:
+                        minMax = tmpMax
+                        index = i
+    return sol_list[index]
+
+
 def choose_minMax(sol_list):
     minMax = max(sol_list[0].time)
     minMin = min(sol_list[0].time)
@@ -159,323 +188,225 @@ def choose_minMax(sol_list):
             bestSol = sol_list[i]
     return bestSol
 
+
 def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
     alpha = len(a) - 1
     beta = len(b) - 1
     gamma = len(c) - 1
 
-    L_AB = [[[Sol((float('inf'), float('inf')), '', 0, '') for k in range(
+    L_AB = [[[Sol((float('inf'), float('inf')), '', '', None) for k in range(
         gamma+1)] for j in range(beta+1)] for i in range(alpha+1)]
-    L_AC = [[[Sol((float('inf'), float('inf')), '', 0, '') for k in range(
+    L_AC = [[[Sol((float('inf'), float('inf')), '', '', None) for k in range(
         gamma+1)] for j in range(beta+1)] for i in range(alpha+1)]
-    L_BB = [[[Sol((float('inf'), float('inf')), '', 0, '') for k in range(
+    L_BB = [[[Sol((float('inf'), float('inf')), '', '', None) for k in range(
         gamma+1)] for j in range(beta+1)] for i in range(alpha+1)]
-    L_BC = [[[Sol((float('inf'), float('inf')), '', 0, '') for k in range(
+    L_BC = [[[Sol((float('inf'), float('inf')), '', '', None) for k in range(
         gamma+1)] for j in range(beta+1)] for i in range(alpha+1)]
 
     # Initialize
-    L_AB[0][0][0] = Sol((last_X[1], last_Y[1]), '', 0, '')
-    L_AC[0][0][0] = Sol((last_X[1], last_Y[1]), '', 0, '')
-    L_BB[0][0][0] = Sol((last_X[1], last_Y[1]), '', 0, '')
-    L_BC[0][0][0] = Sol((last_X[1], last_Y[1]), '', 0, '')
+    L_AB[0][0][0] = Sol((last_X[1], last_Y[1]), '', '', None)
+    L_AC[0][0][0] = Sol((last_X[1], last_Y[1]), '', '', None)
+    L_BB[0][0][0] = Sol((last_X[1], last_Y[1]), '', '', None)
+    L_BC[0][0][0] = Sol((last_X[1], last_Y[1]), '', '', None)
 
     last_XY = last_X[0] + last_Y[0]
     T_X = last_X[1]
     T_Y = last_Y[1]
     if last_XY == 'AB':
-        L_AB[1][1][0] = Sol(
-            (max(a[1].time, T_X+W_same), max(b[1].time, T_Y+W_same)), 'AB', 0, 'XY')
-        L_AC[1][0][1] = Sol(
-            (max(a[1].time, T_X+W_same), max(c[1].time, T_Y+W_diff)), 'AC', 0, 'XY')
-        L_BC[0][1][1] = Sol(
-            (max(b[1].time, T_X+W_diff), max(c[1].time, T_Y+W_diff)), 'BC', 0, 'XY')
+        L_AB[1][1][0] = Sol((max(a[1].time, T_X+W_same), max(b[1].time, T_Y+W_same)), 'AB', 'XY', None)
+        L_AC[1][0][1] = Sol((max(a[1].time, T_X+W_same), max(c[1].time, T_Y+W_diff)), 'AC', 'XY', None)
+        L_BC[0][1][1] = Sol((max(b[1].time, T_X+W_diff), max(c[1].time, T_Y+W_diff)), 'BC', 'XY', None)
         L_BB[0][1][0] = choose_minMax([
-            Sol((max(b[1].time, T_X+W_diff), T_Y), 'BB', 0, 'X0'),
-            Sol((T_X, max(b[1].time, T_Y+W_same)), 'BB', 0, '0Y')]
+            Sol((max(b[1].time, T_X+W_diff), T_Y), 'BB', 'X', None),
+            Sol((T_X, max(b[1].time, T_Y+W_same)), 'BB', 'Y', None)]
         )
-        if beta >= 2:
-            L_BB[0][2][0] = choose_minMax([
-                Sol((max(b[1].time, T_X+W_diff), max(b[2].time, T_Y+W_same)),
-                    'BB', 0, 'XY'),
-                Sol((max(b[2].time, T_X+W_diff), max(b[1].time, T_Y+W_same)),
-                    'BB', 0, 'YX')]
-            )
-        L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_same), T_Y), 'AB', 0, 'X0')
-        L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_same)), 'AB', 0, '0Y')
-        L_AC[1][0][0] = Sol((max(a[1].time, T_X+W_same), T_Y), 'AC', 0, 'X0')
-        L_AC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_diff)), 'AC', 0, '0Y')
-        L_BC[0][1][0] = Sol((max(b[1].time, T_X+W_diff), T_Y), 'BC', 0, 'X0')
-        L_BC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_diff)), 'BC', 0, '0Y')
+        L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_same), T_Y), 'AB', 'X', None)
+        L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_same)), 'AB', 'Y', None)
+        L_AC[1][0][0] = Sol((max(a[1].time, T_X+W_same), T_Y), 'AC', 'X', None)
+        L_AC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_diff)), 'AC', 'Y', None)
+        L_BC[0][1][0] = Sol((max(b[1].time, T_X+W_diff), T_Y), 'BC', 'X', None)
+        L_BC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_diff)), 'BC', 'Y', None)
     elif last_XY == 'AC':
-        L_AB[1][1][0] = Sol(
-            (max(a[1].time, T_X+W_same), max(b[1].time, T_Y+W_diff)), 'AB', 0, 'XY')
-        L_AC[1][0][1] = Sol(
-            (max(a[1].time, T_X+W_same), max(c[1].time, T_Y+W_same)), 'AC', 0, 'XY')
-        L_BC[0][1][1] = Sol(
-            (max(b[1].time, T_X+W_diff), max(c[1].time, T_Y+W_same)), 'BC', 0, 'XY')
+        L_AB[1][1][0] = Sol((max(a[1].time, T_X+W_same), max(b[1].time, T_Y+W_diff)), 'AB', 'XY', None)
+        L_AC[1][0][1] = Sol((max(a[1].time, T_X+W_same), max(c[1].time, T_Y+W_same)), 'AC', 'XY', None)
+        L_BC[0][1][1] = Sol((max(b[1].time, T_X+W_diff), max(c[1].time, T_Y+W_same)), 'BC', 'XY', None)
         L_BB[0][1][0] = choose_minMax([
-            Sol((max(b[1].time, T_X+W_diff), T_Y), 'BB', 0, 'X0'),
-            Sol((T_X, max(b[1].time, T_Y+W_diff)), 'BB', 0, '0Y')]
+            Sol((max(b[1].time, T_X+W_diff), T_Y), 'BB', 'X', None),
+            Sol((T_X, max(b[1].time, T_Y+W_diff)), 'BB', 'Y', None)]
         )
-        if beta >= 2:
-            L_BB[0][2][0] = choose_minMax([
-                Sol((max(b[1].time, T_X+W_diff), max(b[2].time, T_Y+W_diff)),
-                    'BB', 0, 'XY'),
-                Sol((max(b[2].time, T_X+W_diff), max(b[1].time, T_Y+W_diff)),
-                    'BB', 0, 'YX')]
-            )
-        L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_same), T_Y), 'AB', 0, 'X0')
-        L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_diff)), 'AB', 0, '0Y')
-        L_AC[1][0][0] = Sol((max(a[1].time, T_X+W_same), T_Y), 'AC', 0, 'X0')
-        L_AC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_same)), 'AC', 0, '0Y')
-        L_BC[0][1][0] = Sol((max(b[1].time, T_X+W_diff), T_Y), 'BC', 0, 'X0')
-        L_BC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_same)), 'BC', 0, '0Y')
+        L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_same), T_Y), 'AB', 'X', None)
+        L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_diff)), 'AB', 'Y', None)
+        L_AC[1][0][0] = Sol((max(a[1].time, T_X+W_same), T_Y), 'AC', 'X', None)
+        L_AC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_same)), 'AC', 'Y', None)
+        L_BC[0][1][0] = Sol((max(b[1].time, T_X+W_diff), T_Y), 'BC', 'X', None)
+        L_BC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_same)), 'BC', 'Y', None)
     elif last_XY == 'BB':
-        L_AB[1][1][0] = Sol(
-            (max(a[1].time, T_X+W_diff), max(b[1].time, T_Y+W_same)), 'AB', 0, 'XY')
-        L_AC[1][0][1] = Sol(
-            (max(a[1].time, T_X+W_diff), max(c[1].time, T_Y+W_diff)), 'AC', 0, 'XY')
-        L_BC[0][1][1] = Sol(
-            (max(b[1].time, T_X+W_same), max(c[1].time, T_Y+W_diff)), 'BC', 0, 'XY')
+        L_AB[1][1][0] = Sol((max(a[1].time, T_X+W_diff), max(b[1].time, T_Y+W_same)), 'AB', 'XY', None)
+        L_AC[1][0][1] = Sol((max(a[1].time, T_X+W_diff), max(c[1].time, T_Y+W_diff)), 'AC', 'XY', None)
+        L_BC[0][1][1] = Sol((max(b[1].time, T_X+W_same), max(c[1].time, T_Y+W_diff)), 'BC', 'XY', None)
         L_BB[0][1][0] = choose_minMax([
-            Sol((max(b[1].time, T_X+W_same), T_Y), 'BB', 0, 'X0'),
-            Sol((T_X, max(b[1].time, T_Y+W_same)), 'BB', 0, '0Y')]
+            Sol((max(b[1].time, T_X+W_same), T_Y), 'BB', 'X', None),
+            Sol((T_X, max(b[1].time, T_Y+W_same)), 'BB', 'Y', None)]
         )
-        if beta >= 2:
-            L_BB[0][2][0] = choose_minMax([
-                Sol((max(b[1].time, T_X+W_same), max(b[2].time, T_Y+W_same)),
-                    'BB', 0, 'XY'),
-                Sol((max(b[2].time, T_X+W_same), max(b[1].time, T_Y+W_same)),
-                    'BB', 0, 'YX')]
-            )
-        L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_diff), T_Y), 'AB', 0, 'X0')
-        L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_same)), 'AB', 0, '0Y')
-        L_AC[1][0][0] = Sol((max(a[1].time, T_X+W_diff), T_Y), 'AC', 0, 'X0')
-        L_AC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_diff)), 'AC', 0, '0Y')
-        L_BC[0][1][0] = Sol((max(b[1].time, T_X+W_same), T_Y), 'BC', 0, 'X0')
-        L_BC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_diff)), 'BC', 0, '0Y')
+        L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_diff), T_Y), 'AB', 'X', None)
+        L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_same)), 'AB', 'Y', None)
+        L_AC[1][0][0] = Sol((max(a[1].time, T_X+W_diff), T_Y), 'AC', 'X', None)
+        L_AC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_diff)), 'AC', 'Y', None)
+        L_BC[0][1][0] = Sol((max(b[1].time, T_X+W_same), T_Y), 'BC', 'X', None)
+        L_BC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_diff)), 'BC', 'Y', None)
     elif last_XY == 'BC':
-        L_AB[1][1][0] = Sol(
-            (max(a[1].time, T_X+W_diff), max(b[1].time, T_Y+W_diff)), 'AB', 0, 'XY')
-        L_AC[1][0][1] = Sol(
-            (max(a[1].time, T_X+W_diff), max(c[1].time, T_Y+W_same)), 'AC', 0, 'XY')
-        L_BC[0][1][1] = Sol(
-            (max(b[1].time, T_X+W_same), max(c[1].time, T_Y+W_same)), 'BC', 0, 'XY')
+        L_AB[1][1][0] = Sol((max(a[1].time, T_X+W_diff), max(b[1].time, T_Y+W_diff)), 'AB', 'XY', None)
+        L_AC[1][0][1] = Sol((max(a[1].time, T_X+W_diff), max(c[1].time, T_Y+W_same)), 'AC', 'XY', None)
+        L_BC[0][1][1] = Sol((max(b[1].time, T_X+W_same), max(c[1].time, T_Y+W_same)), 'BC', 'XY', None)
         L_BB[0][1][0] = choose_minMax([
-            Sol((max(b[1].time, T_X+W_same), T_Y), 'BB', 0, 'X0'),
-            Sol((T_X, max(b[1].time, T_Y+W_diff)), 'BB', 0, '0Y')]
+            Sol((max(b[1].time, T_X+W_same), T_Y), 'BB', 'X', None),
+            Sol((T_X, max(b[1].time, T_Y+W_diff)), 'BB', 'Y', None)]
         )
-        if beta >= 2:
-            L_BB[0][2][0] = choose_minMax([
-                Sol((max(b[1].time, T_X+W_same), max(b[2].time, T_Y+W_diff)),
-                    'BB', 0, 'XY'),
-                Sol((max(b[2].time, T_X+W_same), max(b[1].time, T_Y+W_diff)),
-                    'BB', 0, 'YX')]
-            )
-        L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_diff), T_Y), 'AB', 0, 'X0')
-        L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_diff)), 'AB', 0, '0Y')
-        L_AC[1][0][0] = Sol((max(a[1].time, T_X+W_diff), T_Y), 'AC', 0, 'X0')
-        L_AC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_same)), 'AC', 0, '0Y')
-        L_BC[0][1][0] = Sol((max(b[1].time, T_X+W_same), T_Y), 'BC', 0, 'X0')
-        L_BC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_same)), 'BC', 0, '0Y')
+        L_AB[1][0][0] = Sol((max(a[1].time, T_X+W_diff), T_Y), 'AB', 'X', None)
+        L_AB[0][1][0] = Sol((T_X, max(b[1].time, T_Y+W_diff)), 'AB', 'Y', None)
+        L_AC[1][0][0] = Sol((max(a[1].time, T_X+W_diff), T_Y), 'AC', 'X', None)
+        L_AC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_same)), 'AC', 'Y', None)
+        L_BC[0][1][0] = Sol((max(b[1].time, T_X+W_same), T_Y), 'BC', 'X', None)
+        L_BC[0][0][1] = Sol((T_X, max(c[1].time, T_Y+W_same)), 'BC', 'Y', None)
     else:
-        L_AB[1][1][0] = Sol((a[1].time, b[1].time), 'AB', 0, 'XY')
-        L_AC[1][0][1] = Sol((a[1].time, c[1].time), 'AC', 0, 'XY')
-        L_BC[0][1][1] = Sol((b[1].time, c[1].time), 'BC', 0, 'XY')
-        L_BB[0][1][0] = Sol((-W_diff, b[1].time), 'BB', 0,
-                            '0Y') if a[1].time <= c[1].time else Sol((b[1].time, -W_diff), 'BB', 0, 'X0')
-        if beta >= 2:
-            L_BB[0][2][0] = Sol((b[1].time, b[2].time), 'BB', 0, 'XY') if a[1].time <= c[1].time else Sol(
-                (b[2].time, b[1].time), 'BB', 0, 'YX')
-        L_AB[1][0][0] = Sol((a[1].time, -W_diff), 'AB', 0, 'X0')
-        L_AB[0][1][0] = Sol((-W_diff, b[1].time), 'AB', 0, '0Y')
-        L_AC[1][0][0] = Sol((a[1].time, -W_diff), 'AC', 0, 'X0')
-        L_AC[0][0][1] = Sol((-W_diff, c[1].time), 'AC', 0, '0Y')
-        L_BC[0][1][0] = Sol((b[1].time, -W_diff), 'BC', 0, 'X0')
-        L_BC[0][0][1] = Sol((-W_diff, c[1].time), 'BC', 0, '0Y')
+        L_AB[1][1][0] = Sol((a[1].time, b[1].time), 'AB', 'XY', None)
+        L_AC[1][0][1] = Sol((a[1].time, c[1].time), 'AC', 'XY', None)
+        L_BC[0][1][1] = Sol((b[1].time, c[1].time), 'BC', 'XY', None)
+        L_BB[0][1][0] = Sol((-W_diff, b[1].time), 'BB', 'Y', None) if a[1].time <= c[1].time else Sol((b[1].time, -W_diff), 'BB', 'X', None)
+        L_AB[1][0][0] = Sol((a[1].time, -W_diff), 'AB', 'X', None)
+        L_AB[0][1][0] = Sol((-W_diff, b[1].time), 'AB', 'Y', None)
+        L_AC[1][0][0] = Sol((a[1].time, -W_diff), 'AC', 'X', None)
+        L_AC[0][0][1] = Sol((-W_diff, c[1].time), 'AC', 'Y', None)
+        L_BC[0][1][0] = Sol((b[1].time, -W_diff), 'BC', 'X', None)
+        L_BC[0][0][1] = Sol((-W_diff, c[1].time), 'BC', 'Y', None)
 
-    for i in range(2, alpha+1):
-        L_AB[i][1][0] = Sol(
-            (max(a[i].time, L_AB[i-1][1][0].time[0]+W_same), L_AB[i-1][1][0].time[1]), 'AB', 0, 'XY')
-    for i in range(2, alpha+1):
-        L_AC[i][0][1] = Sol(
-            (max(a[i].time, L_AC[i-1][0][1].time[0]+W_same), L_AC[i-1][0][1].time[1]), 'AC', 0, 'XY')
-    for k in range(2, gamma+1):
-        L_AC[1][0][k] = Sol(
-            (L_AC[1][0][k-1].time[0], max(c[k].time, L_AC[1][0][k-1].time[1]+W_same)), 'AC', 0, 'XY')
-    for k in range(2, gamma+1):
-        L_BC[0][1][k] = Sol(
-            (L_BC[0][1][k-1].time[0], max(c[k].time, L_BC[0][1][k-1].time[1]+W_same)), 'BC', 0, 'XY')
-    if beta >= 3:
-        for j in range(3, beta+1):
-            L_BB[0][j][0] = choose_minMax([
-                Sol((max(b[j-1].time, L_BB[0][j-2][0].time[0]+W_same),
-                     max(b[j].time, L_BB[0][j-2][0].time[1]+W_same)), 'BB', 0, 'XY'),
-                Sol((max(b[j].time, L_BB[0][j-2][0].time[0]+W_same),
-                     max(b[j-1].time, L_BB[0][j-2][0].time[1]+W_same)), 'BB', 0, 'YX'),
-                Sol((max(b[j].time, max(b[j-1].time, L_BB[0][j-2][0].time[0]+W_same) +
-                         W_same), L_BB[0][j-2][0].time[1]), 'BB', 0, 'XX'),
-                Sol((L_BB[0][j-2][0].time[0], max(b[j].time, max(b[j-1].time,
-                                                            L_BB[0][j-2][0].time[1]+W_same)+W_same)), 'BB', 0, 'YY')]
-            )
-
-    for i in range(2, alpha+1):
-        L_AB[i][0][0] = Sol(
-            (max(a[i].time, L_AB[i-1][0][0].time[0]+W_same), L_AB[i-1][0][0].time[1]), 'AB', 0, 'X0')
     for j in range(2, beta+1):
-        L_AB[0][j][0] = Sol(
-            (L_AB[0][j-1][0].time[0], max(b[j].time, L_AB[0][j-1][0].time[1]+W_same)), 'AB', 0, '0Y')
-    for i in range(2, alpha+1):
-        L_AC[i][0][0] = Sol(
-            (max(a[i].time, L_AC[i-1][0][0].time[0]+W_same), L_AC[i-1][0][0].time[1]), 'AC', 0, 'X0')
-    for k in range(2, gamma+1):
-        L_AC[0][0][k] = Sol(
-            (L_AC[0][0][k-1].time[0], max(c[k].time, L_AC[0][0][k-1].time[1]+W_same)), 'AC', 0, '0Y')
-    for j in range(2, beta+1):
-        L_BC[0][j][0] = Sol(
-            (max(b[j].time, L_BC[0][j-1][0].time[0]+W_same), L_BC[0][j-1][0].time[1]), 'BC', 0, 'X0')
-    for k in range(2, gamma+1):
-        L_BC[0][0][k] = Sol(
-            (L_BC[0][0][k-1].time[0], max(c[k].time, L_BC[0][0][k-1].time[1]+W_same)), 'BC', 0, '0Y')
+        L_BB[0][j][0] = choose_minMax([
+            Sol((max(b[j].time, L_BB[0][j-1][0].time[0]+W_same), L_BB[0][j-1][0].time[1]), 'BB', 'X', None),
+            Sol((L_BB[0][j-1][0].time[0], max(b[j].time, L_BB[0][j-1][0].time[1]+W_same)), 'BB', 'Y', None)]
+        )
 
-    if beta >= 2:
+    for i in range(2, alpha+1):
+        L_AB[i][0][0] = Sol((max(a[i].time, L_AB[i-1][0][0].time[0]+W_same), L_AB[i-1][0][0].time[1]), 'AB', 'X', None)
+    for j in range(2, beta+1):
+        L_AB[0][j][0] = Sol((L_AB[0][j-1][0].time[0], max(b[j].time, L_AB[0][j-1][0].time[1]+W_same)), 'AB', 'Y', None)
+    for i in range(2, alpha+1):
+        L_AC[i][0][0] = Sol((max(a[i].time, L_AC[i-1][0][0].time[0]+W_same), L_AC[i-1][0][0].time[1]), 'AC', 'X', None)
+    for k in range(2, gamma+1):
+        L_AC[0][0][k] = Sol((L_AC[0][0][k-1].time[0], max(c[k].time, L_AC[0][0][k-1].time[1]+W_same)), 'AC', 'Y', None)
+    for j in range(2, beta+1):
+        L_BC[0][j][0] = Sol((max(b[j].time, L_BC[0][j-1][0].time[0]+W_same), L_BC[0][j-1][0].time[1]), 'BC', 'X', None)
+    for k in range(2, gamma+1):
+        L_BC[0][0][k] = Sol((L_BC[0][0][k-1].time[0], max(c[k].time, L_BC[0][0][k-1].time[1]+W_same)), 'BC', 'Y', None)
+
+    if beta > 1:
         if last_XY == 'AB':
             for i in range(1, alpha+1):
                 L_BB[i][2][0] = choose_minMax([
-                    Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[2].time, T_Y+W_same)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[1].time, T_Y+W_same)), 'AC', 0, 'YX')]
+                    Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff), max(b[2].time, T_Y+W_same)), 'AC', 'XY', None),
+                    Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff), max(b[1].time, T_Y+W_same)), 'AC', 'YX', None)]
                 )
             for k in range(1, gamma+1):
                 L_BB[0][2][k] = choose_minMax([
-                    Sol((max(b[1].time, T_X+W_diff), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, T_X+W_diff), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX')]
+                    Sol((max(b[1].time, T_X+W_diff), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY', None),
+                    Sol((max(b[2].time, T_X+W_diff), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX', None)]
                 )
         elif last_XY == 'AC':
             for i in range(1, alpha+1):
                 L_BB[i][2][0] = choose_minMax([
-                    Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[2].time, T_Y+W_diff)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[1].time, T_Y+W_diff)), 'AC', 0, 'YX')]
+                    Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff), max(b[2].time, T_Y+W_diff)), 'AC', 'XY', None),
+                    Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff), max(b[1].time, T_Y+W_diff)), 'AC', 'YX', None)]
                 )
             for k in range(1, gamma+1):
                 L_BB[0][2][k] = choose_minMax([
-                    Sol((max(b[1].time, T_X+W_diff), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, T_X+W_diff), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX')]
+                    Sol((max(b[1].time, T_X+W_diff), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY', None),
+                    Sol((max(b[2].time, T_X+W_diff), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX', None)]
                 )
         elif last_XY == 'BB':
             for i in range(1, alpha+1):
                 L_BB[i][2][0] = choose_minMax([
-                    Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[2].time, T_Y+W_same)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[1].time, T_Y+W_same)), 'AC', 0, 'YX')]
+                    Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff), max(b[2].time, T_Y+W_same)), 'AC', 'XY', None),
+                    Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff), max(b[1].time, T_Y+W_same)), 'AC', 'YX', None)]
                 )
             for k in range(1, gamma+1):
                 L_BB[0][2][k] = choose_minMax([
-                    Sol((max(b[1].time, T_X+W_same), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, T_X+W_same), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX')]
+                    Sol((max(b[1].time, T_X+W_same), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY', None),
+                    Sol((max(b[2].time, T_X+W_same), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX', None)]
                 )
         elif last_XY == 'BC':
             for i in range(1, alpha+1):
                 L_BB[i][2][0] = choose_minMax([
-                    Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[2].time, T_Y+W_diff)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff),
-                         max(b[1].time, T_Y+W_diff)), 'AC', 0, 'YX')]
+                    Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff), max(b[2].time, T_Y+W_diff)), 'AC', 'XY', None),
+                    Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff), max(b[1].time, T_Y+W_diff)), 'AC', 'YX', None)]
                 )
             for k in range(1, gamma+1):
                 L_BB[0][2][k] = choose_minMax([
-                    Sol((max(b[1].time, T_X+W_same), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, T_X+W_same), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 0, 'YX')]
+                    Sol((max(b[1].time, T_X+W_same), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY', None),
+                    Sol((max(b[2].time, T_X+W_same), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX', None)]
                 )
         else:
             for i in range(1, alpha+1):
                 L_BB[i][2][0] = choose_minMax([
-                    Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff),
-                         b[2].time), 'AC', 0, 'XY'),
-                    Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff),
-                         b[1].time), 'AC', 0, 'YX')]
+                    Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff), b[2].time), 'AC', 'XY', None),
+                    Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff), b[1].time), 'AC', 'YX', None)]
                 )
             for k in range(1, gamma+1):
                 L_BB[0][2][k] = choose_minMax([
-                    Sol((b[1].time, max(b[2].time, L_AC[0][0][k].time[1]+W_diff)),
-                        'AC', 0, 'XY'),
-                    Sol((b[2].time, max(b[1].time, L_AC[0][0][k].time[1]+W_diff)),
-                        'AC', 0, 'YX')]
+                    Sol((b[1].time, max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY', None),
+                    Sol((b[2].time, max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX', None)]
                 )
 
     for i in range(1, alpha+1):
         for j in range(2, beta+1):
             L_AB[i][j][0] = choose_minMax([
-                Sol((max(a[i].time, L_AB[i-1][j-1][0].time[0]+W_same),
-                     max(b[j].time, L_AB[i-1][j-1][0].time[1]+W_same)), 'AB', 0, 'XY'),
-                Sol((max(a[i].time, max(b[j].time, L_AB[i-1][j-1][0].time[0]+W_diff) +
-                         W_diff), L_AB[i-1][j-1][0].time[1]), 'AB', 0, 'XX'),
-                Sol((max(a[i].time, L_BB[i-1][j-1][0].time[0]+W_diff),
-                     max(b[j].time, L_BB[i-1][j-1][0].time[1]+W_same)), 'BB', 0, 'XY'),
-                Sol((max(a[i].time, max(b[j].time, L_BB[i-1][j-1][0].time[0]+W_same) +
-                         W_diff), L_BB[i-1][j-1][0].time[1]), 'BB', 0, 'XX')]
+                Sol((max(a[i].time, L_AB[i-1][j][0].time[0]+W_same), L_AB[i-1][j][0].time[1]), 'AB', 'X', L_AB[i-1][j][0]),
+                Sol((max(a[i].time, L_BB[i-1][j][0].time[0]+W_diff), L_BB[i-1][j][0].time[1]), 'BB', 'X', L_BB[i-1][j][0]),
+                Sol((L_AB[i][j-1][0].time[0], max(b[j].time, L_AB[i][j-1][0].time[1]+W_same)), 'AB', 'Y', L_AB[i][j-1][0])]
             )
     for i in range(2, alpha+1):
         for k in range(2, gamma+1):
-            L_AC[i][0][k] = Sol((max(a[i].time, L_AC[i-1][0][k-1].time[0]+W_same),
-                                 max(c[k].time, L_AC[i-1][0][k-1].time[1]+W_same)), 'AC', 0, 'XY')
+            L_AC[i][0][k] = Sol((max(a[i].time, L_AC[i-1][0][k-1].time[0]+W_same), max(c[k].time, L_AC[i-1][0][k-1].time[1]+W_same)), 'AC', 'XY', None)
     for j in range(2, beta+1):
         for k in range(1, gamma+1):
             L_BC[0][j][k] = choose_minMax([
-                Sol((max(b[j].time, L_BB[0][j-1][k-1].time[0]+W_same),
-                     max(c[k].time, L_BB[0][j-1][k-1].time[1]+W_diff)), 'BB', 0, 'XY'),
-                Sol((L_BB[0][j-1][k-1].time[0], max(c[k].time, max(b[j].time, L_BB[0][j-1][k-1].time[1]+W_same)+W_diff)), 'BB', 0, 'YY'),
-                Sol((max(b[j].time, L_BC[0][j-1][k-1].time[0]+W_same),
-                     max(c[k].time, L_BC[0][j-1][k-1].time[1]+W_same)), 'BC', 0, 'XY'),
-                Sol((L_BC[0][j-1][k-1].time[0], max(c[k].time, max(b[j].time, L_BC[0][j-1][k-1].time[1]+W_diff)+W_diff)), 'BC', 0, 'YY')]
+                Sol((max(b[j].time, L_BC[0][j-1][k].time[0]+W_same), L_BC[0][j-1][k].time[1]), 'BC', 'X', L_BC[0][j-1][k]),
+                Sol((L_BC[0][j][k-1].time[0], max(c[k].time, L_BC[0][j][k-1].time[1]+W_same)), 'BC', 'Y', L_BC[0][j][k-1]),
+                Sol((L_BB[0][j][k-1].time[0], max(c[k].time, L_BB[0][j][k-1].time[1]+W_diff)), 'BB', 'Y', L_BB[0][j][k-1])]
             )
     for i in range(1, alpha+1):
         for j in range(3, beta+1):
             L_BB[i][j][0] = choose_minMax([
-                Sol((max(b[j-1].time, L_AB[i][j-2][0].time[0]+W_diff),
-                     max(b[j].time, L_AB[i][j-2][0].time[1]+W_same)), 'AB', 0, 'XY'),
-                Sol((max(b[j].time, L_AB[i][j-2][0].time[0]+W_diff),
-                     max(b[j-1].time, L_AB[i][j-2][0].time[1]+W_same)), 'AB', 0, 'YX'),
-                Sol((max(b[j-1].time, L_BB[i][j-2][0].time[0]+W_same),
-                     max(b[j].time, L_BB[i][j-2][0].time[1]+W_same)), 'BB', 0, 'XY'),
-                Sol((max(b[j].time, L_BB[i][j-2][0].time[0]+W_same),
-                     max(b[j-1].time, L_BB[i][j-2][0].time[1]+W_same)), 'BB', 0, 'YX'),
-                Sol((max(b[j].time, max(b[j-1].time, L_BB[i][j-2][0].time[0]+W_same) +
-                         W_same), L_BB[i][j-2][0].time[1]), 'BB', 0, 'XX'),
-                Sol((L_BB[i][j-2][0].time[0], max(b[j].time, max(b[j-1].time,
-                                                            L_BB[i][j-2][0].time[1]+W_same)+W_same)), 'BB', 0, 'YY')]
+                Sol((max(b[j].time, L_BB[i][j-1][0].time[0]+W_same), L_BB[i][j-1][0].time[1]), 'BB', 'X', L_BB[i][j-1][0]),
+                Sol((max(b[j].time, L_AB[i][j-1][0].time[0]+W_diff), L_AB[i][j-1][0].time[1]), 'AB', 'X', L_AB[i][j-1][0]),
+                Sol((L_BB[i][j-1][0].time[0], max(b[j].time, L_BB[i][j-1][0].time[1]+W_same)), 'BB', 'Y', L_BB[i][j-1][0])]
             )
 
     for i in range(1, alpha+1):
         for j in range(1, beta+1):
             for k in range(1, gamma+1):
                 L_AB[i][j][k] = choose_minMax([
-                    Sol((max(a[i].time, L_AB[i-1][j][k].time[0]+W_same), L_AB[i-1][j][k].time[1]), 'AB', 0, 'X'),
-                    Sol((max(a[i].time, L_BB[i-1][j][k].time[0]+W_diff), L_BB[i-1][j][k].time[1]), 'BB', 0, 'X'),
-                    Sol((L_AB[i][j-1][k].time[0], max(b[j].time, L_AB[i][j-1][k].time[1]+W_same)), 'AB', 0, 'Y'),
-                    Sol((L_AC[i][j-1][k].time[0], max(b[j].time, L_AC[i][j-1][k].time[1]+W_diff)), 'AC', 0, 'Y')]
+                    Sol((max(a[i].time, L_AB[i-1][j][k].time[0]+W_same), L_AB[i-1][j][k].time[1]), 'AB', 'X', L_AB[i-1][j][k]),
+                    Sol((max(a[i].time, L_BB[i-1][j][k].time[0]+W_diff), L_BB[i-1][j][k].time[1]), 'BB', 'X', L_BB[i-1][j][k]),
+                    Sol((L_AB[i][j-1][k].time[0], max(b[j].time, L_AB[i][j-1][k].time[1]+W_same)), 'AB', 'Y', L_AB[i][j-1][k]),
+                    Sol((L_AC[i][j-1][k].time[0], max(b[j].time, L_AC[i][j-1][k].time[1]+W_diff)), 'AC', 'Y', L_AC[i][j-1][k])]
                 )
                 L_AC[i][j][k] = choose_minMax([
-                    Sol((max(a[i].time, L_AC[i-1][j][k].time[0]+W_same), L_AC[i-1][j][k].time[1]), 'AC', 0, 'X'),
-                    Sol((max(a[i].time, L_BC[i-1][j][k].time[0]+W_diff), L_BC[i-1][j][k].time[1]), 'BC', 0, 'X'),
-                    Sol((L_AC[i][j][k-1].time[0], max(c[k].time, L_AC[i][j][k-1].time[1]+W_same)), 'AC', 0, 'Y'),
-                    Sol((L_AB[i][j][k-1].time[0], max(c[k].time, L_AB[i][j][k-1].time[1]+W_diff)), 'AB', 0, 'Y')]
+                    Sol((max(a[i].time, L_AC[i-1][j][k].time[0]+W_same), L_AC[i-1][j][k].time[1]), 'AC', 'X', L_AC[i-1][j][k]),
+                    Sol((max(a[i].time, L_BC[i-1][j][k].time[0]+W_diff), L_BC[i-1][j][k].time[1]), 'BC', 'X', L_BC[i-1][j][k]),
+                    Sol((L_AC[i][j][k-1].time[0], max(c[k].time, L_AC[i][j][k-1].time[1]+W_same)), 'AC', 'Y', L_AC[i][j][k-1]),
+                    Sol((L_AB[i][j][k-1].time[0], max(c[k].time, L_AB[i][j][k-1].time[1]+W_diff)), 'AB', 'Y', L_AB[i][j][k-1])]
                 )
                 L_BC[i][j][k] = choose_minMax([
-                    Sol((max(b[j].time, L_BC[i][j-1][k].time[0]+W_same), L_BC[i][j-1][k].time[1]), 'BC', 0, 'X'),
-                    Sol((max(b[j].time, L_AC[i][j-1][k].time[0]+W_diff), L_AC[i][j-1][k].time[1]), 'AC', 0, 'X'),
-                    Sol((L_BC[i][j][k-1].time[0], max(c[k].time, L_BC[i][j][k-1].time[1]+W_same)), 'BC', 0, 'Y'),
-                    Sol((L_BB[i][j][k-1].time[0], max(c[k].time, L_BB[i][j][k-1].time[1]+W_diff)), 'BB', 0, 'Y')]
+                    Sol((max(b[j].time, L_BC[i][j-1][k].time[0]+W_same), L_BC[i][j-1][k].time[1]), 'BC', 'X', L_BC[i][j-1][k]),
+                    Sol((max(b[j].time, L_AC[i][j-1][k].time[0]+W_diff), L_AC[i][j-1][k].time[1]), 'AC', 'X', L_AC[i][j-1][k]),
+                    Sol((L_BC[i][j][k-1].time[0], max(c[k].time, L_BC[i][j][k-1].time[1]+W_same)), 'BC', 'Y', L_BC[i][j][k-1]),
+                    Sol((L_BB[i][j][k-1].time[0], max(c[k].time, L_BB[i][j][k-1].time[1]+W_diff)), 'BB', 'Y', L_BB[i][j][k-1])]
                 )
                 L_BB[i][j][k] = choose_minMax([
-                    Sol((max(b[j].time, L_BB[i][j-1][k].time[0]+W_same), L_BB[i][j-1][k].time[1]), 'BB', 0, 'X'),
-                    Sol((max(b[j].time, L_AB[i][j-1][k].time[0]+W_diff), L_AB[i][j-1][k].time[1]), 'AB', 0, 'X'),
-                    Sol((L_BB[i][j-1][k].time[0], max(b[j].time, L_BB[i][j-1][k].time[1]+W_same)), 'BB', 0, 'Y'),
-                    Sol((L_BC[i][j-1][k].time[0], max(b[j].time, L_BC[i][j-1][k].time[1]+W_diff)), 'BC', 0, 'Y')]
+                    Sol((max(b[j].time, L_BB[i][j-1][k].time[0]+W_same), L_BB[i][j-1][k].time[1]), 'BB', 'X', L_BB[i][j-1][k]),
+                    Sol((max(b[j].time, L_AB[i][j-1][k].time[0]+W_diff), L_AB[i][j-1][k].time[1]), 'AB', 'X', L_AB[i][j-1][k]),
+                    Sol((L_BB[i][j-1][k].time[0], max(b[j].time, L_BB[i][j-1][k].time[1]+W_same)), 'BB', 'Y', L_BB[i][j-1][k]),
+                    Sol((L_BC[i][j-1][k].time[0], max(b[j].time, L_BC[i][j-1][k].time[1]+W_diff)), 'BC', 'Y', L_BC[i][j-1][k])]
                 )
     
     
@@ -507,22 +438,6 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
             stack_BY.append(Vehicle(b[j].id, L_AB[i][j][k].time[1]))
             i -= 1
             j -= 1
-        elif lanes == 'XX':
-            stack_A.append(Vehicle(a[i].id, L_AB[i][j][k].time[0]))
-            if table == 'AB':
-                stack_BX.append(Vehicle(b[j].id, max(b[j].time, L_AB[i-1][j-1][k].time[0]+W_diff)))
-            elif table == 'BB':
-                stack_BX.append(Vehicle(b[j].id, max(b[j].time, L_BB[i-1][j-1][k].time[0]+W_same)))
-            else:
-                print('bug')
-            i -= 1
-            j -= 1
-        elif lanes[0] == 'X':
-            stack_A.append(Vehicle(a[i].id, L_AB[i][j][k].time[0]))
-            i -= 1
-        elif lanes[1] == 'Y':
-            stack_BY.append(Vehicle(b[j].id, L_AB[i][j][k].time[1]))
-            j -= 1
     elif opt.time == L_AC[i][j][k].time:
         # print('AC')
         table = L_AC[i][j][k].table
@@ -537,12 +452,6 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
             stack_A.append(Vehicle(a[i].id, L_AC[i][j][k].time[0]))
             stack_C.append(Vehicle(c[k].id, L_AC[i][j][k].time[1]))
             i -= 1
-            k -= 1
-        elif lanes[0] == 'X':
-            stack_A.append(Vehicle(a[i].id, L_AC[i][j][k].time[0]))
-            i -= 1
-        elif lanes[1] == 'Y':
-            stack_C.append(Vehicle(c[k].id, L_AC[i][j][k].time[1]))
             k -= 1
     elif opt.time == L_BB[i][j][k].time:
         # print('BB')
@@ -562,28 +471,6 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
             stack_BY.append(Vehicle(b[j-1].id, L_BB[i][j][k].time[1]))
             stack_BX.append(Vehicle(b[j].id, L_BB[i][j][k].time[0]))
             j -= 2
-        elif lanes == 'XX':
-            stack_BX.append(Vehicle(b[j].id, L_BB[i][j][k].time[0]))
-            if table == 'AB':
-                stack_BX.append(Vehicle(b[j-1].id, max(b[j-1].time, L_AB[i][j-2][k].time[0]+W_diff)))
-            elif table == 'BB':
-                stack_BX.append(Vehicle(b[j-1].id, max(b[j-1].time, L_BB[i][j-2][k].time[0]+W_same)))
-            j -= 2
-        elif lanes == 'YY':
-            stack_BY.append(Vehicle(b[j].id, L_BB[i][j][k].time[1]))
-            if table == 'BB':
-                stack_BY.append(Vehicle(b[j-1].id, max(b[j-1].time, L_BB[i][j-2][k].time[1]+W_same)))
-            elif table == 'BC':
-                stack_BY.append(Vehicle(b[j-1].id, max(b[j-1].time, L_BC[i][j-2][k].time[1]+W_diff)))
-            else:
-                print('bug')
-            j -= 2
-        elif lanes[0] == 'X':
-            stack_BX.append(Vehicle(b[j].id, L_BB[i][j][k].time[0]))
-            j -= 1
-        elif lanes[1] == 'Y':
-            stack_BY.append(Vehicle(b[j].id, L_BB[i][j][k].time[1]))
-            j -= 1
     elif opt.time == L_BC[i][j][k].time:
         # print('BC')
         table = L_BC[i][j][k].table
@@ -598,22 +485,6 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
             stack_BX.append(Vehicle(b[j].id, L_BC[i][j][k].time[0]))
             stack_C.append(Vehicle(c[k].id, L_BC[i][j][k].time[1]))
             j -= 1
-            k -= 1
-        elif lanes == 'YY':
-            stack_C.append(Vehicle(c[k].id, L_BC[i][j][k].time[1]))
-            if table == 'BB':
-                stack_BY.append(Vehicle(b[j].id, max(b[j].time, L_BB[i][j-1][k-1].time[1]+W_same)))
-            elif table == 'BC':
-                stack_BY.append(Vehicle(b[j].id, max(b[j].time, L_BC[i][j-1][k-1].time[1]+W_diff)))
-            else:
-                print('bug')
-            j -= 1
-            k -= 1
-        elif lanes[0] == 'X':
-            stack_BX.append(Vehicle(b[j].id, L_BC[i][j][k].time[0]))
-            j -= 1
-        elif lanes[1] == 'Y':
-            stack_C.append(Vehicle(c[k].id, L_BC[i][j][k].time[1]))
             k -= 1
 
     # Backtracking
@@ -634,22 +505,6 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
                 stack_BY.append(Vehicle(b[j].id, L_AB[i][j][k].time[1]))
                 i -= 1
                 j -= 1
-            elif lanes == 'XX':
-                stack_A.append(Vehicle(a[i].id, L_AB[i][j][k].time[0]))
-                if table == 'AB':
-                    stack_BX.append(Vehicle(b[j].id, max(b[j].time, L_AB[i-1][j-1][k].time[0]+W_diff)))
-                elif table == 'BB':
-                    stack_BX.append(Vehicle(b[j].id, max(b[j].time, L_BB[i-1][j-1][k].time[0]+W_same)))
-                else:
-                    print('bug')
-                i -= 1
-                j -= 1
-            elif lanes[0] == 'X':
-                stack_A.append(Vehicle(a[i].id, L_AB[i][j][k].time[0]))
-                i -= 1
-            elif lanes[1] == 'Y':
-                stack_BY.append(Vehicle(b[j].id, L_AB[i][j][k].time[1]))
-                j -= 1
         elif table == 'AC':
             # print('AC')
             table = L_AC[i][j][k].table
@@ -664,12 +519,6 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
                 stack_A.append(Vehicle(a[i].id, L_AC[i][j][k].time[0]))
                 stack_C.append(Vehicle(c[k].id, L_AC[i][j][k].time[1]))
                 i -= 1
-                k -= 1
-            elif lanes[0] == 'X':
-                stack_A.append(Vehicle(a[i].id, L_AC[i][j][k].time[0]))
-                i -= 1
-            elif lanes[1] == 'Y':
-                stack_C.append(Vehicle(c[k].id, L_AC[i][j][k].time[1]))
                 k -= 1
         elif table == 'BB':
             # print('BB')
@@ -689,28 +538,6 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
                 stack_BY.append(Vehicle(b[j-1].id, L_BB[i][j][k].time[1]))
                 stack_BX.append(Vehicle(b[j].id, L_BB[i][j][k].time[0]))
                 j -= 2
-            elif lanes == 'XX':
-                stack_BX.append(Vehicle(b[j].id, L_BB[i][j][k].time[0]))
-                if table == 'AB':
-                    stack_BX.append(Vehicle(b[j-1].id, max(b[j-1].time, L_AB[i][j-2][k].time[0]+W_diff)))
-                elif table == 'BB':
-                    stack_BX.append(Vehicle(b[j-1].id, max(b[j-1].time, L_BB[i][j-2][k].time[0]+W_same)))
-                j -= 2
-            elif lanes == 'YY':
-                stack_BY.append(Vehicle(b[j].id, L_BB[i][j][k].time[1]))
-                if table == 'BB':
-                    stack_BY.append(Vehicle(b[j-1].id, max(b[j-1].time, L_BB[i][j-2][k].time[1]+W_same)))
-                elif table == 'BC':
-                    stack_BY.append(Vehicle(b[j-1].id, max(b[j-1].time, L_BC[i][j-2][k].time[1]+W_diff)))
-                else:
-                    print('bug')
-                j -= 2
-            elif lanes[0] == 'X':
-                stack_BX.append(Vehicle(b[j].id, L_BB[i][j][k].time[0]))
-                j -= 1
-            elif lanes[1] == 'Y':
-                stack_BY.append(Vehicle(b[j].id, L_BB[i][j][k].time[1]))
-                j -= 1
         elif table == 'BC':
             # print('BC')
             table = L_BC[i][j][k].table
@@ -725,22 +552,6 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
                 stack_BX.append(Vehicle(b[j].id, L_BC[i][j][k].time[0]))
                 stack_C.append(Vehicle(c[k].id, L_BC[i][j][k].time[1]))
                 j -= 1
-                k -= 1
-            elif lanes == 'YY':
-                stack_C.append(Vehicle(c[k].id, L_BC[i][j][k].time[1]))
-                if table == 'BB':
-                    stack_BY.append(Vehicle(b[j].id, max(b[j].time, L_BB[i][j-1][k-1].time[1]+W_same)))
-                elif table == 'BC':
-                    stack_BY.append(Vehicle(b[j].id, max(b[j].time, L_BC[i][j-1][k-1].time[1]+W_diff)))
-                else:
-                    print('bug')
-                j -= 1
-                k -= 1
-            elif lanes[0] == 'X':
-                stack_BX.append(Vehicle(b[j].id, L_BC[i][j][k].time[0]))
-                j -= 1
-            elif lanes[1] == 'Y':
-                stack_C.append(Vehicle(c[k].id, L_BC[i][j][k].time[1]))
                 k -= 1
 
     # Delete the redundant element (i==0 or j==0 or k==0)
@@ -869,45 +680,6 @@ def schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, carNum):
                             schedule_BY.append(Vehicle(b[i].id, max(b[i].time, schedule_BY[-1].time+W_same)))
                         else:
                             schedule_BX.append(Vehicle(b[i].id, max(b[i].time, schedule_BX[-1].time+W_same)))
-            # else: # X_lastT == Y_lastT
-            #     if random.randint(0,1) == 0:
-            #         if last_X[0] == '':
-            #             schedule_BX.append(Vehicle(b[1].id, b[1].time))
-            #         elif last_X[0] == 'A':
-            #             schedule_BX.append(Vehicle(b[1].id, max(b[1].time, last_X[1]+W_diff)))
-            #         else:
-            #             schedule_BX.append(Vehicle(b[1].id, max(b[1].time, last_X[1]+W_same)))
-            #         if len(b) > 2:
-            #             if last_Y[0] == '':
-            #                 schedule_BY.append(Vehicle(b[2].id, b[2].time))
-            #             elif last_Y[0] == 'C':
-            #                 schedule_BY.append(Vehicle(b[2].id, max(b[2].time, last_Y[1]+W_diff)))
-            #             else:
-            #                 schedule_BY.append(Vehicle(b[2].id, max(b[2].time, last_Y[1]+W_same)))
-            #             for i in range(3, len(b)):
-            #                 if i % 2 == 1:
-            #                     schedule_BX.append(Vehicle(b[i].id, max(b[i].time, schedule_BX[-1].time+W_same)))
-            #                 else:
-            #                     schedule_BY.append(Vehicle(b[i].id, max(b[i].time, schedule_BY[-1].time+W_same)))
-            #     else:
-            #         if last_Y[0] == '':
-            #             schedule_BY.append(Vehicle(b[1].id, b[1].time))
-            #         elif last_Y[0] == 'C':
-            #             schedule_BY.append(Vehicle(b[1].id, max(b[1].time, last_Y[1]+W_diff)))
-            #         else:
-            #             schedule_BY.append(Vehicle(b[1].id, max(b[1].time, last_Y[1]+W_same)))                   
-            #         if len(b) > 2:
-            #             if last_X[0] == '':
-            #                 schedule_BX.append(Vehicle(b[2].id, b[2].time))
-            #             elif last_X[0] == 'A':
-            #                 schedule_BX.append(Vehicle(b[2].id, max(b[2].time, last_X[1]+W_diff)))
-            #             else:
-            #                 schedule_BX.append(Vehicle(b[2].id, max(b[2].time, last_X[1]+W_same)))
-            #             for i in range(3, len(b)):
-            #                 if i % 2 == 1:
-            #                     schedule_BY.append(Vehicle(b[i].id, max(b[i].time, schedule_BY[-1].time+W_same)))
-            #                 else:
-            #                     schedule_BX.append(Vehicle(b[i].id, max(b[i].time, schedule_BX[-1].time+W_same)))
 
         # print(f'last_X: {last_X}')
         # print(f'last_Y: {last_Y}')
@@ -916,7 +688,7 @@ def schedule_by_num_window(a_all, b_all, c_all, W_same, W_diff, carNum):
     return schedule_A, schedule_BX, schedule_BY, schedule_C
 
 
-def run(W_same, W_diff, windowSize):
+def run(alpha, beta, gamma, W_same, W_diff, windowSize):
     # step = 0
     period = 400
     # junction_x = traci.junction.getPosition("gneJ20")[0]
@@ -940,10 +712,14 @@ def run(W_same, W_diff, windowSize):
     # window_size = 5
     passTime_dX = 0
     passTime_dY = 0
+    A_IDs = []
+    B_IDs = []
+    C_IDs = []
+    A_head = "A_1"
+    B_head = "B_1"
+    C_head = "C_1"
 
     """execute the TraCI control loop"""
-    # we start with phase 2 where EW has green
-    # traci.trafficlight.setPhase("0", 2)
     while traci.simulation.getMinExpectedNumber() > 0:  # The number of vehicles which are in the net plus the ones still waiting to start. 
         for vehID in traci.simulation.getLoadedIDList():
             traci.vehicle.setLaneChangeMode(vehID, 0b000000000000)
@@ -951,40 +727,95 @@ def run(W_same, W_diff, windowSize):
         timeStep_cnt += 1
         traci.trafficlight.setPhase("TL1",1)
         # print(f'timeSteps: {timeStep_cnt}')
-
-        for vehID in traci.inductionloop.getLastStepVehicleIDs("dX"):
+        
+        # Detect the passing vehicles
+        leaveA = False
+        leaveBX = False
+        leaveBY = False
+        leaveC = False
+        A_IDs = traci.edge.getLastStepVehicleIDs("A")
+        B_IDs = traci.edge.getLastStepVehicleIDs("B")
+        C_IDs = traci.edge.getLastStepVehicleIDs("C")
+        A_IDs = sorted(A_IDs,key=lambda x: int(x.split('_')[1]))
+        B_IDs = sorted(B_IDs,key=lambda x: int(x.split('_')[1]))
+        C_IDs = sorted(C_IDs,key=lambda x: int(x.split('_')[1]))
+        if len(A_IDs) > 0 and A_IDs[0] != A_head:
+            print(A_head, "leaves")
             passTime_dX = traci.simulation.getTime()
-            if vehID[0] == 'A':
-                # print('leaveA', vehID)
+            leaveA = True
+            for s in schedule_A:
+                if s.id == A_head:
+                    schedule_A.remove(s)
+                    break
+            A_head = A_IDs[0]
+        elif len(A_IDs) == 0 and len(A_head) > 0:
+            if int(A_head.split('_')[1]) == alpha:
+                print(A_head, "leaves")
+                passTime_dX = traci.simulation.getTime()
                 leaveA = True
                 for s in schedule_A:
-                    if s.id == vehID:
+                    if s.id == A_head:
                         schedule_A.remove(s)
                         break
-            elif vehID[0] == 'B':
-                # print('leaveBX', vehID)
-                leaveBX = True
-                for s in schedule_BX:
-                    if s.id == vehID:
-                        schedule_BX.remove(s)
-                        break
-        for vehID in traci.inductionloop.getLastStepVehicleIDs("dY"):
-            passTime_dY = traci.simulation.getTime()
-            if vehID[0] == 'C':
-                # print('leaveC', vehID)
-                leaveC = True
-                for s in schedule_C:
-                    if s.id == vehID:
-                        schedule_C.remove(s)
-                        break
-            elif vehID[0] == 'B':
-                # print('leaveBY', vehID)
-                leaveBY = True
+                A_head = ""
+        if len(B_IDs) > 0 and B_IDs[0] != B_head:
+            print(B_head, "leaves")
+            isFound = False
+            for s in schedule_BX:
+                if s.id == B_head:
+                    passTime_dX = traci.simulation.getTime()
+                    leaveBX = True
+                    schedule_BX.remove(s)
+                    isFound = True
+                    break
+            if not isFound:
                 for s in schedule_BY:
-                    if s.id == vehID:
+                    if s.id == B_head:
+                        passTime_dY = traci.simulation.getTime()
+                        leaveBY = True
                         schedule_BY.remove(s)
                         break
+            B_head = B_IDs[0]
+        elif len(B_IDs) == 0 and len(B_head) > 0:
+            if int(B_head.split('_')[1]) == beta:
+                print(B_head, "leaves")
+                isFound = False
+                for s in schedule_BX:
+                    if s.id == B_head:
+                        passTime_dX = traci.simulation.getTime()
+                        leaveBX = True
+                        schedule_BX.remove(s)
+                        isFound = True
+                        break
+                if not isFound:
+                    for s in schedule_BY:
+                        if s.id == B_head:
+                            passTime_dY = traci.simulation.getTime()
+                            leaveBY = True
+                            schedule_BY.remove(s)
+                            break
+                B_head = ""
+        if len(C_IDs) > 0 and C_IDs[0] != C_head:
+            print(C_head, "leaves")
+            passTime_dY = traci.simulation.getTime()
+            leaveC = True
+            for s in schedule_C:
+                if s.id == C_head:
+                    schedule_C.remove(s)
+                    break
+            C_head = C_IDs[0]
+        elif len(C_IDs) == 0 and len(C_head) > 0:
+            if int(C_head.split('_')[1]) == gamma:
+                print(C_head, "leaves")
+                passTime_dY = traci.simulation.getTime()
+                leaveC = True
+                for s in schedule_C:
+                    if s.id == C_head:
+                        schedule_C.remove(s)
+                        break
+                C_head = ""
 
+        # Schedule
         if timeStep_cnt - period == 0:
             if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0 and traci.lanearea.getLastStepVehicleNumber("dC") > 0:
                 a_all, b_all, c_all = compute_earliest_arrival(laneLength, schedule_A, schedule_BX, schedule_BY, schedule_C)
@@ -1017,18 +848,7 @@ def run(W_same, W_diff, windowSize):
                         schedule_BY.remove(veh)
                         leaveBX = True
             # step = 0
-        # for vehID in traci.simulation.getLoadedIDList():
-        #     traci.vehicle.setLaneChangeMode(vehID, 0b000000000000)
-        # traci.simulationStep()
-        # timeStep_cnt += 1
-        # traci.trafficlight.setPhase("TL1",1)
-        # step += 1
-        # currentTime = traci.simulation.getTime()
-        # endTime = currentTime
-        # print(currentTime)
-        # print("Pass", traci.lane.getLastStepVehicleIDs("E2_0"))
                 
-        # if traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0 and traci.lanearea.getLastStepVehicleNumber("dC") > 0:
         if traci.lanearea.getLastStepVehicleNumber("dA") > 0 or traci.lanearea.getLastStepVehicleNumber("dB") > 0 or traci.lanearea.getLastStepVehicleNumber("dC") > 0:
             gA = False
             gBX = False
@@ -1043,12 +863,6 @@ def run(W_same, W_diff, windowSize):
                         countdownX = W_diff
                     elif not countdownX:
                         gA = True
-                    # else:
-                    #     if countdownX:
-                    #         traci.trafficlight.setPhase("TL1", 16)
-                    #         countdownX -= 1
-                    #     else:
-                    #         gA = True
                 else:
                     if leaveBX:
                         countdownX = W_same
@@ -1056,12 +870,6 @@ def run(W_same, W_diff, windowSize):
                         countdownX = W_diff
                     elif not countdownX:
                         gBX = True
-                    # else:
-                    #     if countdownX:
-                    #         traci.trafficlight.setPhase("TL1", 16)
-                    #         countdownX -= 1
-                    #     else:
-                    #         gBX = True
             elif len(schedule_A) > 0:
                 if leaveA:
                     countdownX = W_same
@@ -1069,12 +877,6 @@ def run(W_same, W_diff, windowSize):
                     countdownX = W_diff
                 elif not countdownX:
                     gA = True
-                # else:
-                #     if countdownX:
-                #         traci.trafficlight.setPhase("TL1", 16)
-                #         countdownX -= 1
-                #     else:
-                #         gA = True
             elif len(schedule_BX) > 0:
                 if leaveBX:
                     countdownX = W_same
@@ -1082,22 +884,9 @@ def run(W_same, W_diff, windowSize):
                     countdownX = W_diff
                 elif not countdownX:
                     gBX = True
-                # else:
-                #     if countdownX:
-                #         traci.trafficlight.setPhase("TL1", 16)
-                #         countdownX -= 1
-                #     else:
-                #         gBX = True
             elif not countdownX:
                 gA = True
                 gBX = True
-            # else:
-            #     if countdownX:
-            #         traci.trafficlight.setPhase("TL1", 16)
-            #         countdownX -= 1
-            #     else:
-            #         gA = True
-            #         gBX = True
 
             # Control outgoing lane 2
             if len(schedule_C) > 0 and len(schedule_BY) > 0:
@@ -1108,12 +897,6 @@ def run(W_same, W_diff, windowSize):
                         countdownY = W_diff
                     elif not countdownY:
                         gC = True
-                    # else:
-                    #     if countdownY:
-                    #         traci.trafficlight.setPhase("TL1", 18)
-                    #         countdownY -= 1
-                    #     else:
-                    #         gC = True
                 else:
                     if leaveBY:
                         countdownY = W_same
@@ -1121,12 +904,6 @@ def run(W_same, W_diff, windowSize):
                         countdownY = W_diff
                     elif not countdownY:
                         gBY = True
-                    # else:
-                    #     if countdownY:
-                    #         traci.trafficlight.setPhase("TL1", 18)
-                    #         countdownY -= 1
-                    #     else:
-                    #         gBY = True
             elif len(schedule_C) > 0:
                 if leaveC:
                     countdownY = W_same
@@ -1134,12 +911,6 @@ def run(W_same, W_diff, windowSize):
                     countdownY = W_diff
                 elif not countdownY:
                     gC = True
-                # else:
-                #     if countdownY:
-                #         traci.trafficlight.setPhase("TL1", 18)
-                #         countdownY -= 1
-                #     else:
-                #         gC = True
             elif len(schedule_BY) > 0:
                 if leaveBY:
                     countdownY = W_same
@@ -1147,22 +918,9 @@ def run(W_same, W_diff, windowSize):
                     countdownY = W_diff
                 elif not countdownY:
                     gBY = True
-                # else:
-                #     if countdownY:
-                #         traci.trafficlight.setPhase("TL1", 18)
-                #         countdownY -= 1
-                #     else:
-                #         gBY = True
             elif not countdownY:
                 gC = True
                 gBY = True
-            # else:
-            #     if countdownY:
-            #         traci.trafficlight.setPhase("TL1", 18)
-            #         countdownY -= 1
-            #     else:
-            #         gC = True
-            #         gBY = True
             
             if gA and gBX and gBY and gC:
                 traci.trafficlight.setPhase("TL1", 0)
@@ -1184,68 +942,6 @@ def run(W_same, W_diff, windowSize):
                 traci.trafficlight.setPhase("TL1", 14)
             else:
                 traci.trafficlight.setPhase("TL1", 1)
-        '''
-        elif traci.lanearea.getLastStepVehicleNumber("dA") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0:
-            if (not countdownX) and (not countdownY):
-                traci.trafficlight.setPhase("TL1", 2)
-            elif not countdownX:
-                traci.trafficlight.setPhase("TL1", 8)
-            elif not countdownY:
-                traci.trafficlight.setPhase("TL1", 12)
-            for vehID in traci.lanearea.getLastStepVehicleIDs("dB"):
-                try:
-                    traci.vehicle.setRouteID(vehID,"route_2")
-                except Exception as e:
-                    print(e)
-        elif traci.lanearea.getLastStepVehicleNumber("dC") > 0 and traci.lanearea.getLastStepVehicleNumber("dB") > 0:
-            if (not countdownX) and (not countdownY):
-                traci.trafficlight.setPhase("TL1", 6)
-            elif not countdownX:
-                traci.trafficlight.setPhase("TL1", 10)
-            elif not countdownY:
-                traci.trafficlight.setPhase("TL1", 14)
-            for vehID in traci.lanearea.getLastStepVehicleIDs("dB"):
-                try:
-                    traci.vehicle.setRouteID(vehID,"route_1")
-                except Exception as e:
-                    print(e)
-        else:
-            if (not countdownX) and (not countdownY):
-                traci.trafficlight.setPhase("TL1", 0)
-            if traci.lanearea.getLastStepVehicleNumber("dB") > 0:
-                id_list = sorted(traci.lanearea.getLastStepVehicleIDs("dB"), key=lambda x: int(x.split('_')[1]))
-                if passTime_dX <= passTime_dY:
-                    for i in range(len(id_list)):
-                        if i % 2 == 0:
-                            try:
-                                traci.vehicle.setRouteID(id_list[i], "route_1")
-                            except:
-                                pass
-                        else:
-                            try:
-                                traci.vehicle.setRouteID(id_list[i], "route_2")
-                            except:
-                                pass
-                else:
-                    for i in range(len(id_list)):
-                        if i % 2 == 0:
-                            try:
-                                traci.vehicle.setRouteID(id_list[i], "route_2")
-                            except:
-                                pass
-                        else:
-                            try:
-                                traci.vehicle.setRouteID(id_list[i], "route_1")
-                            except:
-                                pass
-
-            # elif countdownX:
-            #     traci.trafficlight.setPhase("TL1", 16)
-            #     countdownX -= 1
-            # elif countdownY:
-            #     traci.trafficlight.setPhase("TL1", 18)
-            #     countdownY -= 1
-        '''
         if countdownX:
             # traci.trafficlight.setPhase("TL1", 16)
             countdownX -= 1
@@ -1255,11 +951,6 @@ def run(W_same, W_diff, windowSize):
 
         # print(f'traffic light state: {gA}, {gBX}, {gBY}, {gC}')
         # print(f'phase: {traci.trafficlight.getPhase("TL1")}')
-        leaveA = False
-        leaveBX = False
-        leaveBY = False
-        leaveC = False
-
         # step += 1
         currentTime = traci.simulation.getTime()
         # endTime = currentTime
@@ -1295,6 +986,9 @@ def main():
     try:
         p = float(sys.argv[1]) # lambda for Poisson distribution
         N = int(sys.argv[2])  # Number of vehicles in each lane
+        alpha = N
+        beta = N
+        gamma = N
         W_same = float(sys.argv[3]) # the waiting time if two consecutive vehicles are from the same lane
         W_diff = float(sys.argv[4])  # the waiting time if two consecutive vehicles are from different lanes
         windowSize = int(sys.argv[5])
@@ -1319,7 +1013,7 @@ def main():
                             "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
                             "-S",
                             "--no-step-log", "true", "-W", "--duration-log.disable", "true"])
-    run(W_same, W_diff, windowSize)
+    run(alpha, beta, gamma, W_same, W_diff, windowSize)
 
 
 if __name__ == "__main__":

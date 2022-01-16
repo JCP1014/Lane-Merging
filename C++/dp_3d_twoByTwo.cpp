@@ -785,23 +785,35 @@ tuple<float, double> schedule_by_window_dp_v1(vector<float> a_all, vector<float>
             tie(last_X, last_Y, tmp) = window_oneSol_dp_v1(a, b, c, W_same, W_diff, last_X, last_Y);
         else if (a.size() > 1 && b.size() > 1)
         {
+            a.erase(a.begin());
+            b.erase(b.begin());
             last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
             last_Y = schedule_single_lane('B', b, W_same, W_diff, last_Y);
         }
         else if (a.size() > 1 and c.size() > 1)
         {
+            a.erase(a.begin());
+            c.erase(c.begin());
             last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
             last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
         }
         else if (b.size() > 1 and c.size() > 1)
         {
+            b.erase(b.begin());
+            c.erase(c.begin());
             last_X = schedule_single_lane('B', b, W_same, W_diff, last_X);
             last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
         }
         else if (a.size() > 1)
+        {
+            a.erase(a.begin());
             last_X = schedule_single_lane('A', a, W_same, W_diff, last_X);
+        }
         else if (c.size() > 1)
+        {
+            c.erase(c.begin());
             last_Y = schedule_single_lane('C', c, W_same, W_diff, last_Y);
+        }
         else if (b.size() > 1)
         {
             if (get<2>(last_X) < get<2>(last_Y))

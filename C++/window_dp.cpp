@@ -609,6 +609,8 @@ tuple<float, float, double> schedule_by_window_dp_v2(vector<float> a_all, vector
         }
         else if (a.size() > 1 && b.size() > 1)
         {
+            a.erase(a.begin());
+            b.erase(b.begin());
             tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
             total_wait += wait_time;
             tie(last_Y, wait_time) = schedule_single_lane('B', b, last_Y);
@@ -616,6 +618,8 @@ tuple<float, float, double> schedule_by_window_dp_v2(vector<float> a_all, vector
         }
         else if (a.size() > 1 and c.size() > 1)
         {
+            a.erase(a.begin());
+            c.erase(c.begin());
             tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
             total_wait += wait_time;
             tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
@@ -623,6 +627,8 @@ tuple<float, float, double> schedule_by_window_dp_v2(vector<float> a_all, vector
         }
         else if (b.size() > 1 and c.size() > 1)
         {
+            b.erase(b.begin());
+            c.erase(c.begin());
             tie(last_X, wait_time) = schedule_single_lane('B', b, last_X);
             total_wait += wait_time;
             tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
@@ -630,11 +636,13 @@ tuple<float, float, double> schedule_by_window_dp_v2(vector<float> a_all, vector
         }
         else if (a.size() > 1)
         {
+            a.erase(a.begin());
             tie(last_X, wait_time) = schedule_single_lane('A', a, last_X);
             total_wait += wait_time;
         }
         else if (c.size() > 1)
         {
+            c.erase(c.begin());
             tie(last_Y, wait_time) = schedule_single_lane('C', c, last_Y);
             total_wait += wait_time;
         }

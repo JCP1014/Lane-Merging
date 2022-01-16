@@ -355,21 +355,6 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
     }
 }
 
-void simple_compute_entering_time(char lane, vector<vehicle> traffic, double W_same, double W_diff, char prevLane, double prevTime, vector<vehicle> &schedule)
-{
-    schedule.clear();
-    if (prevLane == '0')
-        schedule.push_back(vehicle(traffic[1].id, traffic[1].time));
-    else if (lane == prevLane)
-        schedule.push_back(vehicle(traffic[1].id, max(traffic[1].time, prevTime + W_same)));
-    else
-        schedule.push_back(vehicle(traffic[1].id, max(traffic[1].time, prevTime + W_diff)));
-    for (int i = 2; i < traffic.size(); ++i)
-    {
-        prevTime = schedule.back().time;
-        schedule.push_back(vehicle(traffic[i].id, max(traffic[i].time, prevTime + W_same)));
-    }
-}
 
 void run(int alpha, int beta, int gamma, double W_same, double W_diff)
 {
