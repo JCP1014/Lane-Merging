@@ -333,7 +333,7 @@ def run(alpha, beta, gamma, W_same, W_diff):
         B_IDs = sorted(B_IDs,key=lambda x: int(x.split('_')[1]))
         C_IDs = sorted(C_IDs,key=lambda x: int(x.split('_')[1]))
         if len(A_IDs) > 0 and A_IDs[0] != A_head:
-            print(A_head, "leaves")
+            # print(A_head, "leaves")
             passTime_dX = traci.simulation.getTime()
             leaveA = True
             for s in schedule_A:
@@ -343,7 +343,7 @@ def run(alpha, beta, gamma, W_same, W_diff):
             A_head = A_IDs[0]
         elif len(A_IDs) == 0 and len(A_head) > 0:
             if int(A_head.split('_')[1]) == alpha:
-                print(A_head, "leaves")
+                # print(A_head, "leaves")
                 passTime_dX = traci.simulation.getTime()
                 leaveA = True
                 for s in schedule_A:
@@ -352,7 +352,7 @@ def run(alpha, beta, gamma, W_same, W_diff):
                         break
                 A_head = ""
         if len(B_IDs) > 0 and B_IDs[0] != B_head:
-            print(B_head, "leaves")
+            # print(B_head, "leaves")
             isFound = False
             for s in schedule_BX:
                 if s.id == B_head:
@@ -371,7 +371,7 @@ def run(alpha, beta, gamma, W_same, W_diff):
             B_head = B_IDs[0]
         elif len(B_IDs) == 0 and len(B_head) > 0:
             if int(B_head.split('_')[1]) == beta:
-                print(B_head, "leaves")
+                # print(B_head, "leaves")
                 isFound = False
                 for s in schedule_BX:
                     if s.id == B_head:
@@ -389,7 +389,7 @@ def run(alpha, beta, gamma, W_same, W_diff):
                             break
                 B_head = ""
         if len(C_IDs) > 0 and C_IDs[0] != C_head:
-            print(C_head, "leaves")
+            # print(C_head, "leaves")
             passTime_dY = traci.simulation.getTime()
             leaveC = True
             for s in schedule_C:
@@ -399,7 +399,7 @@ def run(alpha, beta, gamma, W_same, W_diff):
             C_head = C_IDs[0]
         elif len(C_IDs) == 0 and len(C_head) > 0:
             if int(C_head.split('_')[1]) == gamma:
-                print(C_head, "leaves")
+                # print(C_head, "leaves")
                 passTime_dY = traci.simulation.getTime()
                 leaveC = True
                 for s in schedule_C:
@@ -644,7 +644,7 @@ def main():
         W_diff = float(sys.argv[4])  # the waiting time if two consecutive vehicles are from different lanes
         isNewTest = sys.argv[5]
     except:
-        print('Arguments: lambda, N, W=, W+, windowSize, isNewTest')
+        print('Arguments: lambda, N, W=, W+, isNewTest')
         return
 
     timeStep = 1    # The precision of time (in second)
@@ -652,17 +652,24 @@ def main():
     pB = p
     pC = p
 
-    # first, generate the route file for this simulation
-    if isNewTest == 'T':
-        print('generate a new file')
-        generate_routefile(timeStep, N, pA, pB, pC)
-
-    # this is the normal way of using traci. sumo is started as a
-    # subprocess and then the python script connects and runs
-    traci.start([sumoBinary, "-c", "sumo_data/laneMerging.sumocfg",
+    if len(sys.argv) > 6:
+        traci.start([sumoBinary, "-c", sys.argv[6],
                             "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
                             "-S",
                             "--no-step-log", "true", "-W", "--duration-log.disable", "true"])
+    else:
+        # first, generate the route file for this simulation
+        if isNewTest == 'T':
+            print('generate a new file')
+            generate_routefile(timeStep, N, pA, pB, pC)
+
+        # this is the normal way of using traci. sumo is started as a
+        # subprocess and then the python script connects and runs
+        traci.start([sumoBinary, "-c", "sumo_data/laneMerging.sumocfg",
+                                "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
+                                "-S",
+                                "--no-step-log", "true", "-W", "--duration-log.disable", "true"])
+    
     run(alpha, beta, gamma, W_same, W_diff)
 
 

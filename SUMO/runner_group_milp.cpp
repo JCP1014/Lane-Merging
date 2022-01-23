@@ -207,8 +207,8 @@ vector<pair<int, int>> grouping(vector<vehicle> &traffic, double timeStep)
             break;
         }
     }
-    for (auto g : grouped_index)
-        cout << g.first << " " << g.second << endl;
+    // for (auto g : grouped_index)
+    //     cout << g.first << " " << g.second << endl;
     return grouped_index;
 }
 
@@ -241,33 +241,33 @@ void group_milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, ve
         GRBVar s[alpha + 1], t[beta + 1], u[gamma + 1];
         for (int i = 0; i <= alpha; ++i)
         {
-            s[i] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "s_" + to_string(i));
+            s[i] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "s_" + to_string(i));
         }
         for (int j = 0; j <= beta; ++j)
         {
-            t[j] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "t_" + to_string(j));
+            t[j] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "t_" + to_string(j));
         }
         for (int k = 0; k <= gamma; ++k)
         {
-            u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "u_" + to_string(k));
+            u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "u_" + to_string(k));
         }
 
         // Create variables: ph_l, pt_l, qh_m, qt_m, rh_n, rt_n (scheduled entering time of groups)
         GRBVar ph[L + 1], pt[L + 1], qh[M + 1], qt[M + 1], rh[N + 1], rt[N + 1];
         for (int l = 0; l <= L; ++l)
         {
-            ph[l] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "ph_" + to_string(l));
-            pt[l] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "pt_" + to_string(l));
+            ph[l] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "ph_" + to_string(l));
+            pt[l] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "pt_" + to_string(l));
         }
         for (int m = 0; m <= M; ++m)
         {
-            qh[m] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "qh_" + to_string(m));
-            qt[m] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "qt_" + to_string(m));
+            qh[m] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "qh_" + to_string(m));
+            qt[m] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "qt_" + to_string(m));
         }
         for (int n = 0; n <= N; ++n)
         {
-            rh[n] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "rh_" + to_string(n));
-            rt[n] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "rt_" + to_string(n));
+            rh[n] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "rh_" + to_string(n));
+            rt[n] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "rt_" + to_string(n));
         }
 
         // Create variables: x_lm, y_nm (allocation indicator)
@@ -288,7 +288,7 @@ void group_milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, ve
         }
 
         // Create variables: f (T_last)
-        GRBVar f = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "f");
+        GRBVar f = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "f");
 
         // Set objective: minimize f
         model.setObjective(f + 0, GRB_MINIMIZE);
@@ -483,7 +483,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff, double ti
         sort(C_IDs.begin(), C_IDs.end(), sort_id);
         if (!A_IDs.empty() && A_IDs[0] != A_head)
         {
-            cout << A_head << " leaves" << endl;
+            // cout << A_head << " leaves" << endl;
             passTime_dX = Simulation::getTime();
             leaveA = true;
             vector<vehicle>::iterator it = find_if(schedule_A.begin(), schedule_A.end(), find_id(A_head));
@@ -495,7 +495,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff, double ti
         {
             if (stoi(A_head.substr(A_head.find("_") + 1)) == alpha)
             {
-                cout << A_head << " leaves" << endl;
+                // cout << A_head << " leaves" << endl;
                 passTime_dX = Simulation::getTime();
                 leaveA = true;
                 vector<vehicle>::iterator it = find_if(schedule_A.begin(), schedule_A.end(), find_id(A_head));
@@ -507,7 +507,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff, double ti
 
         if (!B_IDs.empty() && B_IDs[0] != B_head)
         {
-            cout << B_head << " leaves" << endl;
+            // cout << B_head << " leaves" << endl;
             vector<vehicle>::iterator it = find_if(schedule_BX.begin(), schedule_BX.end(), find_id(B_head));
             if (it != schedule_BX.end())
             {
@@ -531,7 +531,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff, double ti
         {
             if (stoi(B_head.substr(B_head.find("_") + 1)) == beta)
             {
-                cout << B_head << " leaves" << endl;
+                // cout << B_head << " leaves" << endl;
                 vector<vehicle>::iterator it = find_if(schedule_BX.begin(), schedule_BX.end(), find_id(B_head));
                 if (it != schedule_BX.end())
                 {
@@ -555,7 +555,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff, double ti
 
         if (!C_IDs.empty() && C_IDs[0] != C_head)
         {
-            cout << C_head << " leaves" << endl;
+            // cout << C_head << " leaves" << endl;
             passTime_dY = Simulation::getTime();
             leaveC = true;
             vector<vehicle>::iterator it = find_if(schedule_C.begin(), schedule_C.end(), find_id(C_head));
@@ -567,7 +567,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff, double ti
         {
             if (stoi(C_head.substr(C_head.find("_") + 1)) == gamma)
             {
-                cout << C_head << " leaves" << endl;
+                // cout << C_head << " leaves" << endl;
                 passTime_dY = Simulation::getTime();
                 leaveC = true;
                 vector<vehicle>::iterator it = find_if(schedule_C.begin(), schedule_C.end(), find_id(C_head));
@@ -743,7 +743,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff, double ti
                 TrafficLight::setPhase("TL1", 14);
             else
                 TrafficLight::setPhase("TL1", 1);
-            cout << "time: " << Simulation::getTime() << endl;
+            // cout << "time: " << Simulation::getTime() << endl;
             // cout << gA << " " << gBX << " " << gBY << " " << gC << endl;
         }
         // Reduce waiting time
@@ -765,7 +765,7 @@ int main(int argc, char *argv[])
     vector<double> A, B, C;
     char isNewTest;
 
-    if (argc == 6)
+    if (argc >= 6)
     {
         p = atof(argv[1]);
         N = atoi(argv[2]);
@@ -784,16 +784,24 @@ int main(int argc, char *argv[])
         cout << "Arguments: p, N, W=, W+, isNewTest" << endl;
         return 0;
     }
-
-    if (isNewTest == 'T' || isNewTest == 't' || isNewTest == '1')
+    if (argc > 6)
     {
-        cout << "Generate a new test" << endl;
-        generate_routefile(timeStep, N, pA, pB, pC);
+        Simulation::start({"sumo", "-c", argv[6],
+                           "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
+                           "-S",
+                           "--no-step-log", "true", "-W", "--duration-log.disable", "true"});
     }
-    Simulation::start({"sumo-gui", "-c", "sumo_data/laneMerging.sumocfg",
-                       "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
-                       "-S",
-                       "--no-step-log", "true", "-W", "--duration-log.disable", "true"});
-
+    else
+    {
+        if (isNewTest == 'T' || isNewTest == 't' || isNewTest == '1')
+        {
+            cout << "Generate a new test" << endl;
+            generate_routefile(timeStep, N, pA, pB, pC);
+        }
+        Simulation::start({"sumo", "-c", "sumo_data/laneMerging.sumocfg",
+                           "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
+                           "-S",
+                           "--no-step-log", "true", "-W", "--duration-log.disable", "true"});
+    }
     run(alpha, beta, gamma, W_same, W_diff, timeStep);
 }

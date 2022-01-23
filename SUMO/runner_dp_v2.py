@@ -171,24 +171,6 @@ def choose_best_sol(sol_list):
     return sol_list[index]
 
 
-def choose_minMax(sol_list):
-    minMax = max(sol_list[0].time)
-    minMin = min(sol_list[0].time)
-    bestSol = sol_list[0]
-    for i in range(1, len(sol_list)):
-        tmpMax = max(sol_list[i].time)
-        tmpMin = min(sol_list[i].time)
-        if tmpMax < minMax:
-            minMax = tmpMax
-            minMin = tmpMin
-            bestSol = sol_list[i]
-        elif tmpMax == minMax and tmpMin < minMin:
-            minMax = tmpMax
-            minMin = tmpMin
-            bestSol = sol_list[i]
-    return bestSol
-
-
 def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
     alpha = len(a) - 1
     beta = len(b) - 1
@@ -216,7 +198,7 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
         L_AB[1][1][0] = Sol((max(a[1].time, T_X+W_same), max(b[1].time, T_Y+W_same)), 'AB', 'XY', None)
         L_AC[1][0][1] = Sol((max(a[1].time, T_X+W_same), max(c[1].time, T_Y+W_diff)), 'AC', 'XY', None)
         L_BC[0][1][1] = Sol((max(b[1].time, T_X+W_diff), max(c[1].time, T_Y+W_diff)), 'BC', 'XY', None)
-        L_BB[0][1][0] = choose_minMax([
+        L_BB[0][1][0] = choose_best_sol([
             Sol((max(b[1].time, T_X+W_diff), T_Y), 'BB', 'X', None),
             Sol((T_X, max(b[1].time, T_Y+W_same)), 'BB', 'Y', None)]
         )
@@ -230,7 +212,7 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
         L_AB[1][1][0] = Sol((max(a[1].time, T_X+W_same), max(b[1].time, T_Y+W_diff)), 'AB', 'XY', None)
         L_AC[1][0][1] = Sol((max(a[1].time, T_X+W_same), max(c[1].time, T_Y+W_same)), 'AC', 'XY', None)
         L_BC[0][1][1] = Sol((max(b[1].time, T_X+W_diff), max(c[1].time, T_Y+W_same)), 'BC', 'XY', None)
-        L_BB[0][1][0] = choose_minMax([
+        L_BB[0][1][0] = choose_best_sol([
             Sol((max(b[1].time, T_X+W_diff), T_Y), 'BB', 'X', None),
             Sol((T_X, max(b[1].time, T_Y+W_diff)), 'BB', 'Y', None)]
         )
@@ -244,7 +226,7 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
         L_AB[1][1][0] = Sol((max(a[1].time, T_X+W_diff), max(b[1].time, T_Y+W_same)), 'AB', 'XY', None)
         L_AC[1][0][1] = Sol((max(a[1].time, T_X+W_diff), max(c[1].time, T_Y+W_diff)), 'AC', 'XY', None)
         L_BC[0][1][1] = Sol((max(b[1].time, T_X+W_same), max(c[1].time, T_Y+W_diff)), 'BC', 'XY', None)
-        L_BB[0][1][0] = choose_minMax([
+        L_BB[0][1][0] = choose_best_sol([
             Sol((max(b[1].time, T_X+W_same), T_Y), 'BB', 'X', None),
             Sol((T_X, max(b[1].time, T_Y+W_same)), 'BB', 'Y', None)]
         )
@@ -258,7 +240,7 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
         L_AB[1][1][0] = Sol((max(a[1].time, T_X+W_diff), max(b[1].time, T_Y+W_diff)), 'AB', 'XY', None)
         L_AC[1][0][1] = Sol((max(a[1].time, T_X+W_diff), max(c[1].time, T_Y+W_same)), 'AC', 'XY', None)
         L_BC[0][1][1] = Sol((max(b[1].time, T_X+W_same), max(c[1].time, T_Y+W_same)), 'BC', 'XY', None)
-        L_BB[0][1][0] = choose_minMax([
+        L_BB[0][1][0] = choose_best_sol([
             Sol((max(b[1].time, T_X+W_same), T_Y), 'BB', 'X', None),
             Sol((T_X, max(b[1].time, T_Y+W_diff)), 'BB', 'Y', None)]
         )
@@ -281,7 +263,7 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
         L_BC[0][0][1] = Sol((-W_diff, c[1].time), 'BC', 'Y', None)
 
     for j in range(2, beta+1):
-        L_BB[0][j][0] = choose_minMax([
+        L_BB[0][j][0] = choose_best_sol([
             Sol((max(b[j].time, L_BB[0][j-1][0].time[0]+W_same), L_BB[0][j-1][0].time[1]), 'BB', 'X', None),
             Sol((L_BB[0][j-1][0].time[0], max(b[j].time, L_BB[0][j-1][0].time[1]+W_same)), 'BB', 'Y', None)]
         )
@@ -302,63 +284,63 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
     if beta > 1:
         if last_XY == 'AB':
             for i in range(1, alpha+1):
-                L_BB[i][2][0] = choose_minMax([
+                L_BB[i][2][0] = choose_best_sol([
                     Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff), max(b[2].time, T_Y+W_same)), 'AC', 'XY', None),
                     Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff), max(b[1].time, T_Y+W_same)), 'AC', 'YX', None)]
                 )
             for k in range(1, gamma+1):
-                L_BB[0][2][k] = choose_minMax([
+                L_BB[0][2][k] = choose_best_sol([
                     Sol((max(b[1].time, T_X+W_diff), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY', None),
                     Sol((max(b[2].time, T_X+W_diff), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX', None)]
                 )
         elif last_XY == 'AC':
             for i in range(1, alpha+1):
-                L_BB[i][2][0] = choose_minMax([
+                L_BB[i][2][0] = choose_best_sol([
                     Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff), max(b[2].time, T_Y+W_diff)), 'AC', 'XY', None),
                     Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff), max(b[1].time, T_Y+W_diff)), 'AC', 'YX', None)]
                 )
             for k in range(1, gamma+1):
-                L_BB[0][2][k] = choose_minMax([
+                L_BB[0][2][k] = choose_best_sol([
                     Sol((max(b[1].time, T_X+W_diff), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY', None),
                     Sol((max(b[2].time, T_X+W_diff), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX', None)]
                 )
         elif last_XY == 'BB':
             for i in range(1, alpha+1):
-                L_BB[i][2][0] = choose_minMax([
+                L_BB[i][2][0] = choose_best_sol([
                     Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff), max(b[2].time, T_Y+W_same)), 'AC', 'XY', None),
                     Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff), max(b[1].time, T_Y+W_same)), 'AC', 'YX', None)]
                 )
             for k in range(1, gamma+1):
-                L_BB[0][2][k] = choose_minMax([
+                L_BB[0][2][k] = choose_best_sol([
                     Sol((max(b[1].time, T_X+W_same), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY', None),
                     Sol((max(b[2].time, T_X+W_same), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX', None)]
                 )
         elif last_XY == 'BC':
             for i in range(1, alpha+1):
-                L_BB[i][2][0] = choose_minMax([
+                L_BB[i][2][0] = choose_best_sol([
                     Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff), max(b[2].time, T_Y+W_diff)), 'AC', 'XY', None),
                     Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff), max(b[1].time, T_Y+W_diff)), 'AC', 'YX', None)]
                 )
             for k in range(1, gamma+1):
-                L_BB[0][2][k] = choose_minMax([
+                L_BB[0][2][k] = choose_best_sol([
                     Sol((max(b[1].time, T_X+W_same), max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY', None),
                     Sol((max(b[2].time, T_X+W_same), max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX', None)]
                 )
         else:
             for i in range(1, alpha+1):
-                L_BB[i][2][0] = choose_minMax([
+                L_BB[i][2][0] = choose_best_sol([
                     Sol((max(b[1].time, L_AC[i][0][0].time[0]+W_diff), b[2].time), 'AC', 'XY', None),
                     Sol((max(b[2].time, L_AC[i][0][0].time[0]+W_diff), b[1].time), 'AC', 'YX', None)]
                 )
             for k in range(1, gamma+1):
-                L_BB[0][2][k] = choose_minMax([
+                L_BB[0][2][k] = choose_best_sol([
                     Sol((b[1].time, max(b[2].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'XY', None),
                     Sol((b[2].time, max(b[1].time, L_AC[0][0][k].time[1]+W_diff)), 'AC', 'YX', None)]
                 )
 
     for i in range(1, alpha+1):
         for j in range(2, beta+1):
-            L_AB[i][j][0] = choose_minMax([
+            L_AB[i][j][0] = choose_best_sol([
                 Sol((max(a[i].time, L_AB[i-1][j][0].time[0]+W_same), L_AB[i-1][j][0].time[1]), 'AB', 'X', L_AB[i-1][j][0]),
                 Sol((max(a[i].time, L_BB[i-1][j][0].time[0]+W_diff), L_BB[i-1][j][0].time[1]), 'BB', 'X', L_BB[i-1][j][0]),
                 Sol((L_AB[i][j-1][0].time[0], max(b[j].time, L_AB[i][j-1][0].time[1]+W_same)), 'AB', 'Y', L_AB[i][j-1][0])]
@@ -368,14 +350,14 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
             L_AC[i][0][k] = Sol((max(a[i].time, L_AC[i-1][0][k-1].time[0]+W_same), max(c[k].time, L_AC[i-1][0][k-1].time[1]+W_same)), 'AC', 'XY', None)
     for j in range(2, beta+1):
         for k in range(1, gamma+1):
-            L_BC[0][j][k] = choose_minMax([
+            L_BC[0][j][k] = choose_best_sol([
                 Sol((max(b[j].time, L_BC[0][j-1][k].time[0]+W_same), L_BC[0][j-1][k].time[1]), 'BC', 'X', L_BC[0][j-1][k]),
                 Sol((L_BC[0][j][k-1].time[0], max(c[k].time, L_BC[0][j][k-1].time[1]+W_same)), 'BC', 'Y', L_BC[0][j][k-1]),
                 Sol((L_BB[0][j][k-1].time[0], max(c[k].time, L_BB[0][j][k-1].time[1]+W_diff)), 'BB', 'Y', L_BB[0][j][k-1])]
             )
     for i in range(1, alpha+1):
         for j in range(3, beta+1):
-            L_BB[i][j][0] = choose_minMax([
+            L_BB[i][j][0] = choose_best_sol([
                 Sol((max(b[j].time, L_BB[i][j-1][0].time[0]+W_same), L_BB[i][j-1][0].time[1]), 'BB', 'X', L_BB[i][j-1][0]),
                 Sol((max(b[j].time, L_AB[i][j-1][0].time[0]+W_diff), L_AB[i][j-1][0].time[1]), 'AB', 'X', L_AB[i][j-1][0]),
                 Sol((L_BB[i][j-1][0].time[0], max(b[j].time, L_BB[i][j-1][0].time[1]+W_same)), 'BB', 'Y', L_BB[i][j-1][0])]
@@ -384,31 +366,31 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
     for i in range(1, alpha+1):
         for j in range(1, beta+1):
             for k in range(1, gamma+1):
-                L_AB[i][j][k] = choose_minMax([
+                L_AB[i][j][k] = choose_best_sol([
                     Sol((max(a[i].time, L_AB[i-1][j][k].time[0]+W_same), L_AB[i-1][j][k].time[1]), 'AB', 'X', L_AB[i-1][j][k]),
                     Sol((max(a[i].time, L_BB[i-1][j][k].time[0]+W_diff), L_BB[i-1][j][k].time[1]), 'BB', 'X', L_BB[i-1][j][k]),
                     Sol((L_AB[i][j-1][k].time[0], max(b[j].time, L_AB[i][j-1][k].time[1]+W_same)), 'AB', 'Y', L_AB[i][j-1][k]),
                     Sol((L_AC[i][j-1][k].time[0], max(b[j].time, L_AC[i][j-1][k].time[1]+W_diff)), 'AC', 'Y', L_AC[i][j-1][k])]
                 )
-                L_AC[i][j][k] = choose_minMax([
+                L_AC[i][j][k] = choose_best_sol([
                     Sol((max(a[i].time, L_AC[i-1][j][k].time[0]+W_same), L_AC[i-1][j][k].time[1]), 'AC', 'X', L_AC[i-1][j][k]),
                     Sol((max(a[i].time, L_BC[i-1][j][k].time[0]+W_diff), L_BC[i-1][j][k].time[1]), 'BC', 'X', L_BC[i-1][j][k]),
                     Sol((L_AC[i][j][k-1].time[0], max(c[k].time, L_AC[i][j][k-1].time[1]+W_same)), 'AC', 'Y', L_AC[i][j][k-1]),
                     Sol((L_AB[i][j][k-1].time[0], max(c[k].time, L_AB[i][j][k-1].time[1]+W_diff)), 'AB', 'Y', L_AB[i][j][k-1])]
                 )
-                L_BC[i][j][k] = choose_minMax([
+                L_BC[i][j][k] = choose_best_sol([
                     Sol((max(b[j].time, L_BC[i][j-1][k].time[0]+W_same), L_BC[i][j-1][k].time[1]), 'BC', 'X', L_BC[i][j-1][k]),
                     Sol((max(b[j].time, L_AC[i][j-1][k].time[0]+W_diff), L_AC[i][j-1][k].time[1]), 'AC', 'X', L_AC[i][j-1][k]),
                     Sol((L_BC[i][j][k-1].time[0], max(c[k].time, L_BC[i][j][k-1].time[1]+W_same)), 'BC', 'Y', L_BC[i][j][k-1]),
                     Sol((L_BB[i][j][k-1].time[0], max(c[k].time, L_BB[i][j][k-1].time[1]+W_diff)), 'BB', 'Y', L_BB[i][j][k-1])]
                 )
-                L_BB[i][j][k] = choose_minMax([
+                L_BB[i][j][k] = choose_best_sol([
                     Sol((max(b[j].time, L_BB[i][j-1][k].time[0]+W_same), L_BB[i][j-1][k].time[1]), 'BB', 'X', L_BB[i][j-1][k]),
                     Sol((max(b[j].time, L_AB[i][j-1][k].time[0]+W_diff), L_AB[i][j-1][k].time[1]), 'AB', 'X', L_AB[i][j-1][k]),
                     Sol((L_BB[i][j-1][k].time[0], max(b[j].time, L_BB[i][j-1][k].time[1]+W_same)), 'BB', 'Y', L_BB[i][j-1][k]),
                     Sol((L_BC[i][j-1][k].time[0], max(b[j].time, L_BC[i][j-1][k].time[1]+W_diff)), 'BC', 'Y', L_BC[i][j-1][k])]
                 )
-    
+                
     
     stack_A = []
     stack_BX = []
@@ -418,7 +400,7 @@ def dp_compute_entering_time(a, b, c, W_same, W_diff, last_X, last_Y):
     j = beta
     k = gamma
     # Choose the optimal solution and the table to start backtracking
-    opt = choose_minMax([L_AB[i][j][k], L_AC[i][j][k], L_BB[i]
+    opt = choose_best_sol([L_AB[i][j][k], L_AC[i][j][k], L_BB[i]
               [j][k], L_BC[i][j][k]])
     table = ''
     lanes = ''
@@ -954,7 +936,7 @@ def run(alpha, beta, gamma, W_same, W_diff, windowSize):
         # step += 1
         currentTime = traci.simulation.getTime()
         # endTime = currentTime
-        # print(currentTime)
+        print(currentTime)
 
     # print(endTime)
     if passTime_dX >= passTime_dY:
@@ -1002,17 +984,24 @@ def main():
     pB = p
     pC = p
 
-    # first, generate the route file for this simulation
-    if isNewTest == 'T':
-        print('generate a new file')
-        generate_routefile(timeStep, N, pA, pB, pC)
-
-    # this is the normal way of using traci. sumo is started as a
-    # subprocess and then the python script connects and runs
-    traci.start([sumoBinary, "-c", "sumo_data/laneMerging.sumocfg",
+    if len(sys.argv) > 7:
+        traci.start([sumoBinary, "-c", sys.argv[7],
                             "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
                             "-S",
                             "--no-step-log", "true", "-W", "--duration-log.disable", "true"])
+    else:
+        # first, generate the route file for this simulation
+        if isNewTest == 'T':
+            print('generate a new file')
+            generate_routefile(timeStep, N, pA, pB, pC)
+
+        # this is the normal way of using traci. sumo is started as a
+        # subprocess and then the python script connects and runs
+        traci.start([sumoBinary, "-c", "sumo_data/laneMerging.sumocfg",
+                                "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
+                                "-S",
+                                "--no-step-log", "true", "-W", "--duration-log.disable", "true"])
+
     run(alpha, beta, gamma, W_same, W_diff, windowSize)
 
 

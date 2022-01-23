@@ -189,15 +189,15 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
         GRBVar s[alpha + 1], t[beta + 1], u[gamma + 1];
         for (int i = 0; i <= alpha; ++i)
         {
-            s[i] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "s_" + to_string(i));
+            s[i] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "s_" + to_string(i));
         }
         for (int j = 0; j <= beta; ++j)
         {
-            t[j] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "t_" + to_string(j));
+            t[j] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "t_" + to_string(j));
         }
         for (int k = 0; k <= gamma; ++k)
         {
-            u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "u_" + to_string(k));
+            u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "u_" + to_string(k));
         }
 
         // Create variables: x_ij, y_kj (allocation indicator)
@@ -218,7 +218,7 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
         }
 
         // Create variables: f (T_last)
-        GRBVar f = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "f");
+        GRBVar f = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "f");
 
         // Set objective: minimize f
         model.setObjective(f + 0, GRB_MINIMIZE);
@@ -390,7 +390,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
         sort(C_IDs.begin(), C_IDs.end(), sort_id);
         if (!A_IDs.empty() && A_IDs[0] != A_head)
         {
-            cout << A_head << " leaves" << endl;
+            // cout << A_head << " leaves" << endl;
             passTime_dX = Simulation::getTime();
             leaveA = true;
             vector<vehicle>::iterator it = find_if(schedule_A.begin(), schedule_A.end(), find_id(A_head));
@@ -402,7 +402,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
         {
             if (stoi(A_head.substr(A_head.find("_") + 1)) == alpha)
             {
-                cout << A_head << " leaves" << endl;
+                // cout << A_head << " leaves" << endl;
                 passTime_dX = Simulation::getTime();
                 leaveA = true;
                 vector<vehicle>::iterator it = find_if(schedule_A.begin(), schedule_A.end(), find_id(A_head));
@@ -414,7 +414,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
 
         if (!B_IDs.empty() && B_IDs[0] != B_head)
         {
-            cout << B_head << " leaves" << endl;
+            // cout << B_head << " leaves" << endl;
             vector<vehicle>::iterator it = find_if(schedule_BX.begin(), schedule_BX.end(), find_id(B_head));
             if (it != schedule_BX.end())
             {
@@ -438,7 +438,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
         {
             if (stoi(B_head.substr(B_head.find("_") + 1)) == beta)
             {
-                cout << B_head << " leaves" << endl;
+                // cout << B_head << " leaves" << endl;
                 vector<vehicle>::iterator it = find_if(schedule_BX.begin(), schedule_BX.end(), find_id(B_head));
                 if (it != schedule_BX.end())
                 {
@@ -462,7 +462,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
 
         if (!C_IDs.empty() && C_IDs[0] != C_head)
         {
-            cout << C_head << " leaves" << endl;
+            // cout << C_head << " leaves" << endl;
             passTime_dY = Simulation::getTime();
             leaveC = true;
             vector<vehicle>::iterator it = find_if(schedule_C.begin(), schedule_C.end(), find_id(C_head));
@@ -474,7 +474,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
         {
             if (stoi(C_head.substr(C_head.find("_") + 1)) == gamma)
             {
-                cout << C_head << " leaves" << endl;
+                // cout << C_head << " leaves" << endl;
                 passTime_dY = Simulation::getTime();
                 leaveC = true;
                 vector<vehicle>::iterator it = find_if(schedule_C.begin(), schedule_C.end(), find_id(C_head));
@@ -650,7 +650,7 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
                 TrafficLight::setPhase("TL1", 14);
             else
                 TrafficLight::setPhase("TL1", 1);
-            cout << "time: " << Simulation::getTime() << endl;
+            // cout << "time: " << Simulation::getTime() << endl;
             // cout << gA << " " << gBX << " " << gBY << " " << gC << endl;
         }
         // Reduce waiting time
@@ -672,7 +672,7 @@ int main(int argc, char *argv[])
     vector<double> A, B, C;
     char isNewTest;
 
-    if (argc == 6)
+    if (argc >= 6)
     {
         p = atof(argv[1]);
         N = atoi(argv[2]);
@@ -691,16 +691,24 @@ int main(int argc, char *argv[])
         cout << "Arguments: p, N, W=, W+, isNewTest" << endl;
         return 0;
     }
-
-    if (isNewTest == 'T' || isNewTest == 't' || isNewTest == '1')
+    if (argc > 6)
     {
-        cout << "Generate a new test" << endl;
-        generate_routefile(timeStep, N, pA, pB, pC);
+        Simulation::start({"sumo", "-c", argv[6],
+                           "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
+                           "-S",
+                           "--no-step-log", "true", "-W", "--duration-log.disable", "true"});
     }
-    Simulation::start({"sumo-gui", "-c", "sumo_data/laneMerging.sumocfg",
-                       "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
-                       "-S",
-                       "--no-step-log", "true", "-W", "--duration-log.disable", "true"});
-
+    else
+    {
+        if (isNewTest == 'T' || isNewTest == 't' || isNewTest == '1')
+        {
+            cout << "Generate a new test" << endl;
+            generate_routefile(timeStep, N, pA, pB, pC);
+        }
+        Simulation::start({"sumo", "-c", "sumo_data/laneMerging.sumocfg",
+                           "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
+                           "-S",
+                           "--no-step-log", "true", "-W", "--duration-log.disable", "true"});
+    }
     run(alpha, beta, gamma, W_same, W_diff);
 }

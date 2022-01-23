@@ -1,0 +1,48 @@
+644
+Could not connect to TraCI server at localhost:49571 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
+633
+Could not connect to TraCI server at localhost:49575 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
+645
+Could not connect to TraCI server at localhost:49588 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
+655
+Could not connect to TraCI server at localhost:49591 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
+645
+Could not connect to TraCI server at localhost:49845 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
+673
+Could not connect to TraCI server at localhost:49848 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
+643
+Could not connect to TraCI server at localhost:49869 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
+661
+Could not connect to TraCI server at localhost:49873 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
+647
+Could not connect to TraCI server at localhost:50496 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
+692
+Could not connect to TraCI server at localhost:50499 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
+644
+Could not connect to TraCI server at localhost:51051 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
+658
+Could not connect to TraCI server at localhost:51054 tcpip::Socket::connect() @ connect: Connection refused
+ Retrying in 1 second
+Loading configuration ... done.
