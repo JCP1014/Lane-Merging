@@ -4,6 +4,6 @@
 #include <vector>
 using namespace std;
 
-vector<float> get_window_by_num(vector<float> &traffic, int carNum);
+vector<double> get_window_by_num(vector<double> &traffic, int carNum);
 
 #endif

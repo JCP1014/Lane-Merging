@@ -1,16 +1,16 @@
 #include "generate_input.h"
 
-float digit_round(float value, int digit)
+double digit_round(double value, int digit)
 {
     return roundf(value * pow(10, digit)) / pow(10, digit);
 }
 
-vector<float> generate_traffic(float timeStep, int num, float p, int seed)
+vector<double> generate_traffic(double timeStep, int num, double p, int seed)
 {
-    vector<float> earliestArrivalTimes;
-    float t;
+    vector<double> earliestArrivalTimes;
+    double t;
     default_random_engine generator(time(NULL) + seed);
-    uniform_real_distribution<float> unif(0.0, 1.0);
+    uniform_real_distribution<double> unif(0.0, 1.0);
 
     earliestArrivalTimes.push_back(0.0);
 
@@ -27,12 +27,12 @@ vector<float> generate_traffic(float timeStep, int num, float p, int seed)
     return earliestArrivalTimes;
 }
 
-vector<float> read_data(string fileName)
+vector<double> read_data(string fileName)
 {
     fstream file;
     string line;
-    float tmp;
-    vector<float> allData;
+    double tmp;
+    vector<double> allData;
     file.open(fileName);
     while (getline(file, line))
         allData.push_back(stof(line));

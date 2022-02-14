@@ -104,7 +104,9 @@
         "latch": "cpp",
         "queue": "cpp",
         "source_location": "cpp",
-        "syncstream": "cpp"
+        "syncstream": "cpp",
+        "__memory": "cpp",
+        "filesystem": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

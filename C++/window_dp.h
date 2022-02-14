@@ -8,8 +8,8 @@
 #include "get_window.h"
 using namespace std;
 
-extern float W_same, W_diff;
-tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_v2(vector<float> a, vector<float> b, vector<float> c, tuple<char, int, float> last_X, tuple<char, int, float> last_Y);
-tuple<float, float, double> schedule_by_window_dp_v2(vector<float> a_all, vector<float> b_all, vector<float> c_all, int carNum);
+extern double W_same, W_diff;
+tuple<tuple<char, int, double>, tuple<char, int, double>, double> window_oneSol_dp_v2(vector<double> a, vector<double> b, vector<double> c, tuple<char, int, double> last_X, tuple<char, int, double> last_Y);
+tuple<double, double, double> schedule_by_window_dp_v2(vector<double> a_all, vector<double> b_all, vector<double> c_all, int carNum);
 
 #endif

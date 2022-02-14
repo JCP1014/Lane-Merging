@@ -7,10 +7,10 @@
 #include "solution.h"
 using namespace std;
 
-extern float W_same, W_diff;
-float get_tail_time(vector<float> &traffic, pair<int, int> index, float head_time);
-float get_wait_time(vector<float> &traffic, pair<int, int> index, float head_time);
-pair<float, float> grouped_dp(vector<float> a, vector<float> b, vector<float> c, vector<pair<int, int>> grouped_a, vector<pair<int, int>> grouped_b, vector<pair<int, int>> grouped_c);
-tuple<float, float, double> schedule_by_group_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float timeStep);
+extern double W_same, W_diff;
+double get_tail_time(vector<double> &traffic, pair<int, int> index, double head_time);
+double get_wait_time(vector<double> &traffic, pair<int, int> index, double head_time);
+pair<double, double> grouped_dp(vector<double> a, vector<double> b, vector<double> c, vector<pair<int, int>> grouped_a, vector<pair<int, int>> grouped_b, vector<pair<int, int>> grouped_c);
+tuple<double, double, double> schedule_by_group_dp(vector<double> a_all, vector<double> b_all, vector<double> c_all, double timeStep);
 
 #endif

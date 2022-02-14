@@ -9,9 +9,9 @@
 #include <chrono>
 using namespace std;
 
-extern float W_same, W_diff;
-tuple<tuple<char, int, float>, float> schedule_single_lane(char lane, vector<float> traffic, tuple<char, int, float> prev);
-pair<float, double> first_come_first_serve_v1(float timeStep, vector<float> a_all, vector<float> b_all, vector<float> c_all);
-tuple<float, float, double> first_come_first_serve_v2(vector<float> a_all, vector<float> b_all, vector<float> c_all);
+extern double W_same, W_diff;
+tuple<tuple<char, int, double>, double> schedule_single_lane(char lane, vector<double> traffic, tuple<char, int, double> prev);
+pair<double, double> first_come_first_serve_v1(double timeStep, vector<double> a_all, vector<double> b_all, vector<double> c_all);
+tuple<double, double, double> first_come_first_serve_v2(vector<double> a_all, vector<double> b_all, vector<double> c_all);
 
 #endif

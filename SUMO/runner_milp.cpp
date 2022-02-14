@@ -3,7 +3,7 @@
 // Compilation:
 //     g++ -o milp -std=c++11 -I$SUMO_HOME/src runner_milp.cpp -L$SUMO_HOME/bin -ltracicpp -I /Library/gurobi912/mac64/include -L /Library/gurobi912/mac64/lib -lgurobi_c++ -lgurobi91
 // Run:
-//     LD_LIBRARY_PATH=$SUMO_HOME/bin ./milp
+//     LD_LIBRARY_PATH=$SUMO_HOME/bin ./milp [density] [number] [W=] [W+] [generateNewTest (T/F)] [inputPath]
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -57,9 +57,9 @@ void generate_routefile(double timeStep, int N, double pA, double pB, double pC)
 
     file.open("./sumo_data/laneMerging.rou.xml");
     file << "<routes>" << endl;
-    file << "    <vType id=\"typeA\" type=\"passenger\" length=\"2\" accel=\"1.5\" decel=\"2\" sigma=\"0.0\" maxSpeed=\"20\" color=\"yellow\"/>" << endl;
-    file << "    <vType id=\"typeB\" type=\"passenger\" length=\"2\" accel=\"1.5\" decel=\"2\" sigma=\"0.0\" maxSpeed=\"20\" color=\"blue\"/>" << endl;
-    file << "    <vType id=\"typeC\" type=\"passenger\" length=\"2\" accel=\"1.5\" decel=\"2\" sigma=\"0.0\" maxSpeed=\"20\" color=\"magenta\"/>" << endl;
+    file << "    <vType id=\"typeA\" type=\"passenger\" length=\"4\" accel=\"2.6\" decel=\"4.5\" sigma=\"0.0\" maxSpeed=\"20\" color=\"yellow\"/>" << endl;
+    file << "    <vType id=\"typeB\" type=\"passenger\" length=\"4\" accel=\"2.6\" decel=\"4.5\" sigma=\"0.0\" maxSpeed=\"20\" color=\"blue\"/>" << endl;
+    file << "    <vType id=\"typeC\" type=\"passenger\" length=\"4\" accel=\"2.6\" decel=\"4.5\" sigma=\"0.0\" maxSpeed=\"20\" color=\"magenta\"/>" << endl;
     file << "    <route edges=\"A X\" color=\"yellow\" id=\"route_0\"/>" << endl;
     file << "    <route edges=\"B X\" color=\"yellow\" id=\"route_1\"/>" << endl;
     file << "    <route edges=\"B Y\" color=\"yellow\" id=\"route_2\"/>" << endl;
@@ -103,6 +103,7 @@ vector<vehicle> compute_earliest_arrival(int laneLength, vector<vehicle> &schedu
     {
         double dist = laneLength - Vehicle::getDistance(vehID);
         double speed = Vehicle::getSpeed(vehID);
+        double accel = Vehicle::getAcceleration(vehID);
         double arrivalTime = 0;
         if (speed == 0)
         {
@@ -112,7 +113,10 @@ vector<vehicle> compute_earliest_arrival(int laneLength, vector<vehicle> &schedu
         }
         else
         {
-            arrivalTime = currentTime + dist / speed;
+            if (accel != 0)
+                arrivalTime = currentTime + (sqrt(max(0.0, speed * speed + 2 * accel * dist)) - speed) / accel;
+            else
+                arrivalTime = currentTime + dist / speed;
             vector<vehicle>::iterator it = find_if(schedule.begin(), schedule.end(), find_id(vehID));
             if (it != schedule.end())
                 arrivalTime = min(arrivalTime, it->time);
@@ -120,6 +124,7 @@ vector<vehicle> compute_earliest_arrival(int laneLength, vector<vehicle> &schedu
         arrival_times.push_back(vehicle(vehID, arrivalTime));
         sort(arrival_times.begin() + 1, arrival_times.end(), sort_vehicle);
     }
+
     return arrival_times;
 }
 
@@ -136,6 +141,7 @@ vector<vehicle> compute_earliest_arrival(int laneLength, vector<vehicle> &schedu
     {
         double dist = laneLength - Vehicle::getDistance(vehID);
         double speed = Vehicle::getSpeed(vehID);
+        double accel = Vehicle::getAcceleration(vehID);
         double arrivalTime = 0;
         if (speed == 0)
         {
@@ -151,7 +157,10 @@ vector<vehicle> compute_earliest_arrival(int laneLength, vector<vehicle> &schedu
         }
         else
         {
-            arrivalTime = currentTime + dist / speed;
+            if (accel != 0)
+                arrivalTime = currentTime + (sqrt(max(0.0, speed * speed + 2 * accel * dist)) - speed) / accel;
+            else
+                arrivalTime = currentTime + dist / speed;
             vector<vehicle>::iterator it = find_if(schedule_1.begin(), schedule_1.end(), find_id(vehID));
             if (it != schedule_1.end())
                 arrivalTime = min(arrivalTime, it->time);
@@ -177,7 +186,7 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
     {
         // Create an environment
         GRBEnv env = GRBEnv(true);
-        env.set("LogFile", "milp.log");
+        // env.set("LogFile", "milp.log");
         env.set("OutputFlag", "0");
         env.start();
 
@@ -189,15 +198,15 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
         GRBVar s[alpha + 1], t[beta + 1], u[gamma + 1];
         for (int i = 0; i <= alpha; ++i)
         {
-            s[i] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "s_" + to_string(i));
+            s[i] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "s_" + to_string(i));
         }
         for (int j = 0; j <= beta; ++j)
         {
-            t[j] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "t_" + to_string(j));
+            t[j] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "t_" + to_string(j));
         }
         for (int k = 0; k <= gamma; ++k)
         {
-            u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "u_" + to_string(k));
+            u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "u_" + to_string(k));
         }
 
         // Create variables: x_ij, y_kj (allocation indicator)
@@ -218,7 +227,7 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
         }
 
         // Create variables: f (T_last)
-        GRBVar f = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "f");
+        GRBVar f = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "f");
 
         // Set objective: minimize f
         model.setObjective(f + 0, GRB_MINIMIZE);
@@ -227,14 +236,17 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
         for (int i = 0; i <= alpha; ++i)
         {
             model.addConstr(s[i] >= A[i].time, "c0_" + to_string(i));
+            // cout << "A[" << i << "] = " << A[i].time << endl;
         }
         for (int j = 0; j <= beta; ++j)
         {
             model.addConstr(t[j] >= B[j].time, "c1_" + to_string(j));
+            // cout << "B[" << j << "] = " << B[j].time << endl;
         }
         for (int k = 0; k <= gamma; ++k)
         {
             model.addConstr(u[k] >= C[k].time, "c2_" + to_string(k));
+            // cout << "C[" << k << "] = " << C[k].time << endl;
         }
 
         // Add constraint: waiting time if from the same lane
@@ -341,8 +353,47 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
             total_wait += (u[k].get(GRB_DoubleAttr_X) - C[k].time);
             schedule_C.push_back(vehicle(C[k].id, u[k].get(GRB_DoubleAttr_X)));
         }
+
+        // cout << "s = {";
+        // for (int i = 0; i <= alpha; ++i)
+        // {
+        //     cout << s[i].get(GRB_DoubleAttr_X) << ", ";
+        // }
+        // cout << "};" << endl;
+        // cout << "t = {";
+        // for (int j = 0; j <= beta; ++j)
+        // {
+        //     cout << t[j].get(GRB_DoubleAttr_X) << ", ";
+        // }
+        // cout << "};" << endl;
+        // cout << "k = {";
+        // for (int k = 0; k <= gamma; ++k)
+        // {
+        //     cout << u[k].get(GRB_DoubleAttr_X) << ", ";
+        // }
+        // cout << "};" << endl;
+        // for (int j = 1; j <= beta; ++j)
+        // {
+        //     for (int i = 0; i <= alpha; ++i)
+        //     {
+        //         if (x[i][j].get(GRB_DoubleAttr_X) == 1)
+        //             // cout << x[i][j].get(GRB_StringAttr_VarName) << " "
+        //             //      << x[i][j].get(GRB_DoubleAttr_X) << endl;
+        //             cout << "X ";
+        //     }
+        //     for (int k = 0; k <= gamma; ++k)
+        //     {
+        //         if (y[k][j].get(GRB_DoubleAttr_X) == 1)
+        //             // cout << y[k][j].get(GRB_StringAttr_VarName) << " "
+        //             //      << y[k][j].get(GRB_DoubleAttr_X) << endl;
+        //             cout << "Y ";
+        //     }
+        // }
+
         double T_last = model.get(GRB_DoubleAttr_ObjVal);
         double T_delay = total_wait / (alpha + beta + gamma);
+        if (model.get(GRB_DoubleAttr_Runtime) >= 1800)
+            cout << "*** Exceeds the time limit. ***" << endl;
     }
     catch (GRBException e)
     {
@@ -355,19 +406,20 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
     }
 }
 
-
 void run(int alpha, int beta, int gamma, double W_same, double W_diff)
 {
-    int period = 400;
+    int period = 300;
+    vector<vehicle> arrival_A, arrival_B, arrival_C;
     vector<vehicle> schedule_A, schedule_BX, schedule_BY, schedule_C;
     bool leaveA = false, leaveBX = false, leaveBY = false, leaveC = false;
     double countdownX = 0, countdownY = 0;
     bool gA = false, gBX = false, gBY = false, gC = false;
     int timeStep_cnt = 0;
-    int laneLength = 6000;
+    int laneLength = 6500;
     double passTime_dX = 0, passTime_dY = 0;
     vector<string> A_IDs, B_IDs, C_IDs;
     string A_head = "A_1", B_head = "B_1", C_head = "C_1";
+    double waitingTime = 0;
 
     while (Simulation::getMinExpectedNumber() > 0)
     {
@@ -377,11 +429,12 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
         ++timeStep_cnt;
         TrafficLight::setPhase("TL1", 1);
 
-        // Detect the passing vehicles
         leaveA = false;
         leaveBX = false;
         leaveBY = false;
         leaveC = false;
+
+        // Detect the passing vehicles
         A_IDs = Edge::getLastStepVehicleIDs("A");
         B_IDs = Edge::getLastStepVehicleIDs("B");
         C_IDs = Edge::getLastStepVehicleIDs("C");
@@ -394,8 +447,9 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
             passTime_dX = Simulation::getTime();
             leaveA = true;
             vector<vehicle>::iterator it = find_if(schedule_A.begin(), schedule_A.end(), find_id(A_head));
-            if (it != schedule_A.end())
-                schedule_A.erase(it);
+            schedule_A.erase(it);
+            it = find_if(arrival_A.begin(), arrival_A.end(), find_id(A_head));
+            waitingTime += passTime_dX - it->time;
             A_head = A_IDs[0];
         }
         else if (A_IDs.empty() && !A_head.empty())
@@ -403,11 +457,13 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
             if (stoi(A_head.substr(A_head.find("_") + 1)) == alpha)
             {
                 // cout << A_head << " leaves" << endl;
+                waitingTime += Vehicle::getWaitingTime(A_head);
                 passTime_dX = Simulation::getTime();
                 leaveA = true;
                 vector<vehicle>::iterator it = find_if(schedule_A.begin(), schedule_A.end(), find_id(A_head));
-                if (it != schedule_A.end())
-                    schedule_A.erase(it);
+                schedule_A.erase(it);
+                it = find_if(arrival_A.begin(), arrival_A.end(), find_id(A_head));
+                waitingTime += passTime_dX - it->time;
                 A_head = "";
             }
         }
@@ -415,22 +471,24 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
         if (!B_IDs.empty() && B_IDs[0] != B_head)
         {
             // cout << B_head << " leaves" << endl;
+            waitingTime += Vehicle::getWaitingTime(B_head);
             vector<vehicle>::iterator it = find_if(schedule_BX.begin(), schedule_BX.end(), find_id(B_head));
             if (it != schedule_BX.end())
             {
                 passTime_dX = Simulation::getTime();
                 leaveBX = true;
                 schedule_BX.erase(it);
+                it = find_if(arrival_B.begin(), arrival_B.end(), find_id(B_head));
+                waitingTime += passTime_dX - it->time;
             }
             else
             {
                 vector<vehicle>::iterator it = find_if(schedule_BY.begin(), schedule_BY.end(), find_id(B_head));
-                if (it != schedule_BY.end())
-                {
-                    passTime_dY = Simulation::getTime();
-                    leaveBY = true;
-                    schedule_BY.erase(it);
-                }
+                passTime_dY = Simulation::getTime();
+                leaveBY = true;
+                schedule_BY.erase(it);
+                it = find_if(arrival_B.begin(), arrival_B.end(), find_id(B_head));
+                waitingTime += passTime_dY - it->time;
             }
             B_head = B_IDs[0];
         }
@@ -439,12 +497,15 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
             if (stoi(B_head.substr(B_head.find("_") + 1)) == beta)
             {
                 // cout << B_head << " leaves" << endl;
+                waitingTime += Vehicle::getWaitingTime(B_head);
                 vector<vehicle>::iterator it = find_if(schedule_BX.begin(), schedule_BX.end(), find_id(B_head));
                 if (it != schedule_BX.end())
                 {
                     passTime_dX = Simulation::getTime();
                     leaveBX = true;
                     schedule_BX.erase(it);
+                    it = find_if(arrival_B.begin(), arrival_B.end(), find_id(B_head));
+                    waitingTime += passTime_dX - it->time;
                 }
                 else
                 {
@@ -454,6 +515,8 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
                         passTime_dY = Simulation::getTime();
                         leaveBY = true;
                         schedule_BY.erase(it);
+                        it = find_if(arrival_B.begin(), arrival_B.end(), find_id(B_head));
+                        waitingTime += passTime_dY - it->time;
                     }
                 }
                 B_head = "";
@@ -463,11 +526,13 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
         if (!C_IDs.empty() && C_IDs[0] != C_head)
         {
             // cout << C_head << " leaves" << endl;
+            waitingTime += Vehicle::getWaitingTime(C_head);
             passTime_dY = Simulation::getTime();
             leaveC = true;
             vector<vehicle>::iterator it = find_if(schedule_C.begin(), schedule_C.end(), find_id(C_head));
-            if (it != schedule_C.end())
-                schedule_C.erase(it);
+            schedule_C.erase(it);
+            it = find_if(arrival_C.begin(), arrival_C.end(), find_id(C_head));
+            waitingTime += passTime_dY - it->time;
             C_head = C_IDs[0];
         }
         else if (C_IDs.empty() && !C_head.empty())
@@ -475,57 +540,14 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
             if (stoi(C_head.substr(C_head.find("_") + 1)) == gamma)
             {
                 // cout << C_head << " leaves" << endl;
+                waitingTime += Vehicle::getWaitingTime(C_head);
                 passTime_dY = Simulation::getTime();
                 leaveC = true;
                 vector<vehicle>::iterator it = find_if(schedule_C.begin(), schedule_C.end(), find_id(C_head));
-                if (it != schedule_C.end())
-                    schedule_C.erase(it);
+                schedule_C.erase(it);
+                it = find_if(arrival_C.begin(), arrival_C.end(), find_id(C_head));
+                waitingTime += passTime_dY - it->time;
                 C_head = "";
-            }
-        }
-
-        // Schedule
-        if (timeStep_cnt - period == 0)
-        {
-            if (LaneArea::getLastStepVehicleNumber("dA") and LaneArea::getLastStepVehicleNumber("dB") and LaneArea::getLastStepVehicleNumber("dC"))
-            {
-                vector<vehicle> arrival_A = compute_earliest_arrival(laneLength, schedule_A, 'A');
-                vector<vehicle> arrival_B = compute_earliest_arrival(laneLength, schedule_BX, schedule_BY, 'B');
-                vector<vehicle> arrival_C = compute_earliest_arrival(laneLength, schedule_C, 'C');
-                milp_compute_entering_time(arrival_A, arrival_B, arrival_C, W_same, W_diff, schedule_A, schedule_BX, schedule_BY, schedule_C);
-
-                for (auto it = schedule_BX.begin(); it != schedule_BX.end();)
-                {
-                    try
-                    {
-                        Vehicle::setRouteID(it->id, "route_1");
-                        ++it;
-                    }
-                    catch (std::exception &e)
-                    {
-                        cout << "exception: " << e.what() << "\n";
-                        it = schedule_BX.erase(it);
-                        leaveBY = true;
-                    }
-                }
-                for (auto it = schedule_BY.begin(); it != schedule_BY.end();)
-                {
-                    try
-                    {
-                        Vehicle::setRouteID(it->id, "route_2");
-                        ++it;
-                    }
-                    catch (std::exception &e)
-                    {
-                        cout << "exception: " << e.what() << "\n";
-                        it = schedule_BY.erase(it);
-                        leaveBX = true;
-                    }
-                }
-                print_schedule(schedule_A, "A");
-                print_schedule(schedule_BX, "BX");
-                print_schedule(schedule_BY, "BY");
-                print_schedule(schedule_C, "C");
             }
         }
 
@@ -543,38 +565,38 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
                 if (schedule_A[0].time < schedule_BX[0].time)
                 {
                     if (leaveA)
-                        countdownX = W_same;
+                        countdownX = W_same - 1;
                     else if (leaveBX)
-                        countdownX = W_diff;
-                    else if (!countdownX)
+                        countdownX = W_diff - 1;
+                    if (!countdownX)
                         gA = true;
                 }
                 else
                 {
                     if (leaveBX)
-                        countdownX = W_same;
+                        countdownX = W_same - 1;
                     else if (leaveA)
-                        countdownX = W_diff;
-                    else if (!countdownX)
+                        countdownX = W_diff - 1;
+                    if (!countdownX)
                         gBX = true;
                 }
             }
             else if (!schedule_A.empty())
             {
                 if (leaveA)
-                    countdownX = W_same;
+                    countdownX = W_same - 1;
                 else if (leaveBX)
-                    countdownX = W_diff;
-                else if (!countdownX)
+                    countdownX = W_diff - 1;
+                if (!countdownX)
                     gA = true;
             }
             else if (!schedule_BX.empty())
             {
                 if (leaveBX)
-                    countdownX = W_same;
+                    countdownX = W_same - 1;
                 else if (leaveA)
-                    countdownX = W_diff;
-                else if (!countdownX)
+                    countdownX = W_diff - 1;
+                if (!countdownX)
                     gBX = true;
             }
             else if (!countdownX)
@@ -589,38 +611,38 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
                 if (schedule_C[0].time < schedule_BY[0].time)
                 {
                     if (leaveC)
-                        countdownY = W_same;
+                        countdownY = W_same - 1;
                     else if (leaveBY)
-                        countdownY = W_diff;
-                    else if (!countdownY)
+                        countdownY = W_diff - 1;
+                    if (!countdownY)
                         gC = true;
                 }
                 else
                 {
                     if (leaveBY)
-                        countdownY = W_same;
+                        countdownY = W_same - 1;
                     else if (leaveC)
-                        countdownY = W_diff;
-                    else if (!countdownY)
+                        countdownY = W_diff - 1;
+                    if (!countdownY)
                         gBY = true;
                 }
             }
             else if (!schedule_C.empty())
             {
                 if (leaveC)
-                    countdownY = W_same;
+                    countdownY = W_same - 1;
                 else if (leaveBY)
-                    countdownY = W_diff;
-                else if (!countdownY)
+                    countdownY = W_diff - 1;
+                if (!countdownY)
                     gC = true;
             }
             else if (!schedule_BY.empty())
             {
                 if (leaveBY)
-                    countdownY = W_same;
+                    countdownY = W_same - 1;
                 else if (leaveC)
-                    countdownY = W_diff;
-                else if (!countdownY)
+                    countdownY = W_diff - 1;
+                if (!countdownY)
                     gBY = true;
             }
             else if (!countdownY)
@@ -658,8 +680,53 @@ void run(int alpha, int beta, int gamma, double W_same, double W_diff)
             --countdownX;
         if (countdownY)
             --countdownY;
+
+        // Schedule
+        if (timeStep_cnt - period == 0)
+        {
+            if (LaneArea::getLastStepVehicleNumber("dA") and LaneArea::getLastStepVehicleNumber("dB") and LaneArea::getLastStepVehicleNumber("dC"))
+            {
+                arrival_A = compute_earliest_arrival(laneLength, schedule_A, 'A');
+                arrival_B = compute_earliest_arrival(laneLength, schedule_BX, schedule_BY, 'B');
+                arrival_C = compute_earliest_arrival(laneLength, schedule_C, 'C');
+                milp_compute_entering_time(arrival_A, arrival_B, arrival_C, W_same, W_diff, schedule_A, schedule_BX, schedule_BY, schedule_C);
+
+                for (auto it = schedule_BX.begin(); it != schedule_BX.end();)
+                {
+                    try
+                    {
+                        Vehicle::setRouteID(it->id, "route_1");
+                        ++it;
+                    }
+                    catch (std::exception &e)
+                    {
+                        cout << "exception: " << e.what() << "\n";
+                        it = schedule_BX.erase(it);
+                        leaveBY = true;
+                    }
+                }
+                for (auto it = schedule_BY.begin(); it != schedule_BY.end();)
+                {
+                    try
+                    {
+                        Vehicle::setRouteID(it->id, "route_2");
+                        ++it;
+                    }
+                    catch (std::exception &e)
+                    {
+                        cout << "exception: " << e.what() << "\n";
+                        it = schedule_BY.erase(it);
+                        leaveBX = true;
+                    }
+                }
+                // print_schedule(schedule_A, "A");
+                // print_schedule(schedule_BX, "BX");
+                // print_schedule(schedule_BY, "BY");
+                // print_schedule(schedule_C, "C");
+            }
+        }
     }
-    cout << max(passTime_dX, passTime_dY) << endl;
+    cout << max(passTime_dX, passTime_dY) << ", " << waitingTime  / (alpha + beta + gamma) << endl;
     Simulation::close();
 }
 
@@ -678,9 +745,9 @@ int main(int argc, char *argv[])
         N = atoi(argv[2]);
         W_same = atof(argv[3]);
         W_diff = atof(argv[4]);
-        pA = p / 3;
-        pB = p / 3;
-        pC = p / 3;
+        pA = p;
+        pB = p;
+        pC = p;
         alpha = N;
         beta = N;
         gamma = N;
@@ -693,8 +760,11 @@ int main(int argc, char *argv[])
     }
     if (argc > 6)
     {
-        Simulation::start({"sumo", "-c", argv[6],
-                           "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
+        string inputPath(argv[6]);
+        string outputPath = "output/output" + inputPath.substr(inputPath.find("_"));
+        outputPath.replace(outputPath.end() - 8, outputPath.end(), "_MILP.xml");
+        Simulation::start({"sumo", "-c", inputPath,
+                           "--tripinfo-output", outputPath,
                            "-S",
                            "--no-step-log", "true", "-W", "--duration-log.disable", "true"});
     }
@@ -705,7 +775,7 @@ int main(int argc, char *argv[])
             cout << "Generate a new test" << endl;
             generate_routefile(timeStep, N, pA, pB, pC);
         }
-        Simulation::start({"sumo", "-c", "sumo_data/laneMerging.sumocfg",
+        Simulation::start({"sumo-gui", "-c", "sumo_data/laneMerging.sumocfg",
                            "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
                            "-S",
                            "--no-step-log", "true", "-W", "--duration-log.disable", "true"});

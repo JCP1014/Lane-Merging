@@ -1,13 +1,13 @@
 #include "dp_2d.h"
 
-GreedySol update_greedySol(GreedySol s, float newTime, char newTable)
+GreedySol update_greedySol(GreedySol s, double newTime, char newTable)
 {
     s.time = newTime;
     s.table = newTable;
     return s;
 }
 
-tuple<float, float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all)
+tuple<double, double, double> greedy_dp(vector<double> a_all, vector<double> b_all, vector<double> c_all)
 {
     auto t0 = chrono::high_resolution_clock::now();
     int alpha = a_all.size() - 1;
@@ -16,11 +16,11 @@ tuple<float, float, double> greedy_dp(vector<float> a_all, vector<float> b_all, 
     vector<vector<GreedySol>> LX_A, LX_B, LY_C, LY_B;
     int beta_sum = 1;
     int beta_X = 1, beta_Y = 1;
-    float min_X, min_Y;
-    float T_last;
+    double min_X, min_Y;
+    double T_last;
     default_random_engine generator(time(NULL));
     uniform_int_distribution<int> distribution(0, 1);
-    float total_wait = 0;
+    double total_wait = 0;
 
     LX_A.resize(alpha + 1, vector<GreedySol>(beta + 1));
     LX_B.resize(alpha + 1, vector<GreedySol>(beta + 1));
@@ -112,7 +112,7 @@ tuple<float, float, double> greedy_dp(vector<float> a_all, vector<float> b_all, 
     // Choose optimal solution for Lane X
     --beta_X;
     --beta_Y;
-    stack<tuple<char, int, float>> stack_X, stack_Y;
+    stack<tuple<char, int, double>> stack_X, stack_Y;
     char prevTable;
     int i = alpha;
     int j = beta_X;
@@ -219,7 +219,7 @@ tuple<float, float, double> greedy_dp(vector<float> a_all, vector<float> b_all, 
         total_wait += (get<2>(stack_Y.top()) - b_all[get<1>(stack_Y.top())]);
     T_last = max(T_last, get<2>(stack_Y.top()));
     
-    float T_delay = total_wait / (alpha + beta + gamma);
+    double T_delay = total_wait / (alpha + beta + gamma);
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;

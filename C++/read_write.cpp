@@ -1,11 +1,11 @@
 #include "read_write.h"
 
-vector<float> read_data(string fileName)
+vector<double> read_data(string fileName)
 {
     fstream file;
     string line;
-    float tmp;
-    vector<float> allData;
+    double tmp;
+    vector<double> allData;
     file.open(fileName);
     while (getline(file, line))
         allData.push_back(stof(line));
@@ -13,7 +13,7 @@ vector<float> read_data(string fileName)
     return allData;
 }
 
-void write_result(string fileName, string title, float T_last, float computeTime)
+void write_result(string fileName, string title, double T_last, double computeTime)
 {
     
 }

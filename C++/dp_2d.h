@@ -10,14 +10,14 @@
 #include <chrono>
 using namespace std;
 
-extern float W_same, W_diff;
+extern double W_same, W_diff;
 struct GreedySol
 {
-    float time = INFINITY;
+    double time = INFINITY;
     char table = '0';
 };
 
-GreedySol update_greedySol(GreedySol s, float newTime, char newTable);
-tuple<float, float, double> greedy_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all);
+GreedySol update_greedySol(GreedySol s, double newTime, char newTable);
+tuple<double, double, double> greedy_dp(vector<double> a_all, vector<double> b_all, vector<double> c_all);
 
 #endif

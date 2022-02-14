@@ -1,8 +1,8 @@
 #include "group_dp.h"
 
-float get_tail_time(vector<float> &traffic, pair<int, int> index, float head_time)
+double get_tail_time(vector<double> &traffic, pair<int, int> index, double head_time)
 {
-    float tail_time = max(traffic[index.first], head_time);
+    double tail_time = max(traffic[index.first], head_time);
     for (int i = index.first + 1; i <= index.second; ++i)
     {
         tail_time = max(traffic[i], tail_time + W_same);
@@ -10,10 +10,10 @@ float get_tail_time(vector<float> &traffic, pair<int, int> index, float head_tim
     return tail_time;
 }
 
-float get_wait_time(vector<float> &traffic, pair<int, int> index, float head_time)
+double get_wait_time(vector<double> &traffic, pair<int, int> index, double head_time)
 {
-    float tail_time = max(traffic[index.first], head_time);
-    float wait_time = tail_time - traffic[index.first];
+    double tail_time = max(traffic[index.first], head_time);
+    double wait_time = tail_time - traffic[index.first];
     for (int i = index.first + 1; i <= index.second; ++i)
     {
         tail_time = max(traffic[i], tail_time + W_same);
@@ -22,7 +22,7 @@ float get_wait_time(vector<float> &traffic, pair<int, int> index, float head_tim
     return wait_time;
 }
 
-pair<float, float> grouped_dp(vector<float> a, vector<float> b, vector<float> c, vector<pair<int, int>> grouped_a, vector<pair<int, int>> grouped_b, vector<pair<int, int>> grouped_c)
+pair<double, double> grouped_dp(vector<double> a, vector<double> b, vector<double> c, vector<pair<int, int>> grouped_a, vector<pair<int, int>> grouped_b, vector<pair<int, int>> grouped_c)
 {
     int alpha = grouped_a.size() - 1;
     int beta = grouped_b.size() - 1;
@@ -32,8 +32,8 @@ pair<float, float> grouped_dp(vector<float> a, vector<float> b, vector<float> c,
     vector<vector<vector<Solution>>> L_BB;
     vector<vector<vector<Solution>>> L_BC;
     vector<Solution> tmpSolVec;
-    float T_last;
-    float total_wait = 0;
+    double T_last;
+    double total_wait = 0;
     int vehicle_num = a.size() + b.size() + c.size() - 3;
 
     L_AB.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
@@ -206,7 +206,7 @@ pair<float, float> grouped_dp(vector<float> a, vector<float> b, vector<float> c,
     // print_3d_table(L_BC);
 
     // Push order to stack
-    stack<tuple<char, int, float>> stack_X, stack_Y;
+    stack<tuple<char, int, double>> stack_X, stack_Y;
     int i = alpha;
     int j = beta;
     int k = gamma;
@@ -424,13 +424,13 @@ pair<float, float> grouped_dp(vector<float> a, vector<float> b, vector<float> c,
         stack_Y.pop();
 
     // Output order
-    // cout << "Lane X: " << endl;
-    float prev_tail = -W_diff;
+    cout << "Lane X: " << endl;
+    double prev_tail = -W_diff;
     char prev_lane = '0';
     char curr_lane;
     while (stack_X.size() > 1)
     {
-        // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+        cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
         curr_lane = get<0>(stack_X.top());
         if (curr_lane == 'A')
         {
@@ -450,7 +450,7 @@ pair<float, float> grouped_dp(vector<float> a, vector<float> b, vector<float> c,
         prev_tail = get<2>(stack_X.top());
         stack_X.pop();
     }
-    // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+    cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
     curr_lane = get<0>(stack_X.top());
     if (curr_lane == 'A')
     {
@@ -468,12 +468,12 @@ pair<float, float> grouped_dp(vector<float> a, vector<float> b, vector<float> c,
     }
     T_last = get<2>(stack_X.top());
 
-    // cout << "Lane Y: " << endl;
+    cout << "Lane Y: " << endl;
     prev_tail = -W_diff;
     prev_lane = '0';
     while (stack_Y.size() > 1)
     {
-        // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+        cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
         curr_lane = get<0>(stack_Y.top());
         if (curr_lane == 'C')
         {
@@ -493,7 +493,7 @@ pair<float, float> grouped_dp(vector<float> a, vector<float> b, vector<float> c,
         prev_tail = get<2>(stack_Y.top());
         stack_Y.pop();
     }
-    // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+    cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
     curr_lane = get<0>(stack_Y.top());
     if (curr_lane == 'C')
     {
@@ -510,20 +510,20 @@ pair<float, float> grouped_dp(vector<float> a, vector<float> b, vector<float> c,
             total_wait += get_wait_time(b, grouped_b[get<1>(stack_Y.top())], prev_tail + W_diff);
     }
     T_last = max(T_last, get<2>(stack_Y.top()));
-    float T_delay = total_wait / vehicle_num;
+    double T_delay = total_wait / vehicle_num;
 
     return {T_last, T_delay};
 }
 
-tuple<float, float, double> schedule_by_group_dp(vector<float> a_all, vector<float> b_all, vector<float> c_all, float timeStep)
+tuple<double, double, double> schedule_by_group_dp(vector<double> a_all, vector<double> b_all, vector<double> c_all, double timeStep)
 {
     auto t0 = chrono::high_resolution_clock::now();
     vector<pair<int, int>> grouped_a = grouping(a_all, timeStep);
     vector<pair<int, int>> grouped_b = grouping(b_all, timeStep);
     vector<pair<int, int>> grouped_c = grouping(c_all, timeStep);
-    pair<float, float> res = grouped_dp(a_all, b_all, c_all, grouped_a, grouped_b, grouped_c);
-    float T_last = res.first;
-    float T_delay = res.second;
+    pair<double, double> res = grouped_dp(a_all, b_all, c_all, grouped_a, grouped_b, grouped_c);
+    double T_last = res.first;
+    double T_delay = res.second;
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;

@@ -6,7 +6,7 @@
 #include "generate_input.h"
 using namespace std;
 
-extern float W_same, W_diff;
-tuple<float, float, double> solve_milp(vector<float> A, vector<float> B, vector<float> C);
+extern double W_same, W_diff;
+tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vector<double> C);
 
 #endif

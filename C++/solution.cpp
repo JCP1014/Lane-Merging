@@ -1,6 +1,6 @@
 #include "solution.h"
 
-Solution update_sol(Solution s, float newTimeX, float newTimeY, string newTable, string newLane)
+Solution update_sol(Solution s, double newTimeX, double newTimeY, string newTable, string newLane)
 {
     s.time[0] = newTimeX;
     s.time[1] = newTimeY;
@@ -9,7 +9,7 @@ Solution update_sol(Solution s, float newTimeX, float newTimeY, string newTable,
     return s;
 }
 
-Solution update_sol(Solution s, float newTimeX, float newTimeY, string newTable, string newLane, Solution *newSrc)
+Solution update_sol(Solution s, double newTimeX, double newTimeY, string newTable, string newLane, Solution *newSrc)
 {
     s.time[0] = newTimeX;
     s.time[1] = newTimeY;
@@ -21,11 +21,11 @@ Solution update_sol(Solution s, float newTimeX, float newTimeY, string newTable,
 
 Solution choose_best_sol(Solution s, vector<Solution> solVec)
 {
-    float minMax = max(solVec[0].time[0], solVec[0].time[1]);
-    float minSum;
-    float minSrcSum, minSrcMax;
+    double minMax = max(solVec[0].time[0], solVec[0].time[1]);
+    double minSum;
+    double minSrcSum, minSrcMax;
     int index = 0;
-    float tmpMax, tmpMin, tmpSum, tmpSrcMax, tmpSrcMin, tmpSrcSum;
+    double tmpMax, tmpMin, tmpSum, tmpSrcMax, tmpSrcMin, tmpSrcSum;
 
     for (int i = 1; i < solVec.size(); ++i)
     {
@@ -72,11 +72,11 @@ Solution choose_best_sol(Solution s, vector<Solution> solVec)
 
 string get_opt_table(vector<Solution> solVec)
 {
-    float minMax = max(solVec[0].time[0], solVec[0].time[1]);
-    float minSum;
-    float minSrcSum, minSrcMax;
+    double minMax = max(solVec[0].time[0], solVec[0].time[1]);
+    double minSum;
+    double minSrcSum, minSrcMax;
     int index = 0;
-    float tmpMax, tmpMin, tmpSum, tmpSrcMax, tmpSrcMin, tmpSrcSum;
+    double tmpMax, tmpMin, tmpSum, tmpSrcMax, tmpSrcMin, tmpSrcSum;
     string optTable = "AB";
     for (int i = 1; i < solVec.size(); ++i)
     {

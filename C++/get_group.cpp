@@ -1,10 +1,10 @@
 #include "get_group.h"
 
-vector<pair<int, int>> grouping(vector<float> &traffic, float timeStep)
+vector<pair<int, int>> grouping(vector<double> &traffic, double timeStep)
 {
     int groups = 1;
     int max_groups = 35;
-    float grouping_threshold = 1;
+    double grouping_threshold = 1;
     vector<pair<int, int>> grouped_index;
 
     while (1)
@@ -38,12 +38,14 @@ vector<pair<int, int>> grouping(vector<float> &traffic, float timeStep)
             break;
         }
     }
+    for(auto &g:grouped_index)
+        cout << g.first << ", " << g.second << endl;
     return grouped_index;
 }
 
-vector<pair<int, int>> fixed_threshold_grouping(vector<float> &traffic, float timeStep)
+vector<pair<int, int>> fixed_threshold_grouping(vector<double> &traffic, double timeStep)
 {
-    float grouping_threshold = 1;
+    double grouping_threshold = 1;
     vector<pair<int, int>> grouped_index;
 
     grouped_index.push_back({0, 0});

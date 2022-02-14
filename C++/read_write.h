@@ -5,6 +5,6 @@
 #include <vector>
 using namespace std;
 
-vector<float> read_data(string fileName);
+vector<double> read_data(string fileName);
 
 #endif

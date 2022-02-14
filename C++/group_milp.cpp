@@ -4,7 +4,7 @@
 //                  -lgurobi_c++ -lgurobi91
 #include "group_milp.h"
 
-tuple<float, float, double> solve_group_milp(vector<float> A, vector<float> B, vector<float> C, float timeStep)
+tuple<double, double, double> solve_group_milp(vector<double> A, vector<double> B, vector<double> C, double timeStep)
 {
     auto t0 = chrono::high_resolution_clock::now();
     vector<pair<int, int>> grouped_A = grouping(A, timeStep);
@@ -13,7 +13,7 @@ tuple<float, float, double> solve_group_milp(vector<float> A, vector<float> B, v
     int alpha = A.size() - 1;
     int beta = B.size() - 1;
     int gamma = C.size() - 1;
-    // float D = 30;
+    // double D = 30;
     int L = grouped_A.size() - 1;
     int M = grouped_B.size() - 1;
     int N = grouped_C.size() - 1;
@@ -22,7 +22,7 @@ tuple<float, float, double> solve_group_milp(vector<float> A, vector<float> B, v
     {
         // Create an environment
         GRBEnv env = GRBEnv(true);
-        env.set("LogFile", "milp.log");
+        // env.set("LogFile", "milp.log");
         env.set("OutputFlag", "0");
         env.start();
 
@@ -34,33 +34,33 @@ tuple<float, float, double> solve_group_milp(vector<float> A, vector<float> B, v
         GRBVar s[alpha + 1], t[beta + 1], u[gamma + 1];
         for (int i = 0; i <= alpha; ++i)
         {
-            s[i] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "s_" + to_string(i));
+            s[i] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "s_" + to_string(i));
         }
         for (int j = 0; j <= beta; ++j)
         {
-            t[j] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "t_" + to_string(j));
+            t[j] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "t_" + to_string(j));
         }
         for (int k = 0; k <= gamma; ++k)
         {
-            u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "u_" + to_string(k));
+            u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "u_" + to_string(k));
         }
 
         // Create variables: ph_l, pt_l, qh_m, qt_m, rh_n, rt_n (scheduled entering time of groups)
         GRBVar ph[L + 1], pt[L + 1], qh[M + 1], qt[M + 1], rh[N + 1], rt[N + 1];
         for (int l = 0; l <= L; ++l)
         {
-            ph[l] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "ph_" + to_string(l));
-            pt[l] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "pt_" + to_string(l));
+            ph[l] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "ph_" + to_string(l));
+            pt[l] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "pt_" + to_string(l));
         }
         for (int m = 0; m <= M; ++m)
         {
-            qh[m] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "qh_" + to_string(m));
-            qt[m] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "qt_" + to_string(m));
+            qh[m] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "qh_" + to_string(m));
+            qt[m] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "qt_" + to_string(m));
         }
         for (int n = 0; n <= N; ++n)
         {
-            rh[n] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "rh_" + to_string(n));
-            rt[n] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "rt_" + to_string(n));
+            rh[n] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "rh_" + to_string(n));
+            rt[n] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "rt_" + to_string(n));
         }
 
         // Create variables: x_lm, y_nm (allocation indicator)
@@ -81,7 +81,7 @@ tuple<float, float, double> solve_group_milp(vector<float> A, vector<float> B, v
         }
 
         // Create variables: f (T_last)
-        GRBVar f = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "f");
+        GRBVar f = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "f");
 
         // Set objective: minimize f
         model.setObjective(f + 0, GRB_MINIMIZE);
@@ -205,7 +205,7 @@ tuple<float, float, double> solve_group_milp(vector<float> A, vector<float> B, v
         model.optimize();
 
         // Output results
-        float total_wait = 0;
+        double total_wait = 0;
         // cout << "s = {";
         for (int i = 0; i <= alpha; ++i)
         {
@@ -249,8 +249,8 @@ tuple<float, float, double> solve_group_milp(vector<float> A, vector<float> B, v
         // cout << endl;
         // cout << "Obj: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
         // cout << "T_last: " << max(max(s[alpha].get(GRB_DoubleAttr_X), t[beta].get(GRB_DoubleAttr_X)), max(t[beta].get(GRB_DoubleAttr_X), u[gamma].get(GRB_DoubleAttr_X))) << endl;
-        float T_last = model.get(GRB_DoubleAttr_ObjVal);
-        float T_delay = total_wait / (alpha + beta + gamma);
+        double T_last = model.get(GRB_DoubleAttr_ObjVal);
+        double T_delay = total_wait / (alpha + beta + gamma);
         auto t1 = chrono::high_resolution_clock::now();
         double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
         totalComputeTime *= 1e-9;

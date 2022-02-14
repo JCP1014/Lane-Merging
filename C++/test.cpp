@@ -9,14 +9,14 @@ using namespace std;
 
 struct Solution
 {
-    // float time[2] = {INFINITY, INFINITY};
-    float timeX = INFINITY;
-    float timeY = INFINITY;
+    // double time[2] = {INFINITY, INFINITY};
+    double timeX = INFINITY;
+    double timeY = INFINITY;
     string table = "";
     string lane = "";
 };
 
-// Solution update_sol(Solution s, float newTimeX, float newTimeY, string newTable, string newLane)
+// Solution update_sol(Solution s, double newTimeX, double newTimeY, string newTable, string newLane)
 // {
 //     s.time[0] = newTimeX;
 //     s.time[1] = newTimeY;
@@ -25,7 +25,7 @@ struct Solution
 //     return s;
 // }
 
-Solution update_sol(Solution s, float newTimeX, float newTimeY, string newTable, string newLane)
+Solution update_sol(Solution s, double newTimeX, double newTimeY, string newTable, string newLane)
 {
     // s.time[0] = newTimeX;
     // s.time[1] = newTimeY;

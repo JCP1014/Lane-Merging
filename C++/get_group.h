@@ -5,6 +5,6 @@
 #include <iostream>
 using namespace std;
 
-vector<pair<int, int>> grouping(vector<float> &traffic, float timeStep);
+vector<pair<int, int>> grouping(vector<double> &traffic, double timeStep);
 
 #endif

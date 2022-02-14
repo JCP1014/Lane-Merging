@@ -7,7 +7,7 @@
 #include "fcfs.h"
 using namespace std;
 
-tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int, float> reduced_dp(vector<float> a, vector<float> b, vector<float> c, tuple<char, int, float> last_X, tuple<char, int, float> last_Y);
-tuple<float, float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vector<float> c);
+tuple<tuple<char, int, double>, tuple<char, int, double>, int, int, int, double> reduced_dp(vector<double> a, vector<double> b, vector<double> c, tuple<char, int, double> last_X, tuple<char, int, double> last_Y);
+tuple<double, double, double> schedule_by_reduced_dp(vector<double> a, vector<double> b, vector<double> c);
 
 #endif

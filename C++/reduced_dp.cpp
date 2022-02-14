@@ -1,7 +1,7 @@
 #include "reduced_dp.h"
 
 // Do not traverse all space
-tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int, float> reduced_dp(vector<float> a, vector<float> b, vector<float> c, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
+tuple<tuple<char, int, double>, tuple<char, int, double>, int, int, int, double> reduced_dp(vector<double> a, vector<double> b, vector<double> c, tuple<char, int, double> last_X, tuple<char, int, double> last_Y)
 {
     auto t_start = chrono::high_resolution_clock::now();
     int alpha = a.size() - 1;
@@ -12,9 +12,9 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int, float> re
     vector<vector<vector<Solution>>> L_BB;
     vector<vector<vector<Solution>>> L_BC;
     string last_XY;
-    float T_X, T_Y;
+    double T_X, T_Y;
     vector<Solution> tmpSolVec;
-    float wait_time = 0;
+    double wait_time = 0;
 
     L_AB.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
     L_AC.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
@@ -544,7 +544,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int, float> re
     // print_3d_table(L_BC);
 
     // Push order to stack
-    stack<tuple<char, int, float>> stack_X, stack_Y;
+    stack<tuple<char, int, double>> stack_X, stack_Y;
     int i = cut_i;
     int j = cut_j;
     int k = cut_k;
@@ -804,15 +804,15 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, int, int, int, float> re
     return make_tuple(last_X, last_Y, cut_i, cut_j, cut_k, wait_time);
 }
 
-tuple<float, float, double> schedule_by_reduced_dp(vector<float> a, vector<float> b, vector<float> c)
+tuple<double, double, double> schedule_by_reduced_dp(vector<double> a, vector<double> b, vector<double> c)
 {
     auto t0 = chrono::high_resolution_clock::now();
-    tuple<char, int, float> last_X = make_tuple('0', 0, 0.0);
-    tuple<char, int, float> last_Y = make_tuple('0', 0, 0.0);
+    tuple<char, int, double> last_X = make_tuple('0', 0, 0.0);
+    tuple<char, int, double> last_Y = make_tuple('0', 0, 0.0);
     double tmp;
     int cut_i = 0, cut_j = 0, cut_k = 0;
-    float total_wait = 0;
-    float wait_time = 0;
+    double total_wait = 0;
+    double wait_time = 0;
     int vehicle_num = a.size() + b.size() + c.size() - 3;
 
     tie(last_X, last_Y, cut_i, cut_j, cut_k, wait_time) = reduced_dp(a, b, c, last_X, last_Y);
@@ -949,8 +949,8 @@ tuple<float, float, double> schedule_by_reduced_dp(vector<float> a, vector<float
         // cout << "last_X: " << get<0>(last_X) << " " << get<1>(last_X) << " " << get<2>(last_X) << endl;
         // cout << "last_Y: " << get<0>(last_Y) << " " << get<1>(last_Y) << " " << get<2>(last_Y) << endl;
     }
-    float T_last = max(get<2>(last_X), get<2>(last_Y));
-    float T_delay = total_wait / vehicle_num;
+    double T_last = max(get<2>(last_X), get<2>(last_Y));
+    double T_delay = total_wait / vehicle_num;
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;

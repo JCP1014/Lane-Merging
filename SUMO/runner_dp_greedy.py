@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# old version of dp
 from __future__ import absolute_import
 from __future__ import print_function
 

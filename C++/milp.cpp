@@ -4,19 +4,19 @@
 //                  -lgurobi_c++ -lgurobi91
 #include "milp.h"
 
-tuple<float, float, double> solve_milp(vector<float> A, vector<float> B, vector<float> C)
+tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vector<double> C)
 {
     auto t0 = chrono::high_resolution_clock::now();
     int alpha = A.size() - 1;
     int beta = B.size() - 1;
     int gamma = C.size() - 1;
-    // float D = 30;
+    // double D = 30;
 
     try
     {
         // Create an environment
         GRBEnv env = GRBEnv(true);
-        env.set("LogFile", "milp.log");
+        // env.set("LogFile", "milp.log");
         env.set("OutputFlag", "0");
         env.start();
 
@@ -28,15 +28,15 @@ tuple<float, float, double> solve_milp(vector<float> A, vector<float> B, vector<
         GRBVar s[alpha + 1], t[beta + 1], u[gamma + 1];
         for (int i = 0; i <= alpha; ++i)
         {
-            s[i] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "s_" + to_string(i));
+            s[i] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "s_" + to_string(i));
         }
         for (int j = 0; j <= beta; ++j)
         {
-            t[j] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "t_" + to_string(j));
+            t[j] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "t_" + to_string(j));
         }
         for (int k = 0; k <= gamma; ++k)
         {
-            u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "u_" + to_string(k));
+            u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "u_" + to_string(k));
         }
 
         // Create variables: x_ij, y_kj (allocation indicator)
@@ -57,7 +57,7 @@ tuple<float, float, double> solve_milp(vector<float> A, vector<float> B, vector<
         }
 
         // Create variables: f (T_last)
-        GRBVar f = model.addVar(0.0, INFINITY, 0.0, GRB_INTEGER, "f");
+        GRBVar f = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "f");
 
         // Set objective: minimize f
         model.setObjective(f + 0, GRB_MINIMIZE);
@@ -164,7 +164,7 @@ tuple<float, float, double> solve_milp(vector<float> A, vector<float> B, vector<
         model.optimize();
 
         // Output results
-        float total_wait = 0;
+        double total_wait = 0;
         // cout << "s = {";
         for (int i = 0; i <= alpha; ++i)
         {
@@ -182,34 +182,32 @@ tuple<float, float, double> solve_milp(vector<float> A, vector<float> B, vector<
         // cout << "k = {";
         for (int k = 0; k <= gamma; ++k)
         {
-            // cout << u[k].get(GRB_DoubleAttr_X) << ", ";
+            cout << u[k].get(GRB_DoubleAttr_X) << ", ";
             total_wait += (u[k].get(GRB_DoubleAttr_X) - C[k]);
         }
         // cout << "};" << endl;
-        // for (int j = 0; j <= beta; ++j)
+        // for (int j = 1; j <= beta; ++j)
         // {
         //     for (int i = 0; i <= alpha; ++i)
         //     {
         //         if (x[i][j].get(GRB_DoubleAttr_X) == 1)
         //             // cout << x[i][j].get(GRB_StringAttr_VarName) << " "
         //             //      << x[i][j].get(GRB_DoubleAttr_X) << endl;
-        //             cout << "X"
-        //                  << " ";
+        //             cout << "X ";
         //     }
         //     for (int k = 0; k <= gamma; ++k)
         //     {
         //         if (y[k][j].get(GRB_DoubleAttr_X) == 1)
         //             // cout << y[k][j].get(GRB_StringAttr_VarName) << " "
         //             //      << y[k][j].get(GRB_DoubleAttr_X) << endl;
-        //             cout << "Y"
-        //                  << " ";
+        //             cout << "Y ";
         //     }
         // }
         // cout << endl;
         // cout << "Obj: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
         // cout << "T_last: " << max(max(s[alpha].get(GRB_DoubleAttr_X), t[beta].get(GRB_DoubleAttr_X)), max(t[beta].get(GRB_DoubleAttr_X), u[gamma].get(GRB_DoubleAttr_X))) << endl;
-        float T_last = model.get(GRB_DoubleAttr_ObjVal);
-        float T_delay = total_wait / (alpha + beta + gamma);
+        double T_last = model.get(GRB_DoubleAttr_ObjVal);
+        double T_delay = total_wait / (alpha + beta + gamma);
         auto t1 = chrono::high_resolution_clock::now();
         double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
         totalComputeTime *= 1e-9;

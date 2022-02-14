@@ -8,10 +8,10 @@ int main(int argc, char *argv[])
 {
     string fileName;
     ofstream file;
-    float timeStep = 1;
+    double timeStep = 1;
     int alpha, beta, gamma;
-    float p, pA, pB, pC;
-    vector<float> A, B, C;
+    double p, pA, pB, pC;
+    vector<double> A, B, C;
 
     if (argc == 4)
     {

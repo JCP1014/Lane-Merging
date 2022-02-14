@@ -1,7 +1,7 @@
 <additional>
-   <laneAreaDetector id="dA" lane="A_0" endPos="6000" length="6000" freq="1" file="output_dA.xml" />  
-   <laneAreaDetector id="dB" lane="B_0" endPos="6000" length="6000" freq="1" file="output_dB.xml" />
-   <laneAreaDetector id="dC" lane="C_0" endPos="6000" length="6000" freq="1" file="output_dC.xml" />
+   <laneAreaDetector id="dA" lane="A_0" endPos="6500" length="6500" freq="1" file="output_dA.xml" />  
+   <laneAreaDetector id="dB" lane="B_0" endPos="6500" length="6500" freq="1" file="output_dB.xml" />
+   <laneAreaDetector id="dC" lane="C_0" endPos="6500" length="6500" freq="1" file="output_dC.xml" />
    <e1Detector id="dX" lane="X_0" pos="0" freq="1.00" file="output_dX.xml"/>
    <e1Detector id="dY" lane="Y_0" pos="0" freq="1.00" file="output_dY.xml"/>
 </additional>

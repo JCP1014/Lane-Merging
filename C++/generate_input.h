@@ -7,8 +7,8 @@
 #include <fstream>
 using namespace std;
 
-float digit_round(float value, int digit);
-vector<float> generate_traffic(float timeStep, int num, float p, int seed);
-vector<float> read_data(string fileName);
+double digit_round(double value, int digit);
+vector<double> generate_traffic(double timeStep, int num, double p, int seed);
+vector<double> read_data(string fileName);
 
 #endif

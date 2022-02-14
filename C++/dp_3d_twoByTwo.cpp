@@ -1,6 +1,6 @@
 #include <dp_3d_twoByTwo.h>
 
-tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp_v1(vector<float> a, vector<float> b, vector<float> c, float W_same, float W_diff, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
+tuple<tuple<char, int, double>, tuple<char, int, double>, double> window_oneSol_dp_v1(vector<double> a, vector<double> b, vector<double> c, double W_same, double W_diff, tuple<char, int, double> last_X, tuple<char, int, double> last_Y)
 {
     auto t_start = chrono::high_resolution_clock::now();
     int alpha = a.size() - 1;
@@ -11,7 +11,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
     vector<vector<vector<Solution>>> L_BB;
     vector<vector<vector<Solution>>> L_BC;
     string last_XY;
-    float T_X, T_Y;
+    double T_X, T_Y;
     vector<Solution> tmpSolVec;
 
     L_AB.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
@@ -437,7 +437,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
     // }
 
     // Push order to stack
-    stack<tuple<char, int, float>> stack_X, stack_Y;
+    stack<tuple<char, int, double>> stack_X, stack_Y;
     int i = alpha;
     int j = beta;
     int k = gamma;
@@ -768,19 +768,19 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, double> window_oneSol_dp
     return make_tuple(last_X, last_Y, computeTime);
 }
 
-tuple<float, double> schedule_by_window_dp_v1(vector<float> a_all, vector<float> b_all, vector<float> c_all, float W_same, float W_diff, int carNum)
+tuple<double, double> schedule_by_window_dp_v1(vector<double> a_all, vector<double> b_all, vector<double> c_all, double W_same, double W_diff, int carNum)
 {
-    tuple<char, int, float> last_X = make_tuple('0', 0, 0.0);
-    tuple<char, int, float> last_Y = make_tuple('0', 0, 0.0);
+    tuple<char, int, double> last_X = make_tuple('0', 0, 0.0);
+    tuple<char, int, double> last_Y = make_tuple('0', 0, 0.0);
     double tmp;
-    float T_last;
+    double T_last;
     auto t0 = chrono::high_resolution_clock::now();
 
     while (a_all.size() > 1 || b_all.size() > 1 || c_all.size() > 1)
     {
-        vector<float> a = get_window_by_num(a_all, carNum);
-        vector<float> b = get_window_by_num(b_all, carNum);
-        vector<float> c = get_window_by_num(c_all, carNum);
+        vector<double> a = get_window_by_num(a_all, carNum);
+        vector<double> b = get_window_by_num(b_all, carNum);
+        vector<double> c = get_window_by_num(c_all, carNum);
         if (a.size() > 1 && b.size() > 1 && c.size() > 1)
             tie(last_X, last_Y, tmp) = window_oneSol_dp_v1(a, b, c, W_same, W_diff, last_X, last_Y);
         else if (a.size() > 1 && b.size() > 1)

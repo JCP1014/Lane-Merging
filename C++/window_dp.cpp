@@ -1,6 +1,6 @@
 #include "window_dp.h"
 
-tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_v2(vector<float> a, vector<float> b, vector<float> c, tuple<char, int, float> last_X, tuple<char, int, float> last_Y)
+tuple<tuple<char, int, double>, tuple<char, int, double>, double> window_oneSol_dp_v2(vector<double> a, vector<double> b, vector<double> c, tuple<char, int, double> last_X, tuple<char, int, double> last_Y)
 {
     int alpha = a.size() - 1;
     int beta = b.size() - 1;
@@ -10,9 +10,9 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_
     vector<vector<vector<Solution>>> L_BB;
     vector<vector<vector<Solution>>> L_BC;
     string last_XY;
-    float T_X, T_Y;
+    double T_X, T_Y;
     vector<Solution> tmpSolVec;
-    float wait_time = 0;
+    double wait_time = 0;
 
     L_AB.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
     L_AC.resize(alpha + 1, vector<vector<Solution>>(beta + 1, vector<Solution>(gamma + 1)));
@@ -333,7 +333,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_
     // print_3d_table(L_BC);
 
     // Push order to stack
-    stack<tuple<char, int, float>> stack_X, stack_Y;
+    stack<tuple<char, int, double>> stack_X, stack_Y;
     int i = alpha;
     int j = beta;
     int k = gamma;
@@ -350,6 +350,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_
 
     if (optTable == "AB")
     {
+        // cout << "AB" << endl;
         table = L_AB[i][j][k].table;
         lanes = L_AB[i][j][k].lane;
         if (lanes == "X")
@@ -372,6 +373,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_
     }
     else if (optTable == "AC")
     {
+        // cout << "AC" << endl;
         table = L_AC[i][j][k].table;
         lanes = L_AC[i][j][k].lane;
         if (lanes == "X")
@@ -394,6 +396,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_
     }
     else if (optTable == "BB")
     {
+        // cout << "BB" << endl;
         table = L_BB[i][j][k].table;
         lanes = L_BB[i][j][k].lane;
         if (lanes == "X")
@@ -421,6 +424,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_
     }
     else if (optTable == "BC")
     {
+        // cout << "BC" << endl;
         table = L_BC[i][j][k].table;
         lanes = L_BC[i][j][k].lane;
         if (lanes == "X")
@@ -451,6 +455,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_
         // cout << table << " " << lanes << endl;
         if (table == "AB")
         {
+            // cout << "AB" << endl;
             table = L_AB[i][j][k].table;
             lanes = L_AB[i][j][k].lane;
             if (lanes == "X")
@@ -473,6 +478,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_
         }
         else if (table == "AC")
         {
+            // cout << "AC" << endl;
             table = L_AC[i][j][k].table;
             lanes = L_AC[i][j][k].lane;
             if (lanes == "X")
@@ -495,6 +501,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_
         }
         else if (table == "BB")
         {
+            // cout << "BB" << endl;
             table = L_BB[i][j][k].table;
             lanes = L_BB[i][j][k].lane;
             if (lanes == "X")
@@ -522,6 +529,7 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_
         }
         else if (table == "BC")
         {
+            // cout << "BC" << endl;
             table = L_BC[i][j][k].table;
             lanes = L_BC[i][j][k].lane;
             if (lanes == "X")
@@ -588,20 +596,20 @@ tuple<tuple<char, int, float>, tuple<char, int, float>, float> window_oneSol_dp_
     return make_tuple(last_X, last_Y, wait_time);
 }
 
-tuple<float, float, double> schedule_by_window_dp_v2(vector<float> a_all, vector<float> b_all, vector<float> c_all, int carNum)
+tuple<double, double, double> schedule_by_window_dp_v2(vector<double> a_all, vector<double> b_all, vector<double> c_all, int carNum)
 {
     auto t0 = chrono::high_resolution_clock::now();
-    tuple<char, int, float> last_X = make_tuple('0', 0, 0.0);
-    tuple<char, int, float> last_Y = make_tuple('0', 0, 0.0);
-    float wait_time = 0;
-    float total_wait = 0;
+    tuple<char, int, double> last_X = make_tuple('0', 0, 0.0);
+    tuple<char, int, double> last_Y = make_tuple('0', 0, 0.0);
+    double wait_time = 0;
+    double total_wait = 0;
     int vehicle_num = a_all.size() + b_all.size() + c_all.size() - 3;
 
     while (a_all.size() > 1 || b_all.size() > 1 || c_all.size() > 1)
     {
-        vector<float> a = get_window_by_num(a_all, carNum);
-        vector<float> b = get_window_by_num(b_all, carNum);
-        vector<float> c = get_window_by_num(c_all, carNum);
+        vector<double> a = get_window_by_num(a_all, carNum);
+        vector<double> b = get_window_by_num(b_all, carNum);
+        vector<double> c = get_window_by_num(c_all, carNum);
         if (a.size() > 1 && b.size() > 1 && c.size() > 1)
         {
             tie(last_X, last_Y, wait_time) = window_oneSol_dp_v2(a, b, c, last_X, last_Y);
@@ -718,8 +726,8 @@ tuple<float, float, double> schedule_by_window_dp_v2(vector<float> a_all, vector
         // cout << "last_X: " << get<0>(last_X) << " " << get<1>(last_X) << " " << get<2>(last_X) << endl;
         // cout << "last_Y: " << get<0>(last_Y) << " " << get<1>(last_Y) << " " << get<2>(last_Y) << endl;
     }
-    float T_last = max(get<2>(last_X), get<2>(last_Y));
-    float T_delay = total_wait / vehicle_num;
+    double T_last = max(get<2>(last_X), get<2>(last_Y));
+    double T_delay = total_wait / vehicle_num;
     auto t1 = chrono::high_resolution_clock::now();
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;

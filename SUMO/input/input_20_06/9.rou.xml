@@ -1,69 +1,69 @@
 <routes>
-    <vType id="typeA" type="passenger" length="2" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="yellow"/>
-    <vType id="typeB" type="passenger" length="2" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="blue"/>
-    <vType id="typeC" type="passenger" length="2" accel="1.5" decel="2" sigma="0.0" maxSpeed="20" color="magenta"/>
+    <vType id="typeA" type="passenger" length="4" accel="2.6" decel="4.5" sigma="0.0" maxSpeed="20" color="yellow"/>
+    <vType id="typeB" type="passenger" length="4" accel="2.6" decel="4.5" sigma="0.0" maxSpeed="20" color="blue"/>
+    <vType id="typeC" type="passenger" length="4" accel="2.6" decel="4.5" sigma="0.0" maxSpeed="20" color="magenta"/>
     <route edges="A X" color="yellow" id="route_0"/>
     <route edges="B X" color="yellow" id="route_1"/>
     <route edges="B Y" color="yellow" id="route_2"/>
     <route edges="C Y" color="yellow" id="route_3"/>
-    <vehicle id="B_1" type="typeB" route="route_1" depart="1" departLane="0" departSpeed="random"/>
-    <vehicle id="A_1" type="typeA" route="route_0" depart="2" departLane="0" departSpeed="random"/>
-    <vehicle id="C_1" type="typeC" route="route_3" depart="2" departLane="0" departSpeed="random"/>
+    <vehicle id="A_1" type="typeA" route="route_0" depart="1" departLane="0" departSpeed="random"/>
+    <vehicle id="B_1" type="typeB" route="route_1" depart="2" departLane="0" departSpeed="random"/>
     <vehicle id="A_2" type="typeA" route="route_0" depart="3" departLane="0" departSpeed="random"/>
-    <vehicle id="B_2" type="typeB" route="route_1" depart="3" departLane="0" departSpeed="random"/>
-    <vehicle id="C_2" type="typeC" route="route_3" depart="3" departLane="0" departSpeed="random"/>
-    <vehicle id="B_3" type="typeB" route="route_1" depart="5" departLane="0" departSpeed="random"/>
-    <vehicle id="C_3" type="typeC" route="route_3" depart="5" departLane="0" departSpeed="random"/>
-    <vehicle id="A_3" type="typeA" route="route_0" depart="6" departLane="0" departSpeed="random"/>
-    <vehicle id="B_4" type="typeB" route="route_1" depart="6" departLane="0" departSpeed="random"/>
-    <vehicle id="C_4" type="typeC" route="route_3" depart="6" departLane="0" departSpeed="random"/>
-    <vehicle id="B_5" type="typeB" route="route_1" depart="7" departLane="0" departSpeed="random"/>
-    <vehicle id="C_5" type="typeC" route="route_3" depart="7" departLane="0" departSpeed="random"/>
-    <vehicle id="A_4" type="typeA" route="route_0" depart="8" departLane="0" departSpeed="random"/>
-    <vehicle id="B_6" type="typeB" route="route_1" depart="9" departLane="0" departSpeed="random"/>
-    <vehicle id="C_6" type="typeC" route="route_3" depart="9" departLane="0" departSpeed="random"/>
-    <vehicle id="B_7" type="typeB" route="route_1" depart="10" departLane="0" departSpeed="random"/>
-    <vehicle id="C_7" type="typeC" route="route_3" depart="10" departLane="0" departSpeed="random"/>
-    <vehicle id="B_8" type="typeB" route="route_1" depart="11" departLane="0" departSpeed="random"/>
-    <vehicle id="C_8" type="typeC" route="route_3" depart="11" departLane="0" departSpeed="random"/>
-    <vehicle id="A_5" type="typeA" route="route_0" depart="12" departLane="0" departSpeed="random"/>
-    <vehicle id="B_9" type="typeB" route="route_1" depart="12" departLane="0" departSpeed="random"/>
-    <vehicle id="C_9" type="typeC" route="route_3" depart="12" departLane="0" departSpeed="random"/>
-    <vehicle id="A_6" type="typeA" route="route_0" depart="13" departLane="0" departSpeed="random"/>
-    <vehicle id="C_10" type="typeC" route="route_3" depart="13" departLane="0" departSpeed="random"/>
-    <vehicle id="A_7" type="typeA" route="route_0" depart="14" departLane="0" departSpeed="random"/>
-    <vehicle id="B_10" type="typeB" route="route_1" depart="14" departLane="0" departSpeed="random"/>
-    <vehicle id="B_11" type="typeB" route="route_1" depart="15" departLane="0" departSpeed="random"/>
-    <vehicle id="C_11" type="typeC" route="route_3" depart="16" departLane="0" departSpeed="random"/>
-    <vehicle id="A_8" type="typeA" route="route_0" depart="17" departLane="0" departSpeed="random"/>
-    <vehicle id="B_12" type="typeB" route="route_1" depart="17" departLane="0" departSpeed="random"/>
-    <vehicle id="A_9" type="typeA" route="route_0" depart="19" departLane="0" departSpeed="random"/>
-    <vehicle id="C_12" type="typeC" route="route_3" depart="20" departLane="0" departSpeed="random"/>
-    <vehicle id="B_13" type="typeB" route="route_1" depart="21" departLane="0" departSpeed="random"/>
-    <vehicle id="C_13" type="typeC" route="route_3" depart="21" departLane="0" departSpeed="random"/>
-    <vehicle id="A_10" type="typeA" route="route_0" depart="23" departLane="0" departSpeed="random"/>
-    <vehicle id="B_14" type="typeB" route="route_1" depart="23" departLane="0" departSpeed="random"/>
-    <vehicle id="B_15" type="typeB" route="route_1" depart="24" departLane="0" departSpeed="random"/>
-    <vehicle id="A_11" type="typeA" route="route_0" depart="25" departLane="0" departSpeed="random"/>
-    <vehicle id="B_16" type="typeB" route="route_1" depart="25" departLane="0" departSpeed="random"/>
-    <vehicle id="C_14" type="typeC" route="route_3" depart="25" departLane="0" departSpeed="random"/>
-    <vehicle id="A_12" type="typeA" route="route_0" depart="26" departLane="0" departSpeed="random"/>
+    <vehicle id="A_3" type="typeA" route="route_0" depart="4" departLane="0" departSpeed="random"/>
+    <vehicle id="C_1" type="typeC" route="route_3" depart="4" departLane="0" departSpeed="random"/>
+    <vehicle id="C_2" type="typeC" route="route_3" depart="5" departLane="0" departSpeed="random"/>
+    <vehicle id="B_2" type="typeB" route="route_1" depart="6" departLane="0" departSpeed="random"/>
+    <vehicle id="A_4" type="typeA" route="route_0" depart="7" departLane="0" departSpeed="random"/>
+    <vehicle id="B_3" type="typeB" route="route_1" depart="7" departLane="0" departSpeed="random"/>
+    <vehicle id="A_5" type="typeA" route="route_0" depart="8" departLane="0" departSpeed="random"/>
+    <vehicle id="B_4" type="typeB" route="route_1" depart="8" departLane="0" departSpeed="random"/>
+    <vehicle id="C_3" type="typeC" route="route_3" depart="8" departLane="0" departSpeed="random"/>
+    <vehicle id="A_6" type="typeA" route="route_0" depart="9" departLane="0" departSpeed="random"/>
+    <vehicle id="B_5" type="typeB" route="route_1" depart="9" departLane="0" departSpeed="random"/>
+    <vehicle id="C_4" type="typeC" route="route_3" depart="9" departLane="0" departSpeed="random"/>
+    <vehicle id="A_7" type="typeA" route="route_0" depart="10" departLane="0" departSpeed="random"/>
+    <vehicle id="C_5" type="typeC" route="route_3" depart="10" departLane="0" departSpeed="random"/>
+    <vehicle id="A_8" type="typeA" route="route_0" depart="11" departLane="0" departSpeed="random"/>
+    <vehicle id="C_6" type="typeC" route="route_3" depart="11" departLane="0" departSpeed="random"/>
+    <vehicle id="A_9" type="typeA" route="route_0" depart="12" departLane="0" departSpeed="random"/>
+    <vehicle id="B_6" type="typeB" route="route_1" depart="12" departLane="0" departSpeed="random"/>
+    <vehicle id="C_7" type="typeC" route="route_3" depart="12" departLane="0" departSpeed="random"/>
+    <vehicle id="A_10" type="typeA" route="route_0" depart="13" departLane="0" departSpeed="random"/>
+    <vehicle id="C_8" type="typeC" route="route_3" depart="13" departLane="0" departSpeed="random"/>
+    <vehicle id="A_11" type="typeA" route="route_0" depart="14" departLane="0" departSpeed="random"/>
+    <vehicle id="B_7" type="typeB" route="route_1" depart="14" departLane="0" departSpeed="random"/>
+    <vehicle id="A_12" type="typeA" route="route_0" depart="15" departLane="0" departSpeed="random"/>
+    <vehicle id="B_8" type="typeB" route="route_1" depart="15" departLane="0" departSpeed="random"/>
+    <vehicle id="C_9" type="typeC" route="route_3" depart="15" departLane="0" departSpeed="random"/>
+    <vehicle id="A_13" type="typeA" route="route_0" depart="16" departLane="0" departSpeed="random"/>
+    <vehicle id="B_9" type="typeB" route="route_1" depart="16" departLane="0" departSpeed="random"/>
+    <vehicle id="A_14" type="typeA" route="route_0" depart="17" departLane="0" departSpeed="random"/>
+    <vehicle id="B_10" type="typeB" route="route_1" depart="17" departLane="0" departSpeed="random"/>
+    <vehicle id="A_15" type="typeA" route="route_0" depart="18" departLane="0" departSpeed="random"/>
+    <vehicle id="B_11" type="typeB" route="route_1" depart="18" departLane="0" departSpeed="random"/>
+    <vehicle id="C_10" type="typeC" route="route_3" depart="18" departLane="0" departSpeed="random"/>
+    <vehicle id="A_16" type="typeA" route="route_0" depart="19" departLane="0" departSpeed="random"/>
+    <vehicle id="B_12" type="typeB" route="route_1" depart="19" departLane="0" departSpeed="random"/>
+    <vehicle id="C_11" type="typeC" route="route_3" depart="19" departLane="0" departSpeed="random"/>
+    <vehicle id="B_13" type="typeB" route="route_1" depart="20" departLane="0" departSpeed="random"/>
+    <vehicle id="A_17" type="typeA" route="route_0" depart="21" departLane="0" departSpeed="random"/>
+    <vehicle id="B_14" type="typeB" route="route_1" depart="21" departLane="0" departSpeed="random"/>
+    <vehicle id="C_12" type="typeC" route="route_3" depart="21" departLane="0" departSpeed="random"/>
+    <vehicle id="B_15" type="typeB" route="route_1" depart="22" departLane="0" departSpeed="random"/>
+    <vehicle id="A_18" type="typeA" route="route_0" depart="23" departLane="0" departSpeed="random"/>
+    <vehicle id="C_13" type="typeC" route="route_3" depart="23" departLane="0" departSpeed="random"/>
+    <vehicle id="A_19" type="typeA" route="route_0" depart="24" departLane="0" departSpeed="random"/>
+    <vehicle id="B_16" type="typeB" route="route_1" depart="24" departLane="0" departSpeed="random"/>
+    <vehicle id="C_14" type="typeC" route="route_3" depart="24" departLane="0" departSpeed="random"/>
+    <vehicle id="C_15" type="typeC" route="route_3" depart="25" departLane="0" departSpeed="random"/>
+    <vehicle id="A_20" type="typeA" route="route_0" depart="26" departLane="0" departSpeed="random"/>
     <vehicle id="B_17" type="typeB" route="route_1" depart="26" departLane="0" departSpeed="random"/>
-    <vehicle id="C_15" type="typeC" route="route_3" depart="26" departLane="0" departSpeed="random"/>
-    <vehicle id="A_13" type="typeA" route="route_0" depart="27" departLane="0" departSpeed="random"/>
-    <vehicle id="C_16" type="typeC" route="route_3" depart="27" departLane="0" departSpeed="random"/>
-    <vehicle id="B_18" type="typeB" route="route_1" depart="28" departLane="0" departSpeed="random"/>
-    <vehicle id="A_14" type="typeA" route="route_0" depart="29" departLane="0" departSpeed="random"/>
-    <vehicle id="C_17" type="typeC" route="route_3" depart="31" departLane="0" departSpeed="random"/>
-    <vehicle id="C_18" type="typeC" route="route_3" depart="33" departLane="0" departSpeed="random"/>
-    <vehicle id="A_15" type="typeA" route="route_0" depart="34" departLane="0" departSpeed="random"/>
-    <vehicle id="A_16" type="typeA" route="route_0" depart="35" departLane="0" departSpeed="random"/>
-    <vehicle id="B_19" type="typeB" route="route_1" depart="35" departLane="0" departSpeed="random"/>
-    <vehicle id="C_19" type="typeC" route="route_3" depart="35" departLane="0" departSpeed="random"/>
-    <vehicle id="A_17" type="typeA" route="route_0" depart="36" departLane="0" departSpeed="random"/>
-    <vehicle id="B_20" type="typeB" route="route_1" depart="36" departLane="0" departSpeed="random"/>
-    <vehicle id="C_20" type="typeC" route="route_3" depart="36" departLane="0" departSpeed="random"/>
-    <vehicle id="A_18" type="typeA" route="route_0" depart="37" departLane="0" departSpeed="random"/>
-    <vehicle id="A_19" type="typeA" route="route_0" depart="39" departLane="0" departSpeed="random"/>
-    <vehicle id="A_20" type="typeA" route="route_0" depart="40" departLane="0" departSpeed="random"/>
+    <vehicle id="C_16" type="typeC" route="route_3" depart="26" departLane="0" departSpeed="random"/>
+    <vehicle id="B_18" type="typeB" route="route_1" depart="27" departLane="0" departSpeed="random"/>
+    <vehicle id="B_19" type="typeB" route="route_1" depart="29" departLane="0" departSpeed="random"/>
+    <vehicle id="C_17" type="typeC" route="route_3" depart="29" departLane="0" departSpeed="random"/>
+    <vehicle id="C_18" type="typeC" route="route_3" depart="30" departLane="0" departSpeed="random"/>
+    <vehicle id="B_20" type="typeB" route="route_1" depart="31" departLane="0" departSpeed="random"/>
+    <vehicle id="C_19" type="typeC" route="route_3" depart="31" departLane="0" departSpeed="random"/>
+    <vehicle id="C_20" type="typeC" route="route_3" depart="33" departLane="0" departSpeed="random"/>
 </routes>

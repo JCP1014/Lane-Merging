@@ -14,9 +14,9 @@ void generate_routefile(double timeStep, double p, int N, string fileName)
 
     file.open("input/" + fileName + ".rou.xml");
     file << "<routes>" << endl;
-    file << "    <vType id=\"typeA\" type=\"passenger\" length=\"2\" accel=\"1.5\" decel=\"2\" sigma=\"0.0\" maxSpeed=\"20\" color=\"yellow\"/>" << endl;
-    file << "    <vType id=\"typeB\" type=\"passenger\" length=\"2\" accel=\"1.5\" decel=\"2\" sigma=\"0.0\" maxSpeed=\"20\" color=\"blue\"/>" << endl;
-    file << "    <vType id=\"typeC\" type=\"passenger\" length=\"2\" accel=\"1.5\" decel=\"2\" sigma=\"0.0\" maxSpeed=\"20\" color=\"magenta\"/>" << endl;
+    file << "    <vType id=\"typeA\" type=\"passenger\" length=\"4\" accel=\"2.6\" decel=\"4.5\" sigma=\"0.0\" maxSpeed=\"20\" color=\"yellow\"/>" << endl;
+    file << "    <vType id=\"typeB\" type=\"passenger\" length=\"4\" accel=\"2.6\" decel=\"4.5\" sigma=\"0.0\" maxSpeed=\"20\" color=\"blue\"/>" << endl;
+    file << "    <vType id=\"typeC\" type=\"passenger\" length=\"4\" accel=\"2.6\" decel=\"4.5\" sigma=\"0.0\" maxSpeed=\"20\" color=\"magenta\"/>" << endl;
     file << "    <route edges=\"A X\" color=\"yellow\" id=\"route_0\"/>" << endl;
     file << "    <route edges=\"B X\" color=\"yellow\" id=\"route_1\"/>" << endl;
     file << "    <route edges=\"B Y\" color=\"yellow\" id=\"route_2\"/>" << endl;
@@ -43,7 +43,7 @@ void generate_configfile(string fileName)
     string num = fileName.substr(fileName.find("/") + 1);
     file << "<configuration>" << endl;
     file << "    <input>" << endl;
-    file << "        <net-file value=\"../../sumo_data/laneMerging2.net.xml\"/>" << endl;
+    file << "        <net-file value=\"../../sumo_data/laneMerging3.net.xml\"/>" << endl;
     file << "        <route-files value=\"" + num + ".rou.xml\"/>" << endl;
     file << "        <additional-files value=\"../../sumo_data/laneMerging.add.xml\"/>" << endl;
     file << "        <gui-settings-file value=\"../../sumo_data/laneMerging.view.xml\"/>" << endl;
