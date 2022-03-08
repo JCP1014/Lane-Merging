@@ -1,7 +1,7 @@
 // Environment Variable:
 //     export SUMO_HOME="/Users/jcp/sumo"
 // Compilation:
-//     g++ -o fcfs -std=c++11 -I$SUMO_HOME/src runner_fcfs.cpp -L$SUMO_HOME/bin -ltracicpp -I /Library/gurobi912/mac64/include -L /Library/gurobi912/mac64/lib -lgurobi_c++ -lgurobi91
+//     g++ -o fcfs -std=c++11 -I$SUMO_HOME/src runner_fcfs.cpp -L$SUMO_HOME/bin -ltracicpp
 // Run:
 //     LD_LIBRARY_PATH=$SUMO_HOME/bin ./fcfs [density] [number] [W=] [W+] [generateNewTest (T/F)] [inputPath]
 #include <iostream>
@@ -10,7 +10,6 @@
 #include <random>
 #include <time.h>
 #include <libsumo/libtraci.h>
-#include "gurobi_c++.h"
 
 using namespace std;
 using namespace libtraci;
