@@ -1,8 +1,8 @@
 <configuration>
     <input>
-       <net-file value="laneMerging3.net.xml"/>
+       <net-file value="laneMerging4.net.xml"/>
        <route-files value="laneMerging.rou.xml"/>
-       <additional-files value="laneMerging.add.xml"/>
+       <additional-files value="laneMerging4.add.xml"/>
        <gui-settings-file value="laneMerging.view.xml"/>
     </input>
 </configuration>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2022-03-21 07:44:55 by Eclipse SUMO netedit Version 1.9.2
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="/Users/jcp/Desktop/OneDrive%20-%20國立成功大學%20National%20Cheng%20Kung%20University/Lab/Lane-Merging/SUMO/sumo_data/laneMerging4.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="/Users/jcp/Desktop/OneDrive%20-%20國立成功大學%20National%20Cheng%20Kung%20University/Lab/Lane-Merging/SUMO/sumo_data/laneMerging4.net.xml"/>
+    </output>
+
+    <processing>
+        <geometry.min-radius.fix.railways value="false"/>
+        <geometry.max-grade.fix value="false"/>
+        <offset.disable-normalization value="true"/>
+        <lefthand value="false"/>
+    </processing>
+
+    <junctions>
+        <no-turnarounds value="true"/>
+        <junctions.corner-detail value="5"/>
+        <junctions.limit-turn-speed value="5.5"/>
+        <rectangular-lane-cut value="false"/>
+    </junctions>
+
+    <pedestrian>
+        <walkingareas value="false"/>
+    </pedestrian>
+
+    <report>
+        <aggregate-warnings value="5"/>
+    </report>
+
+</configuration>
+-->
+
+<net version="1.9" junctionCornerDetail="5" limitTurnSpeed="5.50" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="0.00,0.00" convBoundary="0.00,-5.00,65.00,5.00" origBoundary="-10000000000.00,-10000000000.00,10000000000.00,10000000000.00" projParameter="!"/>
+
+    <edge id=":gneJ6_0" function="internal">
+        <lane id=":gneJ6_0_0" index="0" speed="20.00" length="12.81" shape="46.00,-8.00 49.97,-7.23 52.80,-5.64 55.32,-4.35 58.35,-4.47"/>
+        <lane id=":gneJ6_0_1" index="1" speed="20.00" length="12.81" shape="46.00,-4.80 49.87,-4.53 52.71,-4.04 55.29,-3.85 58.35,-4.47"/>
+    </edge>
+    <edge id=":gneJ6_2" function="internal">
+        <lane id=":gneJ6_2_0" index="0" speed="20.00" length="13.34" shape="46.00,-4.80 50.15,-4.10 52.96,-2.44 55.38,-0.49 58.35,1.10"/>
+        <lane id=":gneJ6_2_1" index="1" speed="20.00" length="13.34" shape="46.00,-1.60 49.93,-1.40 52.77,-0.84 55.31,0.01 58.35,1.10"/>
+    </edge>
+
+    <edge id="X" from="gneJ6" to="gneJ7" priority="-1" length="20.00">
+        <lane id="X_0" index="0" speed="20.00" length="20.00" shape="58.35,1.10 65.51,3.48"/>
+    </edge>
+    <edge id="Y" from="gneJ6" to="gneJ8" priority="-1" length="20.00">
+        <lane id="Y_0" index="0" speed="20.00" length="20.00" shape="58.35,-4.47 64.49,-6.52"/>
+    </edge>
+    <edge id="incoming" from="gneJ5" to="gneJ6" priority="-1" length="6500.00">
+        <lane id="incoming_0" index="0" speed="20.00" length="6500.00" shape="0.00,-8.00 46.00,-8.00"/>
+        <lane id="incoming_1" index="1" speed="20.00" length="6500.00" shape="0.00,-4.80 46.00,-4.80"/>
+        <lane id="incoming_2" index="2" speed="20.00" length="6500.00" shape="0.00,-1.60 46.00,-1.60"/>
+    </edge>
+
+    <junction id="gneJ5" type="dead_end" x="0.00" y="0.00" incLanes="" intLanes="" shape="0.00,0.00 0.00,-9.60" customShape="1"/>
+    <junction id="gneJ6" type="priority" x="50.00" y="0.00" incLanes="incoming_0 incoming_1 incoming_2" intLanes=":gneJ6_0_0 :gneJ6_0_1 :gneJ6_2_0 :gneJ6_2_1" shape="57.84,2.61 58.85,-0.42 57.17,-1.26 56.96,-1.69 57.17,-2.11 57.80,-2.53 58.85,-2.95 57.84,-5.99 55.36,-5.58 53.54,-6.05 52.04,-7.06 50.52,-8.23 48.62,-9.20 46.00,-9.60 46.00,0.00 48.58,0.06 50.49,0.25 52.04,0.59 53.56,1.08 55.39,1.75">
+        <request index="0" response="0000" foes="0000" cont="0"/>
+        <request index="1" response="0000" foes="0000" cont="0"/>
+        <request index="2" response="0000" foes="0000" cont="0"/>
+        <request index="3" response="0000" foes="0000" cont="0"/>
+    </junction>
+    <junction id="gneJ7" type="dead_end" x="65.00" y="5.00" incLanes="X_0" intLanes="" shape="66.01,1.96 65.00,5.00"/>
+    <junction id="gneJ8" type="dead_end" x="65.00" y="-5.00" incLanes="Y_0" intLanes="" shape="63.99,-8.04 65.00,-5.00"/>
+
+    <connection from="incoming" to="Y" fromLane="0" toLane="0" via=":gneJ6_0_0" dir="s" state="M"/>
+    <connection from="incoming" to="Y" fromLane="1" toLane="0" via=":gneJ6_0_1" dir="s" state="M"/>
+    <connection from="incoming" to="X" fromLane="1" toLane="0" via=":gneJ6_2_0" dir="s" state="M"/>
+    <connection from="incoming" to="X" fromLane="2" toLane="0" via=":gneJ6_2_1" dir="s" state="M"/>
+
+    <connection from=":gneJ6_0" to="Y" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":gneJ6_0" to="Y" fromLane="1" toLane="0" dir="s" state="M"/>
+    <connection from=":gneJ6_2" to="X" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":gneJ6_2" to="X" fromLane="1" toLane="0" dir="s" state="M"/>
+
+</net>
