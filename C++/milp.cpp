@@ -62,6 +62,16 @@ tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vec
         // Set objective: minimize f
         model.setObjective(f + 0, GRB_MINIMIZE);
 
+        // Set objective: minimize weighted sum
+        // GRBLinExpr weightedSum = f * (alpha + beta + gamma);
+        // for (int i = 1; i <= alpha; ++i)
+        //     weightedSum += s[i];
+        // for (int j = 1; j <= beta; ++j)
+        //     weightedSum += t[j];
+        // for (int k = 1; k <= gamma; ++k)
+        //     weightedSum += u[k];
+        // model.setObjective(weightedSum, GRB_MINIMIZE);
+
         // Set objective: minimize sigma(entering time - arrival time)
         // GRBLinExpr obj = 0;
         // for (int i = 1; i <= alpha; ++i)
@@ -122,7 +132,8 @@ tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vec
         // Add constraint: if x[i][j] == 1, then a[i+1] - W_diff >= b[j] >= a[i] + W_diff
         for (int j = 0; j <= beta; ++j)
         {
-            for (int i = 0; i < alpha; ++i)
+            model.addGenConstrIndicator(x[0][j], 1, t[j] <= s[1] - W_diff, "c8_" + to_string(0) + "_" + to_string(j));
+            for (int i = 1; i < alpha; ++i)
             {
                 model.addGenConstrIndicator(x[i][j], 1, t[j] <= s[i + 1] - W_diff, "c8_" + to_string(i) + "_" + to_string(j));
                 model.addGenConstrIndicator(x[i][j], 1, t[j] >= s[i] + W_diff, "c9_" + to_string(i) + "_" + to_string(j));
@@ -133,7 +144,8 @@ tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vec
         // Add constraint: if y[k][j] == 1, then c[k+1] - W_diff >= b[j] >= c[k] + W_diff
         for (int j = 0; j <= beta; ++j)
         {
-            for (int k = 0; k < gamma; ++k)
+            model.addGenConstrIndicator(y[0][j], 1, t[j] <= u[1] - W_diff, "c10_" + to_string(0) + "_" + to_string(j));
+            for (int k = 1; k < gamma; ++k)
             {
                 model.addGenConstrIndicator(y[k][j], 1, t[j] <= u[k + 1] - W_diff, "c10_" + to_string(k) + "_" + to_string(j));
                 model.addGenConstrIndicator(y[k][j], 1, t[j] >= u[k] + W_diff, "c11_" + to_string(k) + "_" + to_string(j));
@@ -168,21 +180,21 @@ tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vec
         // cout << "s = {";
         for (int i = 0; i <= alpha; ++i)
         {
-            // cout << s[i].get(GRB_DoubleAttr_X) << ", ";
+            // cout << s[i].get(GRB_DoubleAttr_X) << "(" << A[i] << "), ";
             total_wait += (s[i].get(GRB_DoubleAttr_X) - A[i]);
         }
         // cout << "};" << endl;
         // cout << "t = {";
         for (int j = 0; j <= beta; ++j)
         {
-            // cout << t[j].get(GRB_DoubleAttr_X) << ", ";
+            // cout << t[j].get(GRB_DoubleAttr_X) << "(" << B[j] << "), ";
             total_wait += (t[j].get(GRB_DoubleAttr_X) - B[j]);
         }
         // cout << "};" << endl;
         // cout << "k = {";
         for (int k = 0; k <= gamma; ++k)
         {
-            cout << u[k].get(GRB_DoubleAttr_X) << ", ";
+            // cout << u[k].get(GRB_DoubleAttr_X) << "(" << C[k] << "), ";
             total_wait += (u[k].get(GRB_DoubleAttr_X) - C[k]);
         }
         // cout << "};" << endl;
@@ -190,14 +202,14 @@ tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vec
         // {
         //     for (int i = 0; i <= alpha; ++i)
         //     {
-        //         if (x[i][j].get(GRB_DoubleAttr_X) == 1)
+        //         if (x[i][j].get(GRB_DoubleAttr_X))
         //             // cout << x[i][j].get(GRB_StringAttr_VarName) << " "
         //             //      << x[i][j].get(GRB_DoubleAttr_X) << endl;
         //             cout << "X ";
         //     }
         //     for (int k = 0; k <= gamma; ++k)
         //     {
-        //         if (y[k][j].get(GRB_DoubleAttr_X) == 1)
+        //         if (y[k][j].get(GRB_DoubleAttr_X))
         //             // cout << y[k][j].get(GRB_StringAttr_VarName) << " "
         //             //      << y[k][j].get(GRB_DoubleAttr_X) << endl;
         //             cout << "Y ";
@@ -206,7 +218,8 @@ tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vec
         // cout << endl;
         // cout << "Obj: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
         // cout << "T_last: " << max(max(s[alpha].get(GRB_DoubleAttr_X), t[beta].get(GRB_DoubleAttr_X)), max(t[beta].get(GRB_DoubleAttr_X), u[gamma].get(GRB_DoubleAttr_X))) << endl;
-        double T_last = model.get(GRB_DoubleAttr_ObjVal);
+        // double T_last = model.get(GRB_DoubleAttr_ObjVal);
+        double T_last = f.get(GRB_DoubleAttr_X);
         double T_delay = total_wait / (alpha + beta + gamma);
         auto t1 = chrono::high_resolution_clock::now();
         double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();

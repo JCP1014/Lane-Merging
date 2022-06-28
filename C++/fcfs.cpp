@@ -1,42 +1,12 @@
 #include "fcfs.h"
 
-double W_same, W_diff;
-
-tuple<tuple<char, int, double>, double> schedule_single_lane(char lane, vector<double> traffic, tuple<char, int, double> prev)
-{
-    char prevLane = get<0>(prev);
-    double prevTime = get<2>(prev);
-    tuple<char, int, double> last = make_tuple('0', 0, 0.0);
-    double wait_time = 0;
-    if (prevLane == '0')
-    {
-        last = make_tuple(lane, 1, traffic[0]);
-    }
-    else if (lane == prevLane)
-    {
-        last = make_tuple(lane, 1, max(traffic[0], prevTime + W_same));
-    }
-    else
-    {
-        last = make_tuple(lane, 1, max(traffic[0], prevTime + W_diff));
-    }
-    wait_time += (get<2>(last) - traffic[0]);
-    for (int i = 1; i < traffic.size(); ++i)
-    {
-        prevTime = get<2>(last);
-        last = make_tuple(lane, i, max(traffic[i], prevTime + W_same));
-        wait_time += (get<2>(last) - traffic[i]);
-    }
-    return make_tuple(last, wait_time);
-}
-
 pair<double, double> first_come_first_serve_v1(double timeStep, vector<double> a_all, vector<double> b_all, vector<double> c_all)
 {
     auto t0 = chrono::high_resolution_clock::now();
     vector<double> a(a_all.begin() + 1, a_all.end());
     vector<double> b(b_all.begin() + 1, b_all.end());
     vector<double> c(c_all.begin() + 1, c_all.end());
-    double t = 0;         // time
+    double t = 0;        // time
     char B_prevTo = 'Y'; // Which lane the previous vehicle in lane B go to
     double X_lastT = -W_diff;
     double Y_lastT = -W_diff;
@@ -666,7 +636,7 @@ pair<double, double> first_come_first_serve_v1(double timeStep, vector<double> a
     double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
     totalComputeTime *= 1e-9;
     double T_last = max(X_lastT, Y_lastT);
-    cout << "fcfs result: " << T_last << " " << totalComputeTime << endl;
+    // cout << "fcfs result: " << T_last << " " << totalComputeTime << endl;
     return {T_last, totalComputeTime};
 }
 
@@ -702,6 +672,7 @@ tuple<double, double, double> first_come_first_serve_v2(vector<double> a_all, ve
                 X_lastFrom = 'A';
                 total_wait += (X_lastT - a[0]);
                 a.erase(a.begin());
+                // cout << X_lastT << " A" << endl;
             }
             if (first == c[0])
             {
@@ -712,72 +683,139 @@ tuple<double, double, double> first_come_first_serve_v2(vector<double> a_all, ve
                 Y_lastFrom = 'C';
                 total_wait += (Y_lastT - c[0]);
                 c.erase(c.begin());
+                // cout << Y_lastT << " C" << endl;
             }
             if (first == b[0])
             {
                 if (X_lastT < Y_lastT)
                 {
                     if (X_lastFrom == 'B')
-                        X_lastT = max(b[0], X_lastT + W_same);
+                    {
+                        if (Y_lastFrom == 'B')
+                            X_lastT = max(max(b[0], X_lastT + W_same), Y_lastT + W_same);
+                        else
+                            X_lastT = max(b[0], X_lastT + W_same);
+                    }
                     else
-                        X_lastT = max(b[0], X_lastT + W_diff);
+                    {
+                        if (Y_lastFrom == 'B')
+                            X_lastT = max(max(b[0], X_lastT + W_diff), Y_lastT + W_same);
+                        else
+                            X_lastT = max(b[0], X_lastT + W_diff);
+                    }
                     X_lastFrom = 'B';
                     total_wait += (X_lastT - b[0]);
                     b.erase(b.begin());
+                    // cout << X_lastT << " BX" << endl;
                 }
                 else if (Y_lastT < X_lastT)
                 {
                     if (Y_lastFrom == 'B')
-                        Y_lastT = max(b[0], Y_lastT + W_same);
+                    {
+                        if (X_lastFrom == 'B')
+                            Y_lastT = max(max(b[0], Y_lastT + W_same), X_lastT + W_same);
+                        else
+                            Y_lastT = max(b[0], Y_lastT + W_same);
+                    }
                     else
-                        Y_lastT = max(b[0], Y_lastT + W_diff);
+                    {
+                        if (X_lastFrom == 'B')
+                            Y_lastT = max(max(b[0], Y_lastT + W_diff), X_lastT + W_same);
+                        else
+                            Y_lastT = max(b[0], Y_lastT + W_diff);
+                    }
                     Y_lastFrom = 'B';
                     total_wait += (Y_lastT - b[0]);
                     b.erase(b.begin());
+                    // cout << Y_lastT << " BY" << endl;
                 }
                 else
                 {
                     if (a[0] > c[0])
                     {
                         if (X_lastFrom == 'B')
-                            X_lastT = max(b[0], X_lastT + W_same);
+                        {
+                            if (Y_lastFrom == 'B')
+                                X_lastT = max(max(b[0], X_lastT + W_same), Y_lastT + W_same);
+                            else
+                                X_lastT = max(b[0], X_lastT + W_same);
+                        }
                         else
-                            X_lastT = max(b[0], X_lastT + W_diff);
+                        {
+                            if (Y_lastFrom == 'B')
+                                X_lastT = max(max(b[0], X_lastT + W_diff), Y_lastT + W_same);
+                            else
+                                X_lastT = max(b[0], X_lastT + W_diff);
+                        }
                         X_lastFrom = 'B';
                         total_wait += (X_lastT - b[0]);
                         b.erase(b.begin());
+                        // cout << X_lastT << " BX" << endl;
                     }
                     else if (c[0] > a[0])
                     {
                         if (Y_lastFrom == 'B')
-                            Y_lastT = max(b[0], Y_lastT + W_same);
+                        {
+                            if (X_lastFrom == 'B')
+                                Y_lastT = max(max(b[0], Y_lastT + W_same), X_lastT + W_same);
+                            else
+                                Y_lastT = max(b[0], Y_lastT + W_same);
+                        }
                         else
-                            Y_lastT = max(b[0], Y_lastT + W_diff);
+                        {
+                            if (X_lastFrom == 'B')
+                                Y_lastT = max(max(b[0], Y_lastT + W_diff), X_lastT + W_same);
+                            else
+                                Y_lastT = max(b[0], Y_lastT + W_diff);
+                        }
                         Y_lastFrom = 'B';
                         total_wait += (Y_lastT - b[0]);
                         b.erase(b.begin());
+                        // cout << Y_lastT << " BY" << endl;
                     }
                     else
                     {
                         if (distribution(generator) == 0)
                         {
                             if (X_lastFrom == 'B')
-                                X_lastT = max(b[0], X_lastT + W_same);
+                            {
+                                if (Y_lastFrom == 'B')
+                                    X_lastT = max(max(b[0], X_lastT + W_same), Y_lastT + W_same);
+                                else
+                                    X_lastT = max(b[0], X_lastT + W_same);
+                            }
                             else
-                                X_lastT = max(b[0], X_lastT + W_diff);
+                            {
+                                if (Y_lastFrom == 'B')
+                                    X_lastT = max(max(b[0], X_lastT + W_diff), Y_lastT + W_same);
+                                else
+                                    X_lastT = max(b[0], X_lastT + W_diff);
+                            }
                             X_lastFrom = 'B';
                             total_wait += (X_lastT - b[0]);
                             b.erase(b.begin());
+                            // cout << X_lastT << " BX" << endl;
                         }
                         else
                         {
                             if (Y_lastFrom == 'B')
-                                Y_lastT = max(b[0], Y_lastT + W_same);
+                            {
+                                if (X_lastFrom == 'B')
+                                    Y_lastT = max(max(b[0], Y_lastT + W_same), X_lastT + W_same);
+                                else
+                                    Y_lastT = max(b[0], Y_lastT + W_same);
+                            }
                             else
-                                Y_lastT = max(b[0], Y_lastT + W_diff);
+                            {
+                                if (X_lastFrom == 'B')
+                                    Y_lastT = max(max(b[0], Y_lastT + W_diff), X_lastT + W_same);
+                                else
+                                    Y_lastT = max(b[0], Y_lastT + W_diff);
+                            }
                             Y_lastFrom = 'B';
                             total_wait += (Y_lastT - b[0]);
                             b.erase(b.begin());
+                            // cout << Y_lastT << " BY" << endl;
                         }
                     }
                 }
@@ -837,22 +875,44 @@ tuple<double, double, double> first_come_first_serve_v2(vector<double> a_all, ve
                 if (X_lastT < Y_lastT)
                 {
                     if (X_lastFrom == 'B')
-                        X_lastT = max(b[0], X_lastT + W_same);
+                    {
+                        if (Y_lastFrom == 'B')
+                            X_lastT = max(max(b[0], X_lastT + W_same), Y_lastT + W_same);
+                        else
+                            X_lastT = max(b[0], X_lastT + W_same);
+                    }
                     else
-                        X_lastT = max(b[0], X_lastT + W_diff);
+                    {
+                        if (Y_lastFrom == 'B')
+                            X_lastT = max(max(b[0], X_lastT + W_diff), Y_lastT + W_same);
+                        else
+                            X_lastT = max(b[0], X_lastT + W_diff);
+                    }
                     X_lastFrom = 'B';
                     total_wait += (X_lastT - b[0]);
                     b.erase(b.begin());
+                    // cout << X_lastT << " BX" << endl;
                 }
                 else
                 {
                     if (Y_lastFrom == 'B')
-                        Y_lastT = max(b[0], Y_lastT + W_same);
+                    {
+                        if (X_lastFrom == 'B')
+                            Y_lastT = max(max(b[0], Y_lastT + W_same), X_lastT + W_same);
+                        else
+                            Y_lastT = max(b[0], Y_lastT + W_same);
+                    }
                     else
-                        Y_lastT = max(b[0], Y_lastT + W_diff);
+                    {
+                        if (X_lastFrom == 'B')
+                            Y_lastT = max(max(b[0], Y_lastT + W_diff), X_lastT + W_same);
+                        else
+                            Y_lastT = max(b[0], Y_lastT + W_diff);
+                    }
                     Y_lastFrom = 'B';
                     total_wait += (Y_lastT - b[0]);
                     b.erase(b.begin());
+                    // cout << Y_lastT << " BY" << endl;
                 }
             }
         }

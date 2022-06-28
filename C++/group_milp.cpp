@@ -4,12 +4,12 @@
 //                  -lgurobi_c++ -lgurobi91
 #include "group_milp.h"
 
-tuple<double, double, double> solve_group_milp(vector<double> A, vector<double> B, vector<double> C, double timeStep)
+tuple<double, double, double> solve_group_milp(vector<double> A, vector<double> B, vector<double> C)
 {
     auto t0 = chrono::high_resolution_clock::now();
-    vector<pair<int, int>> grouped_A = grouping(A, timeStep);
-    vector<pair<int, int>> grouped_B = grouping(B, timeStep);
-    vector<pair<int, int>> grouped_C = grouping(C, timeStep); 
+    vector<pair<int, int>> grouped_A = grouping(A);
+    vector<pair<int, int>> grouped_B = grouping(B);
+    vector<pair<int, int>> grouped_C = grouping(C);
     int alpha = A.size() - 1;
     int beta = B.size() - 1;
     int gamma = C.size() - 1;
@@ -85,6 +85,16 @@ tuple<double, double, double> solve_group_milp(vector<double> A, vector<double> 
 
         // Set objective: minimize f
         model.setObjective(f + 0, GRB_MINIMIZE);
+
+        // Set objective: minimize weighted sum
+        // GRBLinExpr weightedSum = f * (alpha + beta + gamma);
+        // for (int i = 1; i <= alpha; ++i)
+        //     weightedSum += s[i];
+        // for (int j = 1; j <= beta; ++j)
+        //     weightedSum += t[j];
+        // for (int k = 1; k <= gamma; ++k)
+        //     weightedSum += u[k];
+        // model.setObjective(weightedSum, GRB_MINIMIZE);
 
         // Set objective: minimize sigma(entering time - arrival time)
         // GRBLinExpr obj = 0;
@@ -163,7 +173,8 @@ tuple<double, double, double> solve_group_milp(vector<double> A, vector<double> 
         // Add constraint: if x[l][m] == 1, then p[l+1] - W_diff >= q[m] >= p[l] + W_diff
         for (int m = 0; m <= M; ++m)
         {
-            for (int l = 0; l < L; ++l)
+            model.addGenConstrIndicator(x[0][m], 1, qt[m] <= ph[1] - W_diff, "c14_" + to_string(0) + "_" + to_string(m));
+            for (int l = 1; l < L; ++l)
             {
                 model.addGenConstrIndicator(x[l][m], 1, qt[m] <= ph[l + 1] - W_diff, "c14_" + to_string(l) + "_" + to_string(m));
                 model.addGenConstrIndicator(x[l][m], 1, qh[m] >= pt[l] + W_diff, "c15_" + to_string(l) + "_" + to_string(m));
@@ -174,7 +185,8 @@ tuple<double, double, double> solve_group_milp(vector<double> A, vector<double> 
         // Add constraint: if y[n][m] == 1, then r[n+1] - W_diff >= q[m] >= r[n] + W_diff
         for (int m = 0; m <= M; ++m)
         {
-            for (int n = 0; n < N; ++n)
+            model.addGenConstrIndicator(y[0][m], 1, qt[m] <= rh[1] - W_diff, "c17_" + to_string(0) + "_" + to_string(m));
+            for (int n = 1; n < N; ++n)
             {
                 model.addGenConstrIndicator(y[n][m], 1, qt[m] <= rh[n + 1] - W_diff, "c17_" + to_string(n) + "_" + to_string(m));
                 model.addGenConstrIndicator(y[n][m], 1, qh[m] >= rt[n] + W_diff, "c18_" + to_string(n) + "_" + to_string(m));
@@ -231,7 +243,7 @@ tuple<double, double, double> solve_group_milp(vector<double> A, vector<double> 
         // {
         //     for (int l = 0; l <= L; ++l)
         //     {
-        //         if (x[l][m].get(GRB_DoubleAttr_X) == 1)
+        //         if (x[l][m].get(GRB_DoubleAttr_X))
         //             // cout << x[l][m].get(GRB_StringAttr_VarName) << " "
         //             //      << x[l][m].get(GRB_DoubleAttr_X) << endl;
         //             cout << "X"
@@ -239,7 +251,7 @@ tuple<double, double, double> solve_group_milp(vector<double> A, vector<double> 
         //     }
         //     for (int n = 0; n <= N; ++n)
         //     {
-        //         if (y[n][m].get(GRB_DoubleAttr_X) == 1)
+        //         if (y[n][m].get(GRB_DoubleAttr_X))
         //             // cout << y[n][m].get(GRB_StringAttr_VarName) << " "
         //             //      << y[n][m].get(GRB_DoubleAttr_X) << endl;
         //             cout << "Y"
@@ -249,7 +261,8 @@ tuple<double, double, double> solve_group_milp(vector<double> A, vector<double> 
         // cout << endl;
         // cout << "Obj: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
         // cout << "T_last: " << max(max(s[alpha].get(GRB_DoubleAttr_X), t[beta].get(GRB_DoubleAttr_X)), max(t[beta].get(GRB_DoubleAttr_X), u[gamma].get(GRB_DoubleAttr_X))) << endl;
-        double T_last = model.get(GRB_DoubleAttr_ObjVal);
+        // double T_last = model.get(GRB_DoubleAttr_ObjVal);
+        double T_last = f.get(GRB_DoubleAttr_X);
         double T_delay = total_wait / (alpha + beta + gamma);
         auto t1 = chrono::high_resolution_clock::now();
         double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();

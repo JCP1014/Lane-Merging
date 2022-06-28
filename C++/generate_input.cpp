@@ -26,16 +26,3 @@ vector<double> generate_traffic(double timeStep, int num, double p, int seed)
     }
     return earliestArrivalTimes;
 }
-
-vector<double> read_data(string fileName)
-{
-    fstream file;
-    string line;
-    double tmp;
-    vector<double> allData;
-    file.open(fileName);
-    while (getline(file, line))
-        allData.push_back(stof(line));
-    file.close();
-    return allData;
-}

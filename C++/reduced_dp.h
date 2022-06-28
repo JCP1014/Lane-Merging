@@ -3,6 +3,7 @@
 
 #include <stack>
 #include <iostream>
+#include "utility.h"
 #include "solution.h"
 #include "fcfs.h"
 using namespace std;

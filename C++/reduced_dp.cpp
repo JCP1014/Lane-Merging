@@ -283,7 +283,6 @@ tuple<tuple<char, int, double>, tuple<char, int, double>, int, int, int, double>
     bool isCut = false;
     int N = max(max(alpha, beta), max(beta, gamma));
     int cut_i = alpha, cut_j = beta, cut_k = gamma;
-    int quota = 5;
 
     // Find where to cut
     for (int square = 1; square <= N; ++square)
@@ -340,10 +339,10 @@ tuple<tuple<char, int, double>, tuple<char, int, double>, int, int, int, double>
                 }
                 // L_BB
                 tmpSolVec.resize(4);
-                tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BB[i][j - 1][k].time[0] + W_same), L_BB[i][j - 1][k].time[1], "BB", "X", &L_BB[i][j - 1][k]);
-                tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AB[i][j - 1][k].time[0] + W_diff), L_AB[i][j - 1][k].time[1], "AB", "X", &L_AB[i][j - 1][k]);
-                tmpSolVec[2] = update_sol(tmpSolVec[2], L_BB[i][j - 1][k].time[0], max(b[j], L_BB[i][j - 1][k].time[1] + W_same), "BB", "Y", &L_BB[i][j - 1][k]);
-                tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], max(b[j], L_BC[i][j - 1][k].time[1] + W_diff), "BC", "Y", &L_BC[i][j - 1][k]);
+                tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], max(L_BB[i][j - 1][k].time[0] + W_same, L_BB[i][j - 1][k].time[1] + W_same)), L_BB[i][j - 1][k].time[1], "BB", "X", &L_BB[i][j - 1][k]);
+                tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], max(L_AB[i][j - 1][k].time[0] + W_diff, L_AB[i][j - 1][k].time[1] + W_same)), L_AB[i][j - 1][k].time[1], "AB", "X", &L_AB[i][j - 1][k]);
+                tmpSolVec[2] = update_sol(tmpSolVec[2], L_BB[i][j - 1][k].time[0], max(b[j], max(L_BB[i][j - 1][k].time[1] + W_same, L_BB[i][j - 1][k].time[0] + W_same)), "BB", "Y", &L_BB[i][j - 1][k]);
+                tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], max(b[j], max(L_BC[i][j - 1][k].time[1] + W_diff, L_BC[i][j - 1][k].time[0] + W_same)), "BC", "Y", &L_BC[i][j - 1][k]);
                 L_BB[i][j][k] = choose_best_sol(L_BB[i][j][k], tmpSolVec);
                 tmpSolVec.clear();
                 if ((i == alpha || max(L_BB[i][j][k].time[0], L_BB[i][j][k].time[1]) <= a[i + 1]) &&
@@ -417,10 +416,10 @@ tuple<tuple<char, int, double>, tuple<char, int, double>, int, int, int, double>
 
                 // L_BB
                 tmpSolVec.resize(4);
-                tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], L_BB[i][j - 1][k].time[0] + W_same), L_BB[i][j - 1][k].time[1], "BB", "X", &L_BB[i][j - 1][k]);
-                tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], L_AB[i][j - 1][k].time[0] + W_diff), L_AB[i][j - 1][k].time[1], "AB", "X", &L_AB[i][j - 1][k]);
-                tmpSolVec[2] = update_sol(tmpSolVec[2], L_BB[i][j - 1][k].time[0], max(b[j], L_BB[i][j - 1][k].time[1] + W_same), "BB", "Y", &L_BB[i][j - 1][k]);
-                tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], max(b[j], L_BC[i][j - 1][k].time[1] + W_diff), "BC", "Y", &L_BC[i][j - 1][k]);
+                tmpSolVec[0] = update_sol(tmpSolVec[0], max(b[j], max(L_BB[i][j - 1][k].time[0] + W_same, L_BB[i][j - 1][k].time[1]+W_same)), L_BB[i][j - 1][k].time[1], "BB", "X", &L_BB[i][j - 1][k]);
+                tmpSolVec[1] = update_sol(tmpSolVec[1], max(b[j], max(L_AB[i][j - 1][k].time[0] + W_diff, L_AB[i][j - 1][k].time[1]+W_same)), L_AB[i][j - 1][k].time[1], "AB", "X", &L_AB[i][j - 1][k]);
+                tmpSolVec[2] = update_sol(tmpSolVec[2], L_BB[i][j - 1][k].time[0], max(b[j], max(L_BB[i][j - 1][k].time[1] + W_same, L_BB[i][j - 1][k].time[0]+W_same)), "BB", "Y", &L_BB[i][j - 1][k]);
+                tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], max(b[j], max(L_BC[i][j - 1][k].time[1] + W_diff, L_BC[i][j - 1][k].time[0]+W_same)), "BC", "Y", &L_BC[i][j - 1][k]);
                 L_BB[i][j][k] = choose_best_sol(L_BB[i][j][k], tmpSolVec);
                 tmpSolVec.clear();
                 if ((i == alpha || max(L_BB[i][j][k].time[0], L_BB[i][j][k].time[1]) <= a[i + 1]) &&

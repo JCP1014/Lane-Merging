@@ -185,10 +185,10 @@ pair<double, double> grouped_dp(vector<double> a, vector<double> b, vector<doubl
 
                 // L_BB
                 tmpSolVec.resize(4);
-                tmpSolVec[0] = update_sol(tmpSolVec[0], get_tail_time(b, grouped_b[j], L_BB[i][j - 1][k].time[0] + W_same), L_BB[i][j - 1][k].time[1], "BB", "X", &L_BB[i][j - 1][k]);
-                tmpSolVec[1] = update_sol(tmpSolVec[1], get_tail_time(b, grouped_b[j], L_AB[i][j - 1][k].time[0] + W_diff), L_AB[i][j - 1][k].time[1], "AB", "X", &L_AB[i][j - 1][k]);
-                tmpSolVec[2] = update_sol(tmpSolVec[2], L_BB[i][j - 1][k].time[0], get_tail_time(b, grouped_b[j], L_BB[i][j - 1][k].time[1] + W_same), "BB", "Y", &L_BB[i][j - 1][k]);
-                tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], get_tail_time(b, grouped_b[j], L_BC[i][j - 1][k].time[1] + W_diff), "BC", "Y", &L_BC[i][j - 1][k]);
+                tmpSolVec[0] = update_sol(tmpSolVec[0], get_tail_time(b, grouped_b[j], max(L_BB[i][j - 1][k].time[0] + W_same, L_BB[i][j - 1][k].time[1] + W_same)), L_BB[i][j - 1][k].time[1], "BB", "X", &L_BB[i][j - 1][k]);
+                tmpSolVec[1] = update_sol(tmpSolVec[1], get_tail_time(b, grouped_b[j], max(L_AB[i][j - 1][k].time[0] + W_diff, L_AB[i][j - 1][k].time[1] + W_same)), L_AB[i][j - 1][k].time[1], "AB", "X", &L_AB[i][j - 1][k]);
+                tmpSolVec[2] = update_sol(tmpSolVec[2], L_BB[i][j - 1][k].time[0], get_tail_time(b, grouped_b[j], max(L_BB[i][j - 1][k].time[1] + W_same, L_BB[i][j - 1][k].time[0] + W_same)), "BB", "Y", &L_BB[i][j - 1][k]);
+                tmpSolVec[3] = update_sol(tmpSolVec[3], L_BC[i][j - 1][k].time[0], get_tail_time(b, grouped_b[j], max(L_BC[i][j - 1][k].time[1] + W_diff, L_BC[i][j - 1][k].time[0] + W_same)), "BC", "Y", &L_BC[i][j - 1][k]);
                 L_BB[i][j][k] = choose_best_sol(L_BB[i][j][k], tmpSolVec);
                 tmpSolVec.clear();
             }
@@ -424,13 +424,13 @@ pair<double, double> grouped_dp(vector<double> a, vector<double> b, vector<doubl
         stack_Y.pop();
 
     // Output order
-    cout << "Lane X: " << endl;
+    // cout << "Lane X: " << endl;
     double prev_tail = -W_diff;
     char prev_lane = '0';
     char curr_lane;
     while (stack_X.size() > 1)
     {
-        cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+        // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
         curr_lane = get<0>(stack_X.top());
         if (curr_lane == 'A')
         {
@@ -450,7 +450,7 @@ pair<double, double> grouped_dp(vector<double> a, vector<double> b, vector<doubl
         prev_tail = get<2>(stack_X.top());
         stack_X.pop();
     }
-    cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
+    // cout << get<0>(stack_X.top()) << " " << get<1>(stack_X.top()) << " " << get<2>(stack_X.top()) << endl;
     curr_lane = get<0>(stack_X.top());
     if (curr_lane == 'A')
     {
@@ -468,12 +468,12 @@ pair<double, double> grouped_dp(vector<double> a, vector<double> b, vector<doubl
     }
     T_last = get<2>(stack_X.top());
 
-    cout << "Lane Y: " << endl;
+    // cout << "Lane Y: " << endl;
     prev_tail = -W_diff;
     prev_lane = '0';
     while (stack_Y.size() > 1)
     {
-        cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+        // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
         curr_lane = get<0>(stack_Y.top());
         if (curr_lane == 'C')
         {
@@ -493,7 +493,7 @@ pair<double, double> grouped_dp(vector<double> a, vector<double> b, vector<doubl
         prev_tail = get<2>(stack_Y.top());
         stack_Y.pop();
     }
-    cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
+    // cout << get<0>(stack_Y.top()) << " " << get<1>(stack_Y.top()) << " " << get<2>(stack_Y.top()) << endl;
     curr_lane = get<0>(stack_Y.top());
     if (curr_lane == 'C')
     {
@@ -515,12 +515,12 @@ pair<double, double> grouped_dp(vector<double> a, vector<double> b, vector<doubl
     return {T_last, T_delay};
 }
 
-tuple<double, double, double> schedule_by_group_dp(vector<double> a_all, vector<double> b_all, vector<double> c_all, double timeStep)
+tuple<double, double, double> schedule_by_group_dp(vector<double> a_all, vector<double> b_all, vector<double> c_all)
 {
     auto t0 = chrono::high_resolution_clock::now();
-    vector<pair<int, int>> grouped_a = grouping(a_all, timeStep);
-    vector<pair<int, int>> grouped_b = grouping(b_all, timeStep);
-    vector<pair<int, int>> grouped_c = grouping(c_all, timeStep);
+    vector<pair<int, int>> grouped_a = grouping(a_all);
+    vector<pair<int, int>> grouped_b = grouping(b_all);
+    vector<pair<int, int>> grouped_c = grouping(c_all);
     pair<double, double> res = grouped_dp(a_all, b_all, c_all, grouped_a, grouped_b, grouped_c);
     double T_last = res.first;
     double T_delay = res.second;

@@ -8,9 +8,9 @@
 #include <time.h>
 #include <stack>
 #include <chrono>
+#include "utility.h"
 using namespace std;
 
-extern double W_same, W_diff;
 struct GreedySol
 {
     double time = INFINITY;
