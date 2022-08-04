@@ -1,5 +1,6 @@
 #include "utility.h"
 
+// For sorting vehicles based on their IDs
 bool sort_vehicle(vehicle a, vehicle b)
 {
     int a_id = stoi(a.id.substr(a.id.find("_") + 1));
@@ -7,6 +8,7 @@ bool sort_vehicle(vehicle a, vehicle b)
     return a_id < b_id;
 }
 
+// For sorting IDs based on the number
 bool sort_id(string a, string b)
 {
     int a_id = stoi(a.substr(a.find("_") + 1));

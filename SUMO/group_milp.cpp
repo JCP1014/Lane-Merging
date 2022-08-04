@@ -188,13 +188,11 @@ void group_milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, ve
         model.optimize();
 
         // Output results
-        double total_wait = 0;
         schedule_A.clear();
         schedule_B.clear();
         schedule_C.clear();
         for (int i = 1; i <= alpha; ++i)
         {
-            total_wait += (s[i].get(GRB_DoubleAttr_X) - A[i].time);
             schedule_A.push_back(vehicle(A[i].id, s[i].get(GRB_DoubleAttr_X)));
         }
         for (int m = 1; m <= M; ++m)
@@ -206,7 +204,6 @@ void group_milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, ve
                 {
                     for (int j = grouped_B[m].first; j <= grouped_B[m].second; ++j)
                     {
-                        total_wait += (t[j].get(GRB_DoubleAttr_X) - B[j].time);
                         Vehicle::setRouteID(B[j].id, "route_1");
                         schedule_B.push_back(vehicle(B[j].id, t[j].get(GRB_DoubleAttr_X)));
                     }
@@ -222,7 +219,6 @@ void group_milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, ve
                     {
                         for (int j = grouped_B[m].first; j <= grouped_B[m].second; ++j)
                         {
-                            total_wait += (t[j].get(GRB_DoubleAttr_X) - B[j].time);
                             Vehicle::setRouteID(B[j].id, "route_2");
                             schedule_B.push_back(vehicle(B[j].id, t[j].get(GRB_DoubleAttr_X)));
                         }
@@ -233,11 +229,9 @@ void group_milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, ve
         }
         for (int k = 1; k <= gamma; ++k)
         {
-            total_wait += (u[k].get(GRB_DoubleAttr_X) - C[k].time);
             schedule_C.push_back(vehicle(C[k].id, u[k].get(GRB_DoubleAttr_X)));
         }
         double T_last = model.get(GRB_DoubleAttr_ObjVal);
-        double T_delay = total_wait / (alpha + beta + gamma);
         if (model.get(GRB_DoubleAttr_Runtime) >= 1800)
             cout << "*** Exceeds the time limit. ***" << endl;
     }

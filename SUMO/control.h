@@ -3,13 +3,13 @@
 
 #include "utility.h"
 #include "get_vehicle_info.h"
-#include "fcfs.h"
+#include "fafg.h"
 #include "milp.h"
 #include "dp.h"
 #include "group_milp.h"
 #include "group_dp.h"
 
-#define FCFS 0
+#define FAFG 0
 #define MILP 1
 #define DP 2
 #define GROUP_MILP 3

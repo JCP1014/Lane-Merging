@@ -11,13 +11,14 @@
 #include "utility.h"
 using namespace std;
 
+// Solution of 2D table
 struct GreedySol
 {
-    double time = INFINITY;
-    char table = '0';
+    double time = INFINITY; // the scheduled entering time of the last vehicle
+    char table = '0';   // which table we derive from
 };
 
 GreedySol update_greedySol(GreedySol s, double newTime, char newTable);
-tuple<double, double, double> greedy_dp(vector<double> a_all, vector<double> b_all, vector<double> c_all);
+tuple<double, double, double> dp_2d(vector<double> A_all, vector<double> B_all, vector<double> C_all);
 
 #endif

@@ -10,10 +10,10 @@ using namespace std;
 
 struct Solution
 {
-    double time[2] = {INFINITY, INFINITY};
-    string table = "";
-    string lane = "";
-    Solution *src = NULL;
+    double time[2] = {INFINITY, INFINITY};  // scheduled entering times of the last vehicle going to Lane X and Lane Y
+    string table = "";  // the table which we derive from
+    string lane = "";   // the lane which the last vehicle goes to (or the last two vehicles go to)
+    Solution *src = NULL;   // the source solution which we derive from
 };
 
 Solution update_sol(Solution s, double newTimeX, double newTimeY, string newTable, string newLane);

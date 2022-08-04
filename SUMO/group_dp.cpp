@@ -10,16 +10,15 @@ double get_tail_time(vector<vehicle> &traffic, pair<int, int> index, double head
     return tail_time;
 }
 
-void compute_member_time(vector<vehicle> &traffic, pair<int, int> index, double head_time, vector<vehicle> &schedule, double &total_wait)
+// Calculate the scheduled entering time of each vehicle in a group
+void compute_member_time(vector<vehicle> &traffic, pair<int, int> index, double head_time, vector<vehicle> &schedule)
 {
     double tail_time = max(traffic[index.first].time, head_time);
     schedule.push_back(vehicle(traffic[index.first].id, tail_time));
-    total_wait += (tail_time - traffic[index.first].time);
     for (int i = index.first + 1; i <= index.second; ++i)
     {
         tail_time = max(traffic[i].time, tail_time + W_same);
         schedule.push_back(vehicle(traffic[i].id, tail_time));
-        total_wait += (tail_time - traffic[i].time);
     }
 }
 
@@ -211,7 +210,7 @@ void group_dp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vect
     int i = alpha;
     int j = beta;
     int k = gamma;
-    string optTable;
+    // string optTable;
     string table = "";
     string lanes = "";
     // Choose the optimal solution and the table to start backtracking
@@ -219,102 +218,102 @@ void group_dp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vect
     tmpSolVec.push_back(L_AC[i][j][k]);
     tmpSolVec.push_back(L_BB[i][j][k]);
     tmpSolVec.push_back(L_BC[i][j][k]);
-    optTable = get_opt_table(tmpSolVec);
+    table = get_opt_table(tmpSolVec);
     tmpSolVec.clear();
 
-    if (optTable == "AB")
-    {
-        table = L_AB[i][j][k].table;
-        lanes = L_AB[i][j][k].lane;
-        if (lanes == "X")
-        {
-            stack_X.push(make_tuple('A', i, L_AB[i][j][k].time[0]));
-            --i;
-        }
-        else if (lanes == "Y")
-        {
-            stack_Y.push(make_tuple('B', j, L_AB[i][j][k].time[1]));
-            --j;
-        }
-        else if (lanes == "XY")
-        {
-            stack_X.push(make_tuple('A', i, L_AB[i][j][k].time[0]));
-            stack_Y.push(make_tuple('B', j, L_AB[i][j][k].time[1]));
-            --i;
-            --j;
-        }
-    }
-    else if (optTable == "AC")
-    {
-        table = L_AC[i][j][k].table;
-        lanes = L_AC[i][j][k].lane;
-        if (lanes == "X")
-        {
-            stack_X.push(make_tuple('A', i, L_AC[i][j][k].time[0]));
-            --i;
-        }
-        else if (lanes == "Y")
-        {
-            stack_Y.push(make_tuple('C', k, L_AC[i][j][k].time[1]));
-            --k;
-        }
-        else if (lanes == "XY")
-        {
-            stack_X.push(make_tuple('A', i, L_AC[i][j][k].time[0]));
-            stack_Y.push(make_tuple('C', k, L_AC[i][j][k].time[1]));
-            --i;
-            --k;
-        }
-    }
-    else if (optTable == "BB")
-    {
-        table = L_BB[i][j][k].table;
-        lanes = L_BB[i][j][k].lane;
-        if (lanes == "X")
-        {
-            stack_X.push(make_tuple('B', j, L_BB[i][j][k].time[0]));
-            --j;
-        }
-        else if (lanes == "Y")
-        {
-            stack_Y.push(make_tuple('B', j, L_BB[i][j][k].time[1]));
-            --j;
-        }
-        else if (lanes == "XY")
-        {
-            stack_X.push(make_tuple('B', j - 1, L_BB[i][j][k].time[0]));
-            stack_Y.push(make_tuple('B', j, L_BB[i][j][k].time[1]));
-            j -= 2;
-        }
-        else if (lanes == "YX")
-        {
-            stack_Y.push(make_tuple('B', j - 1, L_BB[i][j][k].time[1]));
-            stack_X.push(make_tuple('B', j, L_BB[i][j][k].time[0]));
-            j -= 2;
-        }
-    }
-    else if (optTable == "BC")
-    {
-        table = L_BC[i][j][k].table;
-        lanes = L_BC[i][j][k].lane;
-        if (lanes == "X")
-        {
-            stack_X.push(make_tuple('B', j, L_BC[i][j][k].time[0]));
-            --j;
-        }
-        else if (lanes == "Y")
-        {
-            stack_Y.push(make_tuple('C', k, L_BC[i][j][k].time[1]));
-            --k;
-        }
-        else if (lanes == "XY")
-        {
-            stack_X.push(make_tuple('B', j, L_BC[i][j][k].time[0]));
-            stack_Y.push(make_tuple('C', k, L_BC[i][j][k].time[1]));
-            --j;
-            --k;
-        }
-    }
+    // if (optTable == "AB")
+    // {
+    //     table = L_AB[i][j][k].table;
+    //     lanes = L_AB[i][j][k].lane;
+    //     if (lanes == "X")
+    //     {
+    //         stack_X.push(make_tuple('A', i, L_AB[i][j][k].time[0]));
+    //         --i;
+    //     }
+    //     else if (lanes == "Y")
+    //     {
+    //         stack_Y.push(make_tuple('B', j, L_AB[i][j][k].time[1]));
+    //         --j;
+    //     }
+    //     else if (lanes == "XY")
+    //     {
+    //         stack_X.push(make_tuple('A', i, L_AB[i][j][k].time[0]));
+    //         stack_Y.push(make_tuple('B', j, L_AB[i][j][k].time[1]));
+    //         --i;
+    //         --j;
+    //     }
+    // }
+    // else if (optTable == "AC")
+    // {
+    //     table = L_AC[i][j][k].table;
+    //     lanes = L_AC[i][j][k].lane;
+    //     if (lanes == "X")
+    //     {
+    //         stack_X.push(make_tuple('A', i, L_AC[i][j][k].time[0]));
+    //         --i;
+    //     }
+    //     else if (lanes == "Y")
+    //     {
+    //         stack_Y.push(make_tuple('C', k, L_AC[i][j][k].time[1]));
+    //         --k;
+    //     }
+    //     else if (lanes == "XY")
+    //     {
+    //         stack_X.push(make_tuple('A', i, L_AC[i][j][k].time[0]));
+    //         stack_Y.push(make_tuple('C', k, L_AC[i][j][k].time[1]));
+    //         --i;
+    //         --k;
+    //     }
+    // }
+    // else if (optTable == "BB")
+    // {
+    //     table = L_BB[i][j][k].table;
+    //     lanes = L_BB[i][j][k].lane;
+    //     if (lanes == "X")
+    //     {
+    //         stack_X.push(make_tuple('B', j, L_BB[i][j][k].time[0]));
+    //         --j;
+    //     }
+    //     else if (lanes == "Y")
+    //     {
+    //         stack_Y.push(make_tuple('B', j, L_BB[i][j][k].time[1]));
+    //         --j;
+    //     }
+    //     else if (lanes == "XY")
+    //     {
+    //         stack_X.push(make_tuple('B', j - 1, L_BB[i][j][k].time[0]));
+    //         stack_Y.push(make_tuple('B', j, L_BB[i][j][k].time[1]));
+    //         j -= 2;
+    //     }
+    //     else if (lanes == "YX")
+    //     {
+    //         stack_Y.push(make_tuple('B', j - 1, L_BB[i][j][k].time[1]));
+    //         stack_X.push(make_tuple('B', j, L_BB[i][j][k].time[0]));
+    //         j -= 2;
+    //     }
+    // }
+    // else if (optTable == "BC")
+    // {
+    //     table = L_BC[i][j][k].table;
+    //     lanes = L_BC[i][j][k].lane;
+    //     if (lanes == "X")
+    //     {
+    //         stack_X.push(make_tuple('B', j, L_BC[i][j][k].time[0]));
+    //         --j;
+    //     }
+    //     else if (lanes == "Y")
+    //     {
+    //         stack_Y.push(make_tuple('C', k, L_BC[i][j][k].time[1]));
+    //         --k;
+    //     }
+    //     else if (lanes == "XY")
+    //     {
+    //         stack_X.push(make_tuple('B', j, L_BC[i][j][k].time[0]));
+    //         stack_Y.push(make_tuple('C', k, L_BC[i][j][k].time[1]));
+    //         --j;
+    //         --k;
+    //     }
+    // }
 
     // Backtracking
     while (i > 0 || j > 0 || k > 0)
@@ -439,17 +438,17 @@ void group_dp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vect
         if (curr_lane == 'A')
         {
             if (prev_lane == curr_lane)
-                compute_member_time(A, grouped_A[get<1>(stack_X.top())], prev_tail + W_same, schedule_A, total_wait);
+                compute_member_time(A, grouped_A[get<1>(stack_X.top())], prev_tail + W_same, schedule_A);
             else
-                compute_member_time(A, grouped_A[get<1>(stack_X.top())], prev_tail + W_diff, schedule_A, total_wait);
+                compute_member_time(A, grouped_A[get<1>(stack_X.top())], prev_tail + W_diff, schedule_A);
         }
         else
         {
             pair<int, int> index = grouped_B[get<1>(stack_X.top())];
             if (prev_lane == curr_lane)
-                compute_member_time(B, index, prev_tail + W_same, schedule_B, total_wait);
+                compute_member_time(B, index, prev_tail + W_same, schedule_B);
             else
-                compute_member_time(B, index, prev_tail + W_diff, schedule_B, total_wait);
+                compute_member_time(B, index, prev_tail + W_diff, schedule_B);
             for (int i = index.first; i <= index.second; ++i)
                 Vehicle::setRouteID(B[i].id, "route_1");
         }
@@ -462,17 +461,17 @@ void group_dp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vect
     if (curr_lane == 'A')
     {
         if (prev_lane == curr_lane)
-            compute_member_time(A, grouped_A[get<1>(stack_X.top())], prev_tail + W_same, schedule_A, total_wait);
+            compute_member_time(A, grouped_A[get<1>(stack_X.top())], prev_tail + W_same, schedule_A);
         else
-            compute_member_time(A, grouped_A[get<1>(stack_X.top())], prev_tail + W_diff, schedule_A, total_wait);
+            compute_member_time(A, grouped_A[get<1>(stack_X.top())], prev_tail + W_diff, schedule_A);
     }
     else
     {
         pair<int, int> index = grouped_B[get<1>(stack_X.top())];
         if (prev_lane == curr_lane)
-            compute_member_time(B, index, prev_tail + W_same, schedule_B, total_wait);
+            compute_member_time(B, index, prev_tail + W_same, schedule_B);
         else
-            compute_member_time(B, index, prev_tail + W_diff, schedule_B, total_wait);
+            compute_member_time(B, index, prev_tail + W_diff, schedule_B);
         for (int i = index.first; i <= index.second; ++i)
             Vehicle::setRouteID(B[i].id, "route_1");
     }
@@ -488,17 +487,17 @@ void group_dp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vect
         if (curr_lane == 'C')
         {
             if (prev_lane == curr_lane)
-                compute_member_time(C, grouped_C[get<1>(stack_Y.top())], prev_tail + W_same, schedule_C, total_wait);
+                compute_member_time(C, grouped_C[get<1>(stack_Y.top())], prev_tail + W_same, schedule_C);
             else
-                compute_member_time(C, grouped_C[get<1>(stack_Y.top())], prev_tail + W_diff, schedule_C, total_wait);
+                compute_member_time(C, grouped_C[get<1>(stack_Y.top())], prev_tail + W_diff, schedule_C);
         }
         else
         {
             pair<int, int> index = grouped_B[get<1>(stack_Y.top())];
             if (prev_lane == curr_lane)
-                compute_member_time(B, index, prev_tail + W_same, schedule_B, total_wait);
+                compute_member_time(B, index, prev_tail + W_same, schedule_B);
             else
-                compute_member_time(B, index, prev_tail + W_diff, schedule_B, total_wait);
+                compute_member_time(B, index, prev_tail + W_diff, schedule_B);
             for (int i = index.first; i <= index.second; ++i)
                 Vehicle::setRouteID(B[i].id, "route_2");
         }
@@ -511,20 +510,19 @@ void group_dp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vect
     if (curr_lane == 'C')
     {
         if (prev_lane == curr_lane)
-            compute_member_time(C, grouped_C[get<1>(stack_Y.top())], prev_tail + W_same, schedule_C, total_wait);
+            compute_member_time(C, grouped_C[get<1>(stack_Y.top())], prev_tail + W_same, schedule_C);
         else
-            compute_member_time(C, grouped_C[get<1>(stack_Y.top())], prev_tail + W_diff, schedule_C, total_wait);
+            compute_member_time(C, grouped_C[get<1>(stack_Y.top())], prev_tail + W_diff, schedule_C);
     }
     else
     {
         pair<int, int> index = grouped_B[get<1>(stack_Y.top())];
         if (prev_lane == curr_lane)
-            compute_member_time(B, index, prev_tail + W_same, schedule_B, total_wait);
+            compute_member_time(B, index, prev_tail + W_same, schedule_B);
         else
-            compute_member_time(B, index, prev_tail + W_diff, schedule_B, total_wait);
+            compute_member_time(B, index, prev_tail + W_diff, schedule_B);
         for (int i = index.first; i <= index.second; ++i)
             Vehicle::setRouteID(B[i].id, "route_2");
     }
     T_last = max(T_last, get<2>(stack_Y.top()));
-    double T_delay = total_wait / vehicle_num;
 }

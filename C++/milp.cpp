@@ -4,42 +4,39 @@
 //                  -lgurobi_c++ -lgurobi91
 #include "milp.h"
 
+// Scheduled by MILP
 tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vector<double> C)
 {
-    auto t0 = chrono::high_resolution_clock::now();
-    int alpha = A.size() - 1;
-    int beta = B.size() - 1;
-    int gamma = C.size() - 1;
-    // double D = 30;
+    auto t0 = chrono::high_resolution_clock::now(); // starting time of computation
+    int alpha = A.size() - 1;   // number of vehicleas on Lane A
+    int beta = B.size() - 1;    // number of vehicleas on Lane B
+    int gamma = C.size() - 1;   // number of vehicleas on Lane C
 
     try
     {
-        // Create an environment
-        GRBEnv env = GRBEnv(true);
-        // env.set("LogFile", "milp.log");
-        env.set("OutputFlag", "0");
-        env.start();
+        GRBEnv env = GRBEnv(true);  // create an environment
+        env.set("OutputFlag", "0"); // disable solver output
+        env.start();    // start an empty environment
 
-        // Create an empty model
-        GRBModel model = GRBModel(env);
-        model.set("TimeLimit", "1800.0");
+        GRBModel model = GRBModel(env);  // create an empty model
+        model.set("TimeLimit", "1800.0");   // limit the total time expended (in seconds)
 
-        // Create variables: s_i, t_j, u_k (scheduled entering time)
-        GRBVar s[alpha + 1], t[beta + 1], u[gamma + 1];
+        // Create variables: a_i, b_j, c_k (scheduled entering time)
+        GRBVar a[alpha + 1], b[beta + 1], c[gamma + 1];
         for (int i = 0; i <= alpha; ++i)
         {
-            s[i] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "s_" + to_string(i));
+            a[i] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "a_" + to_string(i));
         }
         for (int j = 0; j <= beta; ++j)
         {
-            t[j] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "t_" + to_string(j));
+            b[j] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "b_" + to_string(j));
         }
         for (int k = 0; k <= gamma; ++k)
         {
-            u[k] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "u_" + to_string(k));
+            c[k] = model.addVar(0.0, INFINITY, 0.0, GRB_CONTINUOUS, "c_" + to_string(k));
         }
 
-        // Create variables: x_ij, y_kj (allocation indicator)
+        // Create variables: x_ij, y_kj (insertion indicator)
         GRBVar x[alpha + 1][beta + 1], y[gamma + 1][beta + 1];
         for (int i = 0; i <= alpha; ++i)
         {
@@ -62,52 +59,32 @@ tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vec
         // Set objective: minimize f
         model.setObjective(f + 0, GRB_MINIMIZE);
 
-        // Set objective: minimize weighted sum
-        // GRBLinExpr weightedSum = f * (alpha + beta + gamma);
-        // for (int i = 1; i <= alpha; ++i)
-        //     weightedSum += s[i];
-        // for (int j = 1; j <= beta; ++j)
-        //     weightedSum += t[j];
-        // for (int k = 1; k <= gamma; ++k)
-        //     weightedSum += u[k];
-        // model.setObjective(weightedSum, GRB_MINIMIZE);
-
-        // Set objective: minimize sigma(entering time - arrival time)
-        // GRBLinExpr obj = 0;
-        // for (int i = 1; i <= alpha; ++i)
-        //     obj += (s[i] - A[i]);
-        // for (int j = 1; j <= beta; ++j)
-        //     obj += (t[j] - B[j]);
-        // for (int k = 1; k <= gamma; ++k)
-        //     obj += (u[k] - C[k]);
-        // model.setObjective(obj, GRB_MINIMIZE);
-
         // Add constraint: scheduled entering time >= earliest arrival time
         for (int i = 0; i <= alpha; ++i)
         {
-            model.addConstr(s[i] >= A[i], "c0_" + to_string(i));
+            model.addConstr(a[i] >= A[i], "c2_" + to_string(i));
         }
         for (int j = 0; j <= beta; ++j)
         {
-            model.addConstr(t[j] >= B[j], "c1_" + to_string(j));
+            model.addConstr(b[j] >= B[j], "c3_" + to_string(j));
         }
         for (int k = 0; k <= gamma; ++k)
         {
-            model.addConstr(u[k] >= C[k], "c2_" + to_string(k));
+            model.addConstr(c[k] >= C[k], "c4_" + to_string(k));
         }
 
         // Add constraint: waiting time if from the same lane
         for (int i = 1; i < alpha; ++i)
         {
-            model.addConstr(s[i + 1] - s[i] >= W_same, "c3_" + to_string(i));
+            model.addConstr(a[i + 1] - a[i] >= W_same, "c5_" + to_string(i));
         }
         for (int j = 1; j < beta; ++j)
         {
-            model.addConstr(t[j + 1] - t[j] >= W_same, "c4_" + to_string(j));
+            model.addConstr(b[j + 1] - b[j] >= W_same, "c6_" + to_string(j));
         }
         for (int k = 1; k < gamma; ++k)
         {
-            model.addConstr(u[k + 1] - u[k] >= W_same, "c5_" + to_string(k));
+            model.addConstr(c[k + 1] - c[k] >= W_same, "c7_" + to_string(k));
         }
 
         // Add constraint: B_j is put into only one gap
@@ -118,7 +95,7 @@ tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vec
                 sigma += x[i][j];
             for (int k = 0; k <= gamma; ++k)
                 sigma += y[k][j];
-            model.addConstr(sigma == 1, "c6_" + to_string(j));
+            model.addConstr(sigma == 1, "c8_" + to_string(j));
         }
 
         // Add constraint: B_0 is not put into any gap
@@ -127,104 +104,61 @@ tuple<double, double, double> solve_milp(vector<double> A, vector<double> B, vec
             sigma += x[i][0];
         for (int k = 0; k <= gamma; ++k)
             sigma += y[k][0];
-        model.addConstr(sigma == 0, "c7");
+        model.addConstr(sigma == 0, "c9");
 
         // Add constraint: if x[i][j] == 1, then a[i+1] - W_diff >= b[j] >= a[i] + W_diff
         for (int j = 0; j <= beta; ++j)
         {
-            model.addGenConstrIndicator(x[0][j], 1, t[j] <= s[1] - W_diff, "c8_" + to_string(0) + "_" + to_string(j));
+            model.addGenConstrIndicator(x[0][j], 1, b[j] <= a[1] - W_diff, "c11_" + to_string(0) + "_" + to_string(j));
             for (int i = 1; i < alpha; ++i)
             {
-                model.addGenConstrIndicator(x[i][j], 1, t[j] <= s[i + 1] - W_diff, "c8_" + to_string(i) + "_" + to_string(j));
-                model.addGenConstrIndicator(x[i][j], 1, t[j] >= s[i] + W_diff, "c9_" + to_string(i) + "_" + to_string(j));
+                model.addGenConstrIndicator(x[i][j], 1, b[j] <= a[i + 1] - W_diff, "c11_" + to_string(i) + "_" + to_string(j));
+                model.addGenConstrIndicator(x[i][j], 1, b[j] >= a[i] + W_diff, "c10_" + to_string(i) + "_" + to_string(j));
             }
-            model.addGenConstrIndicator(x[alpha][j], 1, t[j] >= s[alpha] + W_diff, "c9_" + to_string(alpha) + "_" + to_string(j));
+            model.addGenConstrIndicator(x[alpha][j], 1, b[j] >= a[alpha] + W_diff, "c10_" + to_string(alpha) + "_" + to_string(j));
         }
 
         // Add constraint: if y[k][j] == 1, then c[k+1] - W_diff >= b[j] >= c[k] + W_diff
         for (int j = 0; j <= beta; ++j)
         {
-            model.addGenConstrIndicator(y[0][j], 1, t[j] <= u[1] - W_diff, "c10_" + to_string(0) + "_" + to_string(j));
+            model.addGenConstrIndicator(y[0][j], 1, b[j] <= c[1] - W_diff, "c13_" + to_string(0) + "_" + to_string(j));
             for (int k = 1; k < gamma; ++k)
             {
-                model.addGenConstrIndicator(y[k][j], 1, t[j] <= u[k + 1] - W_diff, "c10_" + to_string(k) + "_" + to_string(j));
-                model.addGenConstrIndicator(y[k][j], 1, t[j] >= u[k] + W_diff, "c11_" + to_string(k) + "_" + to_string(j));
+                model.addGenConstrIndicator(y[k][j], 1, b[j] <= c[k + 1] - W_diff, "c13_" + to_string(k) + "_" + to_string(j));
+                model.addGenConstrIndicator(y[k][j], 1, b[j] >= c[k] + W_diff, "c12_" + to_string(k) + "_" + to_string(j));
             }
-            model.addGenConstrIndicator(y[gamma][j], 1, t[j] >= u[gamma] + W_diff, "c11_" + to_string(gamma) + "_" + to_string(j));
+            model.addGenConstrIndicator(y[gamma][j], 1, b[j] >= c[gamma] + W_diff, "c12_" + to_string(gamma) + "_" + to_string(j));
         }
 
-        // Add constraint: delay <= D
-        // for (int i = 0; i <= alpha; ++i)
-        // {
-        //     model.addConstr(s[i] - A[i] <= D, "c12_" + to_string(i));
-        // }
-        // for (int k = 0; k <= gamma; ++k)
-        // {
-        //     model.addConstr(u[k] - C[k] <= D, "c13_" + to_string(k));
-        // }
-        // for (int j = 0; j <= beta; ++j)
-        // {
-        //     model.addConstr(t[j] - B[j] <= D, "c14_" + to_string(j));
-        // }
-
         // Add constraint: f = max(a[alpha], b[beta], c[gamma])
-        model.addConstr(f >= s[alpha], "c15");
-        model.addConstr(f >= t[beta], "c16");
-        model.addConstr(f >= u[gamma], "c17");
+        model.addConstr(f >= a[alpha], "c1_1");
+        model.addConstr(f >= b[beta], "c1_2");
+        model.addConstr(f >= c[gamma], "c1_3");
 
         // Optimize model
         model.optimize();
 
-        // Output results
+        // Calculate waiting time (difference between scheduled entering time and earliest arrival time)
         double total_wait = 0;
-        // cout << "s = {";
         for (int i = 0; i <= alpha; ++i)
         {
-            // cout << s[i].get(GRB_DoubleAttr_X) << "(" << A[i] << "), ";
-            total_wait += (s[i].get(GRB_DoubleAttr_X) - A[i]);
+            total_wait += (a[i].get(GRB_DoubleAttr_X) - A[i]);
         }
-        // cout << "};" << endl;
-        // cout << "t = {";
         for (int j = 0; j <= beta; ++j)
         {
-            // cout << t[j].get(GRB_DoubleAttr_X) << "(" << B[j] << "), ";
-            total_wait += (t[j].get(GRB_DoubleAttr_X) - B[j]);
+            total_wait += (b[j].get(GRB_DoubleAttr_X) - B[j]);
         }
-        // cout << "};" << endl;
-        // cout << "k = {";
         for (int k = 0; k <= gamma; ++k)
         {
-            // cout << u[k].get(GRB_DoubleAttr_X) << "(" << C[k] << "), ";
-            total_wait += (u[k].get(GRB_DoubleAttr_X) - C[k]);
+            total_wait += (c[k].get(GRB_DoubleAttr_X) - C[k]);
         }
-        // cout << "};" << endl;
-        // for (int j = 1; j <= beta; ++j)
-        // {
-        //     for (int i = 0; i <= alpha; ++i)
-        //     {
-        //         if (x[i][j].get(GRB_DoubleAttr_X))
-        //             // cout << x[i][j].get(GRB_StringAttr_VarName) << " "
-        //             //      << x[i][j].get(GRB_DoubleAttr_X) << endl;
-        //             cout << "X ";
-        //     }
-        //     for (int k = 0; k <= gamma; ++k)
-        //     {
-        //         if (y[k][j].get(GRB_DoubleAttr_X))
-        //             // cout << y[k][j].get(GRB_StringAttr_VarName) << " "
-        //             //      << y[k][j].get(GRB_DoubleAttr_X) << endl;
-        //             cout << "Y ";
-        //     }
-        // }
-        // cout << endl;
-        // cout << "Obj: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
-        // cout << "T_last: " << max(max(s[alpha].get(GRB_DoubleAttr_X), t[beta].get(GRB_DoubleAttr_X)), max(t[beta].get(GRB_DoubleAttr_X), u[gamma].get(GRB_DoubleAttr_X))) << endl;
-        // double T_last = model.get(GRB_DoubleAttr_ObjVal);
-        double T_last = f.get(GRB_DoubleAttr_X);
-        double T_delay = total_wait / (alpha + beta + gamma);
-        auto t1 = chrono::high_resolution_clock::now();
-        double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();
+
+        double T_last = f.get(GRB_DoubleAttr_X);    // get the objective value
+        double T_delay = total_wait / (alpha + beta + gamma);   // average difference betweeb each vehicle's scheduled entering time and its earliest arrival time
+        auto t1 = chrono::high_resolution_clock::now(); // ending time of computation
+        double totalComputeTime = chrono::duration_cast<chrono::nanoseconds>(t1 - t0).count();  // computation time
         totalComputeTime *= 1e-9;
-        // cout << "milp result: " << T_last << " " << T_delay << " " << totalComputeTime << endl;
+
         return {T_last, T_delay, totalComputeTime};
     }
     catch (GRBException e)

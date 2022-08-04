@@ -1,5 +1,6 @@
 #include "solution.h"
 
+// Update the solution (without the source derived from)
 Solution update_sol(Solution s, double newTimeX, double newTimeY, string newTable, string newLane)
 {
     s.time[0] = newTimeX;
@@ -9,6 +10,7 @@ Solution update_sol(Solution s, double newTimeX, double newTimeY, string newTabl
     return s;
 }
 
+// Update the solution (with the source derived from)
 Solution update_sol(Solution s, double newTimeX, double newTimeY, string newTable, string newLane, Solution *newSrc)
 {
     s.time[0] = newTimeX;
@@ -19,6 +21,7 @@ Solution update_sol(Solution s, double newTimeX, double newTimeY, string newTabl
     return s;
 }
 
+// Update the solution with the best one among all possible solutions 
 Solution choose_best_sol(Solution s, vector<Solution> solVec)
 {
     double minMax = max(solVec[0].time[0], solVec[0].time[1]);
@@ -29,6 +32,7 @@ Solution choose_best_sol(Solution s, vector<Solution> solVec)
 
     for (int i = 1; i < solVec.size(); ++i)
     {
+        // Compare max element of the tuple
         tmpMax = max(solVec[i].time[0], solVec[i].time[1]);
         if (tmpMax < minMax)
         {
@@ -37,6 +41,7 @@ Solution choose_best_sol(Solution s, vector<Solution> solVec)
         }
         else if (tmpMax == minMax)
         {
+            // Compare sum of the tuple
             tmpSum = solVec[i].time[0] + solVec[i].time[1];
             minSum = solVec[index].time[0] + solVec[index].time[1];
             if (tmpSum < minSum)
@@ -46,6 +51,7 @@ Solution choose_best_sol(Solution s, vector<Solution> solVec)
             }
             else if (tmpSum == minSum && solVec[i].src)
             {
+                // Compare max element of the source solution
                 tmpSrcMax = max(solVec[i].src->time[0], solVec[i].src->time[1]);
                 minSrcMax = max(solVec[index].src->time[0], solVec[index].src->time[1]);
                 if (tmpSrcMax < minSrcMax)
@@ -55,6 +61,7 @@ Solution choose_best_sol(Solution s, vector<Solution> solVec)
                 }
                 else if (tmpSrcMax == minSrcMax)
                 {
+                    // Compare sum of the source solution
                     tmpSrcSum = solVec[i].src->time[0] + solVec[i].src->time[1];
                     minSrcSum = solVec[index].src->time[0] + solVec[index].src->time[1];
                     if (tmpSrcSum < minSrcSum)
@@ -70,6 +77,7 @@ Solution choose_best_sol(Solution s, vector<Solution> solVec)
     return s;
 }
 
+// Get which table the final optimal solution is in
 string get_opt_table(vector<Solution> solVec)
 {
     double minMax = max(solVec[0].time[0], solVec[0].time[1]);
@@ -78,8 +86,10 @@ string get_opt_table(vector<Solution> solVec)
     int index = 0;
     double tmpMax, tmpMin, tmpSum, tmpSrcMax, tmpSrcMin, tmpSrcSum;
     string optTable = "AB";
+    
     for (int i = 1; i < solVec.size(); ++i)
     {
+        // Compare max element of the tuple
         tmpMax = max(solVec[i].time[0], solVec[i].time[1]);
         if (tmpMax < minMax)
         {
@@ -88,6 +98,7 @@ string get_opt_table(vector<Solution> solVec)
         }
         else if (tmpMax == minMax)
         {
+            // Compare sum of the tuple
             tmpSum = solVec[i].time[0] + solVec[i].time[1];
             minSum = solVec[index].time[0] + solVec[index].time[1];
             if (tmpSum < minSum)
@@ -97,6 +108,7 @@ string get_opt_table(vector<Solution> solVec)
             }
             else if (tmpSum == minSum && solVec[i].src)
             {
+                // Compare max element of the source solution
                 tmpSrcMax = max(solVec[i].src->time[0], solVec[i].src->time[1]);
                 minSrcMax = max(solVec[index].src->time[0], solVec[index].src->time[1]);
                 if (tmpSrcMax < minSrcMax)
@@ -106,6 +118,7 @@ string get_opt_table(vector<Solution> solVec)
                 }
                 else if (tmpSrcMax == minSrcMax)
                 {
+                    // Compare sum of the source solution
                     tmpSrcSum = solVec[i].src->time[0] + solVec[i].src->time[1];
                     minSrcSum = solVec[index].src->time[0] + solVec[index].src->time[1];
                     if (tmpSrcSum < minSrcSum)
@@ -117,6 +130,8 @@ string get_opt_table(vector<Solution> solVec)
             }
         }
     }
+
+    // Get the name of table by the index
     switch (index)
     {
     case 0:
@@ -148,6 +163,7 @@ string get_opt_table(vector<Solution> solVec)
     return optTable;
 }
 
+// Print out the content of a table for debugging
 void print_3d_table(vector<vector<vector<Solution>>> &table)
 {
     for (int k = 0; k < table[0][0].size(); ++k)

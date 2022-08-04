@@ -9,7 +9,6 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
     {
         // Create an environment
         GRBEnv env = GRBEnv(true);
-        // env.set("LogFile", "milp.log");
         env.set("OutputFlag", "0");
         env.start();
 
@@ -148,18 +147,15 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
         model.optimize();
 
         // Output results
-        double total_wait = 0;
         schedule_A.clear();
         schedule_B.clear();
         schedule_C.clear();
         for (int i = 1; i <= alpha; ++i)
         {
-            total_wait += (s[i].get(GRB_DoubleAttr_X) - A[i].time);
             schedule_A.push_back(vehicle(A[i].id, s[i].get(GRB_DoubleAttr_X)));
         }
         for (int j = 1; j <= beta; ++j)
         {
-            total_wait += (t[j].get(GRB_DoubleAttr_X) - B[j].time);
             bool isFound = false;
             for (int i = 0; i <= alpha; ++i)
             {
@@ -186,7 +182,6 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
         }
         for (int k = 1; k <= gamma; ++k)
         {
-            total_wait += (u[k].get(GRB_DoubleAttr_X) - C[k].time);
             schedule_C.push_back(vehicle(C[k].id, u[k].get(GRB_DoubleAttr_X)));
         }
 
@@ -227,7 +222,6 @@ void milp_compute_entering_time(vector<vehicle> &A, vector<vehicle> &B, vector<v
         // }
 
         double T_last = model.get(GRB_DoubleAttr_ObjVal);
-        double T_delay = total_wait / (alpha + beta + gamma);
         if (model.get(GRB_DoubleAttr_Runtime) >= 1800)
             cout << "*** Exceeds the time limit. ***" << endl;
     }

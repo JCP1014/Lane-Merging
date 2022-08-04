@@ -2,7 +2,7 @@
 #include "utility.h"
 #include "get_vehicle_info.h"
 #include "solution.h"
-#include "fcfs.h"
+#include "fafg.h"
 #include "milp.h"
 #include "dp.h"
 #include "group_milp.h"
@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     double p, pA, pB, pC;
     int N, alpha, beta, gamma;
     vector<double> A, B, C;
-    char isNewTest;
+    char isNewTest; // whether to generate new test case
 
     if (argc >= 6)
     {
@@ -29,9 +29,6 @@ int main(int argc, char *argv[])
         N = atoi(argv[2]);
         W_same = atof(argv[3]);
         W_diff = atof(argv[4]);
-        pA = p;
-        pB = p;
-        pC = p;
         alpha = N;
         beta = N;
         gamma = N;
@@ -47,30 +44,38 @@ int main(int argc, char *argv[])
         string filePath(argv[6]);
         filePath.replace(filePath.begin(), filePath.begin() + 11, "output/output");
         filePath = filePath.substr(0, filePath.find("."));
-        // Simulation::start({"sumo", "-c", argv[6],
-        //                    "--tripinfo-output", filePath + "_fcfs.xml",
-        //                    "-S",
-        //                    "--no-step-log", "true",
-        //                    "-W",
-        //                    "--duration-log.disable", "true",
-        //                    "--step-length", "0.5"});
-        // run(FCFS, alpha, beta, gamma);
-        // Simulation::start({"sumo", "-c", argv[6],
-        //                    "--tripinfo-output", filePath + "_milp.xml",
-        //                    "-S",
-        //                    "--no-step-log", "true",
-        //                    "-W",
-        //                    "--duration-log.disable", "true",
-        //                    "--step-length", "0.5"});
-        // run(MILP, alpha, beta, gamma);
-        // Simulation::start({"sumo", "-c", argv[6],
-        //                    "--tripinfo-output", filePath + "_dp.xml",
-        //                    "-S",
-        //                    "--no-step-log", "true",
-        //                    "-W",
-        //                    "--duration-log.disable", "true",
-        //                    "--step-length", "0.5"});
-        // run(DP, alpha, beta, gamma);
+        
+        // FAFG
+        Simulation::start({"sumo", "-c", argv[6],
+                           "--tripinfo-output", filePath + "_fcfs.xml",
+                           "-S",
+                           "--no-step-log", "true",
+                           "-W",
+                           "--duration-log.disable", "true",
+                           "--step-length", "0.5"});
+        run(FAFG, alpha, beta, gamma);
+        
+        // MILP
+        Simulation::start({"sumo", "-c", argv[6],
+                           "--tripinfo-output", filePath + "_milp.xml",
+                           "-S",
+                           "--no-step-log", "true",
+                           "-W",
+                           "--duration-log.disable", "true",
+                           "--step-length", "0.5"});
+        run(MILP, alpha, beta, gamma);
+        
+        // 3D DP
+        Simulation::start({"sumo", "-c", argv[6],
+                           "--tripinfo-output", filePath + "_dp.xml",
+                           "-S",
+                           "--no-step-log", "true",
+                           "-W",
+                           "--duration-log.disable", "true",
+                           "--step-length", "0.5"});
+        run(DP, alpha, beta, gamma);
+        
+        // Grouping MILP
         Simulation::start({"sumo", "-c", argv[6],
                            "--tripinfo-output", filePath + "_groupMILP.xml",
                            "-S",
@@ -79,6 +84,8 @@ int main(int argc, char *argv[])
                            "--duration-log.disable", "true",
                            "--step-length", "0.5"});
         run(GROUP_MILP, alpha, beta, gamma);
+        
+        // Grouping 3D DP
         Simulation::start({"sumo", "-c", argv[6],
                            "--tripinfo-output", filePath + "_groupDP.xml",
                            "-S",
@@ -95,6 +102,7 @@ int main(int argc, char *argv[])
             cout << "Generate a new test" << endl;
             generate_routefile(W_same, N, pA, pB, pC);
         }
+        // FAFG
         Simulation::start({"sumo-gui", "-c", "sumo_data/laneMerging.sumocfg",
                            "--tripinfo-output", "sumo_data/tripinfo_fcfs.xml",
                            "-S",
@@ -102,7 +110,9 @@ int main(int argc, char *argv[])
                            "-W",
                            "--duration-log.disable", "true",
                            "--step-length", "0.5"});
-        run(FCFS, alpha, beta, gamma);
+        run(FAFG, alpha, beta, gamma);
+        
+        // MILP
         Simulation::start({"sumo-gui", "-c", "sumo_data/laneMerging.sumocfg",
                            "--tripinfo-output", "sumo_data/tripinfo_milp.xml",
                            "-S",
@@ -111,6 +121,8 @@ int main(int argc, char *argv[])
                            "--duration-log.disable", "true",
                            "--step-length", "0.5"});
         run(MILP, alpha, beta, gamma);
+        
+        // 3D DP
         Simulation::start({"sumo-gui", "-c", "sumo_data/laneMerging.sumocfg",
                            "--tripinfo-output", "sumo_data/tripinfo_dp.xml",
                            "-S",
@@ -119,6 +131,8 @@ int main(int argc, char *argv[])
                            "--duration-log.disable", "true",
                            "--step-length", "0.5"});
         run(DP, alpha, beta, gamma);
+        
+        // Grouping MILP
         Simulation::start({"sumo-gui", "-c", "sumo_data/laneMerging.sumocfg",
                            "--tripinfo-output", "sumo_data/tripinfo_groupMILP.xml",
                            "-S",
@@ -127,6 +141,8 @@ int main(int argc, char *argv[])
                            "--duration-log.disable", "true",
                            "--step-length", "0.5"});
         run(GROUP_MILP, alpha, beta, gamma);
+        
+        // Grouping 3D DP
         Simulation::start({"sumo-gui", "-c", "sumo_data/laneMerging.sumocfg",
                            "--tripinfo-output", "sumo_data/tripinfo_DP.xml",
                            "-S",
